@@ -42,6 +42,7 @@ def main():
         from feedastrolabe.db import get_db, connect
         from feedastrolabe.collection import now
         from feedastrolabe.keys import issue_key
+        from feedastrolabe import research as research
         from feedastrolabe import social, collection
         from feedastrolabe.maintenance import backup, restore
         assert os.getuid() == 10001
@@ -81,6 +82,15 @@ def main():
                 raise AssertionError('Revoked key should fail')
             except urllib.error.HTTPError as error:
                 assert error.code == 401
+            existing = db.execute("SELECT id FROM workspaces WHERE title='Container research fixture'").fetchone()
+            workspace_id = existing['id'] if existing else research.create_workspace({'title':'Container research fixture','classification':'restricted'})
+            research.associate('workspace',workspace_id,'feed',feed_id)
+            article_id = db.execute("SELECT id FROM articles WHERE guid='container-smoke-state'").fetchone()[0]
+            research.associate('workspace',workspace_id,'article',article_id)
+            existing_note = db.execute('SELECT * FROM notes WHERE workspace_id=?',(workspace_id,)).fetchone()
+            note_id = existing_note['id'] if existing_note else research.create_note(workspace_id,{'title':'Container note','body':'original'})
+            if research.find('note',note_id)['revision']==1:
+                research.update_note(note_id,{'expected_revision':1,'body':'edited','label':'fact'})
             snapshot = '/data/smoke-backup-' + uuid.uuid4().hex + '.sqlite3'
             backup('/data/feeds.sqlite3', snapshot)
             destination = tempfile.mkdtemp() + '/feeds.sqlite3'
@@ -88,6 +98,9 @@ def main():
             with connect(destination) as restored:
                 row = restored.execute("SELECT is_read,is_starred FROM articles WHERE guid='container-smoke-state'").fetchone()
                 assert tuple(row)==(1,1)
+                assert restored.execute('SELECT count(*) FROM note_revisions WHERE note_id=?',(note_id,)).fetchone()[0]==2
+                assert restored.execute('SELECT body FROM notes WHERE id=?',(note_id,)).fetchone()[0]=='edited'
+                assert restored.execute('SELECT count(*) FROM workspace_articles WHERE workspace_id=?',(workspace_id,)).fetchone()[0]==1
         print('PASS: non-root, read-only filesystem, authenticated live API, revocation, consistent backup and restore')
     ''')
     run('up', '-d', '--force-recreate', '--wait', '--wait-timeout', '90')
@@ -100,7 +113,9 @@ def main():
             row = get_db().execute("SELECT is_read,is_starred FROM articles WHERE guid='container-smoke-state'").fetchone()
             assert tuple(row)==(1,1)
             assert get_db().execute("SELECT count(*) FROM articles WHERE guid='mastodon:789'").fetchone()[0] == 1
-            assert get_db().execute('PRAGMA user_version').fetchone()[0] == 4
+            assert get_db().execute('PRAGMA user_version').fetchone()[0] == 5
+            assert get_db().execute("SELECT count(*) FROM note_revisions nr JOIN notes n ON n.id=nr.note_id JOIN workspaces w ON w.id=n.workspace_id WHERE w.title='Container research fixture'").fetchone()[0]==2
+            assert get_db().execute("SELECT n.body FROM notes n JOIN workspaces w ON w.id=n.workspace_id WHERE w.title='Container research fixture'").fetchone()[0]=='edited'
         assert json.load(urllib.request.urlopen('http://127.0.0.1:5000/healthz'))['status']=='ok'
         print('PASS: Web/worker recreation retains read and star state')
     ''')

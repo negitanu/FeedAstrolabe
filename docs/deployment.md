@@ -77,7 +77,7 @@ mkdir -p backups
 docker compose -f compose.yaml -f compose.local.yaml cp web:/data/library-20261008.sqlite3 backups/library-20261008.sqlite3
 ```
 
-復元前に Web、worker、ページ観測を使用している場合は observer を停止します。元DBもbackupしてから実行してください。nativeではサービス停止後に `maintenance restore <snapshot>` を実行します。v1〜v3 snapshot は v4 に移行されます。
+復元前に Web、worker、ページ観測を使用している場合は observer を停止します。元DBもbackupしてから実行してください。nativeではサービス停止後に `maintenance restore <snapshot>` を実行します。v1〜v4 snapshot は v5 に移行されます。調査案件・タグ・メモの版履歴も同じ SQLite バックアップに含まれます。
 
 コンテナでは対象サービスを停止し、snapshotを標準入力から one-off restore へ渡します。コンテナのUID10001が一時ファイルを作成するため、ホスト側のUIDやファイル所有者が違っていてもコピー時のpermission変更を必要としません。
 

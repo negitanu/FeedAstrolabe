@@ -145,3 +145,25 @@ URL 修正後も購読・記事 ID と既読・スターは保持します。RSS
 ページ観測は202で `queued: true` を返し、専用 observer が処理します。既存 `/observe` も引き続き使えます。手動更新は pause 中にも実行できますが、SNS のプロバイダー待機中は429と `Retry-After` 秒数・`retry_at` を返し、外部 API を呼びません。
 
 設定画面の「フィード別の収集設定」に URL 修正フォームがあります。API と同じ検証を使い、CSRF を必要とします。
+
+## 調査案件・メモ・共有タグ（第六段階）
+
+すべての読み取りは read または write キー、変更は write キーが必要です。新しい API も既存のレート上限に従います。詳細は [OpenAPI](../feedastrolabe/static/openapi.json) と [ワークスペースの操作](research.md) を参照してください。
+
+- `GET/POST /api/v1/workspaces`、`GET/PATCH /api/v1/workspaces/{id}`：案件一覧・作成・詳細・編集。作成は `title` 必須。`purpose`、`questions`、`status`（active/paused/completed）、`classification`（public/internal/restricted）、`archived`（JSON真偽値）を指定できます。
+- `GET /api/v1/workspaces/{id}/feeds`、`GET /api/v1/workspaces/{id}/articles`：関連フィード／記事。記事は直接リンクとフィード経由を重複排除し、関連フィードの新着も含みます。
+- `POST/DELETE /api/v1/workspaces/{id}/feeds/{feed_id}`、`.../articles/{article_id}`、`.../tags/{tag_id}`：既存IDの関連付け／解除。本文なし、成功204、同じ操作を再実行可能。元の購読・記事は変更しません。
+- `GET/POST /api/v1/workspaces/{id}/notes`、`GET/PATCH /api/v1/notes/{id}`：メモ一覧・作成・詳細・版付き編集。作成は `title` 必須、`body`、`label`（fact/source-claim/hypothesis、既定hypothesis）、`archived` を指定できます。
+- `GET /api/v1/notes/{id}/revisions`：変更できない完全な版履歴。履歴の cursor は記事IDの代わりに版番号を使います。
+- `GET/POST /api/v1/tags`、`GET/PATCH /api/v1/tags/{id}`：共有タグ。変更本文は `{"name":"OSINT"}`。重複名は409。
+- `POST/DELETE /api/v1/articles/{id}/tags/{tag_id}`、`.../notes/{id}/tags/{tag_id}`：記事・メモのタグ関連付け。
+
+案件・メモ・タグ・版・関連フィードの記事一覧は `limit`、`before_id`、`after_id` と記事と同じ cursor 応答を使います。案件／メモ一覧は既定でアーカイブを除外し、`archived=true` でアーカイブのみ取得します。詳細はアーカイブ後も取得できます。案件／メモ一覧の `tag={id}`、記事一覧の `workspace={id}&tag={id}` で絞り込めます。存在しない案件／タグのフィルターは404です。
+
+PATCH メモの例：
+
+```json
+{"expected_revision": 1, "body": "## 確認事項\n\n根拠を照合する。", "label": "hypothesis"}
+```
+
+`expected_revision` は正の JSON 整数で、変更項目が最低1つ必要です。保存は版番号を増やし、古い版による変更は409で原子的に拒否します。案件・メモの削除相当操作は `archived:true` です。アーカイブ済み案件は `{"archived":false}` だけで再開し、通常編集・関連変更・配下メモ編集は再開まで409です。メモ再開は `{"expected_revision":3,"archived":false}`。案件・メモの hard DELETE は提供しません。

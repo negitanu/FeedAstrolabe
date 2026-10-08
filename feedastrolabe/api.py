@@ -104,8 +104,26 @@ def create_feed():
 
 
 @api.get('/articles')
-def list_articles():
+def list_articles(workspace_id=None):
     clauses, params = [], []
+    from .research import find, ResearchMissing, WORKSPACE_ARTICLES
+    if 'workspace' in request.args:
+        requested = integer_arg('workspace', None)
+        if workspace_id is not None and requested != workspace_id:
+            abort(400, description='Conflicting workspace filters')
+        workspace_id = requested
+    try:
+        if workspace_id is not None:
+            find('workspace', workspace_id)
+            clauses.append(WORKSPACE_ARTICLES)
+            params.extend([workspace_id,workspace_id])
+        if 'tag' in request.args:
+            tag_id = integer_arg('tag',None)
+            find('tag',tag_id)
+            clauses.append('EXISTS(SELECT 1 FROM article_tags t WHERE t.article_id=a.id AND t.tag_id=?)')
+            params.append(tag_id)
+    except ResearchMissing as exc:
+        abort(404,description=str(exc))
     if 'source_type' in request.args:
         if request.args['source_type'] not in ('rss', 'x', 'mastodon', 'page'):
             abort(400, description='Unsupported source_type')

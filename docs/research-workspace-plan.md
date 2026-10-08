@@ -1,6 +1,6 @@
 # 情報収集・調査ワークスペース実装計画
 
-作成日：2026-10-08。対象はセキュリティ、OSINT、ネットワーク、生成 AI の情報収集・検証・整理です。これは **実装前の計画** です。第六〜第十四段階の機能はまだ提供していません。
+作成日：2026-10-08。対象はセキュリティ、OSINT、ネットワーク、生成 AI の情報収集・検証・整理です。第六段階の調査案件・版付きメモ・タグは実装済みです。第七〜第十四段階は **実装前の計画** です。
 
 ## 現在の基盤と方針
 
@@ -21,7 +21,7 @@ Change：[phase-six-research-workspaces](../openspec/changes/phase-six-research-
 
 受入条件：案件をアーカイブしても記事・既読・スターが消えない。メモの同時編集は409で保護。UIのCSRF、API権限、Markdownの安全な表示を確認する。
 
-依存：実装済みの第一〜第五段階。**次に着手する change はこれです。**
+依存：実装済みの第一〜第五段階。実装済み。操作は [research.md](research.md)、受入結果は [検証記録](verification-phase-six.md) を参照。
 
 ## 第七段階：根拠保存・出典管理
 
@@ -144,7 +144,7 @@ Change：[phase-fourteen-reports-operations](../openspec/changes/phase-fourteen-
 
 基本順序は第六→第七→第八→第九→第十です。その後のネットワーク連携とAI研究追跡は共通連携基盤の上に個別に進められます。AI補助はAI研究追跡と根拠基盤の後、レポート・運用は分野別連携の後に進めます。
 
-各 change の `tasks.md` には前提確認、実装、受入テスト、UI/API/コンテナ確認、文書・秘密情報検査・Git管理、仕様同期・archiveを記載しました。**全タスクは未完了のまま**です。OpenSpecのartifactが揃っていることと、機能が実装済みであることは区別します。後続changeは依存する実装が完了するまで着手しません。
+各 change の `tasks.md` には前提確認、実装、受入テスト、UI/API/コンテナ確認、文書・秘密情報検査・Git管理、仕様同期・archiveを記載しました。**第六は実装・検証済み、第七〜第十四のタスクは未完了**です。OpenSpecのartifactが揃っていることと、機能が実装済みであることは区別します。後続changeは依存する実装が完了するまで着手しません。
 
 1. 実装前：依存するchangeと現在のコード・schemaを確認し、必要なら仕様を更新して厳格検証。
 2. 実装：タスクごとに実装し、意味のある受入テストが通った項目のみ完了にする。
@@ -156,12 +156,12 @@ Change：[phase-fourteen-reports-operations](../openspec/changes/phase-fourteen-
 開始時に選択する change：
 
 ```sh
-openspec status --change phase-six-research-workspaces --json
-openspec instructions apply --change phase-six-research-workspaces --json
+openspec status --change phase-seven-evidence-provenance --json
+openspec instructions apply --change phase-seven-evidence-provenance --json
 openspec validate --all --strict --no-interactive
 ```
 
-この計画の納品ではランタイムの実装・DB移行・外部送信を行いません。日程・工数は、初期MVPの実装実績と外部サービス条件を確認してから見積もります。
+第六段階ではスキーマ v5 のランタイム実装・DB移行を完了しました。後続段階や外部送信は未実装です。日程・工数は、初期MVPの実装実績と外部サービス条件を確認してから見積もります。
 
 ## 連携仕様の一次資料
 

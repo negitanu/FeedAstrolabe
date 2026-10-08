@@ -21,4 +21,4 @@ None. Additive capabilities preserve existing RSS/SNS/page and API contracts.
 
 ## Impact
 
-Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Planned only: no runtime behavior changes in this planning delivery. Dependencies: existing phases one to five.
+Transactional SQLite schema v5, Flask Japanese UI, scoped research APIs, Markdown3.11 dependency and backup/restore/API documentation. Existing collection workers and renderer isolation are preserved. Dependencies: verified phases one to five.

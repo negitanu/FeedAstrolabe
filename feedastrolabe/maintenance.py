@@ -31,7 +31,7 @@ def restore(source, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     src = connect(str(source))
     try:
-        if src.execute('PRAGMA quick_check').fetchone()[0] != 'ok' or src.execute('PRAGMA user_version').fetchone()[0] not in (1, 2, 3, 4):
+        if src.execute('PRAGMA quick_check').fetchone()[0] != 'ok' or src.execute('PRAGMA user_version').fetchone()[0] not in (1, 2, 3, 4, 5):
             raise ValueError('Invalid backup schema')
         with (destination.parent / 'init.lock').open('a') as init_lock, (destination.parent / 'refresh.lock').open('a') as refresh, (destination.parent / 'observer.lock').open('a') as observer:
             fcntl.flock(init_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

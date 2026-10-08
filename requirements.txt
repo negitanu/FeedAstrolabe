@@ -5,3 +5,4 @@ waitress==3.0.2
 PyJWT[crypto]==2.15.1
 cryptography==50.0.2
 defusedxml==0.7.1
+Markdown==3.11

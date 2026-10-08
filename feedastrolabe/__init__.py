@@ -15,6 +15,8 @@ from .subscriptions import update_subscription, delete_subscription, Subscriptio
 from .access import configure_access, verify_access
 from .api import api
 from .settings import settings
+from .research_api import research_api
+from .research_ui import research_ui
 from werkzeug.exceptions import HTTPException, SecurityError
 
 
@@ -44,6 +46,8 @@ def create_app(test_config=None):
     app.before_request(verify_access)
     app.register_blueprint(api)
     app.register_blueprint(settings)
+    app.register_blueprint(research_api)
+    app.register_blueprint(research_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -84,7 +88,28 @@ def create_app(test_config=None):
             clauses.append("(a.title LIKE ? ESCAPE '!' OR a.search_text LIKE ? ESCAPE '!')")
             escaped = query.replace('!', '!!').replace('%', '!%').replace('_', '!_')
             params.extend(['%' + escaped + '%'] * 2)
-        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, q=query)
+        from .research import find, ResearchMissing, WORKSPACE_ARTICLES
+        scopes = {}
+        for name, kind in [('workspace','workspace'),('tag','tag')]:
+            value = source.get(name, '')
+            scopes[name] = None
+            if value:
+                try:
+                    if not value.isdecimal() or len(value)>19:
+                        raise ValueError('ID は正の整数で指定してください。')
+                    scopes[name] = int(value)
+                    find(kind, scopes[name])
+                except ResearchMissing as exc:
+                    abort(404,description=str(exc))
+                except ValueError as exc:
+                    abort(400,description=str(exc))
+        if scopes['workspace']:
+            clauses.append(WORKSPACE_ARTICLES)
+            params.extend([scopes['workspace']]*2)
+        if scopes['tag']:
+            clauses.append('EXISTS(SELECT 1 FROM article_tags t WHERE t.article_id=a.id AND t.tag_id=?)')
+            params.append(scopes['tag'])
+        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, q=query, **scopes)
 
     def return_to():
         target = request.form.get('next', '/')
@@ -95,6 +120,7 @@ def create_app(test_config=None):
 
     @app.get('/')
     def index():
+        from .research import tag_rows, options
         db = get_db()
         where, params, selected = filters()
         total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
@@ -112,7 +138,10 @@ def create_app(test_config=None):
         title = selected_feed['title'] if selected_feed else {'all': 'すべての記事', 'unread': '未読の記事', 'starred': 'スター付き'}[selected['view']]
         return render_template('index.html', articles=articles, feeds=feeds, counts=counts, article=article,
                                selected=selected, selected_feed=selected_feed, title=title, total=total, page=page, pages=pages,
-                               safe_content=sanitize(article['content']) if article else '', next_path=request.full_path.rstrip('?'))
+                               safe_content=sanitize(article['content']) if article else '', next_path=request.full_path.rstrip('?'),
+                               research_workspaces=options('workspace',selected['workspace']),
+                               research_tags=options('tag',selected['tag']),
+                               article_tags=tag_rows('article',article_id) if article else [])
 
     @app.post('/feeds')
     def subscribe():

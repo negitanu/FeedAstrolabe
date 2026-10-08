@@ -1,6 +1,6 @@
 # FeedAstrolabe
 
-個人利用向けの RSS/Atom リーダー。RSS、SNS、API・設定と Playwright のページ観測を Flask / SQLite で実装しています。Cloudflare の実公開は接続先の設定後に行います。
+個人利用向けの RSS/Atom リーダー。RSS、SNS、API・設定、Playwright のページ観測と調査ワークスペースを Flask / SQLite で実装しています。Cloudflare の実公開は接続先の設定後に行います。
 
 ## 起動
 
@@ -93,4 +93,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 
 ## 調査ワークスペースへの拡張計画
 
-セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。計画段階であり、これらの機能は未実装です。
+セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。第六段階の調査案件・版付きメモ・共有タグは実装済みです。第七〜第十四段階は計画段階です。
+
+
+`/workspaces` から調査案件を作成し、既存フィード・記事を複数の案件へ関連付けられます。Markdown メモは事実／情報源の主張／仮説と版履歴を持ち、同時編集は409で保護します。共有タグ、案件／記事タグによる検索、アーカイブ／再開、公開区分を UI・API から利用できます。[操作と制限](docs/research.md)、[第六段階の検証](docs/verification-phase-six.md) を参照してください。

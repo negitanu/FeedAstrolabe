@@ -1,14 +1,14 @@
 schema: spec-driven
 context: |
-  FeedAstrolabe is a single-user shared-library RSS/SNS/page reader and planned research workspace.
+  FeedAstrolabe is a single-user shared-library RSS/SNS/page reader and research workspace (schema v5).
   Python 3.11+, Flask, SQLite,
   server-rendered Japanese responsive UI. Source and specs are tracked in Git.
   Ordered phases: 1 RSS/UI; 2 containers and Cloudflare Zero Trust;
-  3 SNS feeds including X; 4 Playwright fixed-page monitoring; 5 subscription management.
-  Planned phases 6-14: workspaces/notes, immutable evidence, watchlists, entities,
+  3 SNS feeds including X; 4 Playwright fixed-page monitoring; 5 subscription management; 6 research workspaces, versioned notes and shared tags.
+  Planned phases 7-14: immutable evidence, watchlists, entities,
   security/network/AI research connectors, grounded AI assistance and reports/operations.
   See docs/research-workspace-plan.md for dependencies; start implementation with
-  phase-six-research-workspaces. Cloudflare and live X setup remain explicitly deferred.
+  phase-seven-evidence-provenance. Cloudflare and live X setup remain explicitly deferred.
   Planned changes are not implemented features. Workspace classification is not per-user isolation.
   Propose and validate requirements, design and tasks before implementation.
   Native UI defaults to localhost. API always requires scoped Bearer keys.

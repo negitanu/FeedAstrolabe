@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -16,6 +16,643 @@
         "type": "http",
         "scheme": "bearer",
         "description": "Scoped expiring API key issued in /settings"
+      }
+    },
+    "schemas": {
+      "WorkspaceCreate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "purpose": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "questions": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "completed"
+            ],
+            "default": "active"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "public",
+              "internal",
+              "restricted"
+            ],
+            "default": "internal"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "WorkspacePatch": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "purpose": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "questions": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "completed"
+            ],
+            "default": "active"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "public",
+              "internal",
+              "restricted"
+            ],
+            "default": "internal"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "NoteCreate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 100000
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ],
+            "default": "hypothesis"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "NotePatch": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 100000
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ],
+            "default": "hypothesis"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false,
+        "minProperties": 2
+      },
+      "TagInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "purpose": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "questions": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "completed"
+            ],
+            "default": "active"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "public",
+              "internal",
+              "restricted"
+            ],
+            "default": "internal"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "created_at": {
+            "type": "string",
+            "description": "UTC YYYY-MM-DD HH:MM:SS"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "UTC YYYY-MM-DD HH:MM:SS"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          }
+        }
+      },
+      "Note": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 100000
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ],
+            "default": "hypothesis"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "created_at": {
+            "type": "string",
+            "description": "UTC YYYY-MM-DD HH:MM:SS"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "UTC YYYY-MM-DD HH:MM:SS"
+          },
+          "workspace_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          }
+        }
+      },
+      "NoteRevision": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 100000
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ],
+            "default": "hypothesis"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          },
+          "note_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "created_at": {
+            "type": "string",
+            "description": "UTC YYYY-MM-DD HH:MM:SS"
+          }
+        }
+      },
+      "WorkspacePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Workspace"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "NotePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Note"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "NoteRevisionPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteRevision"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "TagPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "FeedPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "ArticlePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "WorkspaceResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Workspace"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "NoteResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Note"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "TagResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Tag"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    },
+    "parameters": {
+      "limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 30
+        },
+        "description": "Use only one of before_id/after_id; records ordered by ID (revision numbers for history). Existing tag/workspace IDs required."
+      },
+      "before_id": {
+        "name": "before_id",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "description": "Use only one of before_id/after_id; records ordered by ID (revision numbers for history). Existing tag/workspace IDs required."
+      },
+      "after_id": {
+        "name": "after_id",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "description": "Use only one of before_id/after_id; records ordered by ID (revision numbers for history). Existing tag/workspace IDs required."
+      },
+      "tag": {
+        "name": "tag",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "description": "Use only one of before_id/after_id; records ordered by ID (revision numbers for history). Existing tag/workspace IDs required."
+      },
+      "workspace": {
+        "name": "workspace",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "description": "Use only one of before_id/after_id; records ordered by ID (revision numbers for history). Existing tag/workspace IDs required."
+      },
+      "archived": {
+        "name": "archived",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ],
+          "default": "false"
+        }
       }
     }
   },
@@ -458,6 +1095,12 @@
                 "page"
               ]
             }
+          },
+          {
+            "$ref": "#/components/parameters/workspace"
+          },
+          {
+            "$ref": "#/components/parameters/tag"
           }
         ]
       }
@@ -643,6 +1286,1426 @@
           },
           "429": {
             "description": "Key rate limit or provider cooldown"
+          }
+        }
+      }
+    },
+    "/workspaces": {
+      "get": {
+        "summary": "List research workspaces",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "$ref": "#/components/parameters/archived"
+          },
+          {
+            "$ref": "#/components/parameters/tag"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspacePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create workspace (write scope)",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}": {
+      "get": {
+        "summary": "Read workspace including archive",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit/archive/reopen workspace (write scope)",
+        "description": "Archived workspaces accept only {archived:false}. Archive keeps sources/articles/notes; classification is organizational metadata, not per-user authorization.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspacePatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/feeds": {
+      "get": {
+        "summary": "List associated sources",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/articles": {
+      "get": {
+        "summary": "List distinct direct and feed-associated articles",
+        "description": "Also accepts the same q, feed, source_type and state filters as /articles. Related feeds include current/future articles. Direct unlink may leave feed membership intact.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "$ref": "#/components/parameters/tag"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticlePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/notes": {
+      "get": {
+        "summary": "List workspace notes",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "$ref": "#/components/parameters/archived"
+          },
+          {
+            "$ref": "#/components/parameters/tag"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create note at revision 1 (write scope)",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes/{note_id}": {
+      "get": {
+        "summary": "Read current note including archive",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit/archive/reopen note atomically (write scope)",
+        "description": "expected_revision must match; stale writes return409. Each successful update adds immutable history. Archived notes accept only expected_revision and archived:false; archived workspace rejects every note mutation.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotePatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes/{note_id}/revisions": {
+      "get": {
+        "summary": "Read immutable full revisions",
+        "description": "before_id/after_id refer to revision numbers; histories are read-only.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteRevisionPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/tags": {
+      "get": {
+        "summary": "List shared tags",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create shared tag (write scope)",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tags/{tag_id}": {
+      "get": {
+        "summary": "Read shared tag",
+        "description": "",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Rename shared tag globally (write scope)",
+        "description": "SQLite NOCASE uniqueness (ASCII case insensitive); associations remain unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/feeds/{feed_id}": {
+      "post": {
+        "summary": "Associate existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unlink existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/articles/{article_id}": {
+      "post": {
+        "summary": "Associate existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unlink existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/tags/{tag_id}": {
+      "post": {
+        "summary": "Associate existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unlink existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/articles/{article_id}/tags/{tag_id}": {
+      "post": {
+        "summary": "Associate existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unlink existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/notes/{note_id}/tags/{tag_id}": {
+      "post": {
+        "summary": "Associate existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unlink existing records (write scope)",
+        "description": "Empty request body. Idempotent; IDs must exist. Workspace/note links reject archived parent; source ownership is unchanged.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid fields, bounds or cursor combination"
+          },
+          "401": {
+            "description": "Bearer key missing/invalid"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Record/filter ID missing"
+          },
+          "409": {
+            "description": "Archived parent, stale revision or duplicate tag"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
           }
         }
       }

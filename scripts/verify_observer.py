@@ -86,7 +86,7 @@ def main():
                 db=get_db()
                 row=db.execute("SELECT a.is_read,a.is_starred FROM articles a JOIN feeds f ON a.feed_id=f.id WHERE f.target='https://example.com/observer-fixture' AND a.guid='page:1'").fetchone()
                 assert tuple(row)==(1,1)
-                assert db.execute('PRAGMA user_version').fetchone()[0]==4
+                assert db.execute('PRAGMA user_version').fetchone()[0]==5
                 print('PASS: renderer/worker recreation preserves baseline and event state')
         ''')
     finally:

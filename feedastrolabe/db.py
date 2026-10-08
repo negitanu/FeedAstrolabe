@@ -38,7 +38,7 @@ def init_database(path):
         db.execute('PRAGMA foreign_keys=OFF')
         db.execute('BEGIN IMMEDIATE')
         version = db.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, 1, 2, 3, 4):
+        if version not in (0, 1, 2, 3, 4, 5):
             raise RuntimeError(f'Unsupported database version: {version}')
         if version == 0:
             for statement in SCHEMA.split(';'):
@@ -83,6 +83,65 @@ def init_database(path):
             db.execute('ALTER TABLE feeds ADD COLUMN retention_days INTEGER NOT NULL DEFAULT 90 CHECK(retention_days BETWEEN 1 AND 365)')
             db.execute('CREATE TABLE page_jobs (feed_id INTEGER PRIMARY KEY REFERENCES feeds(id) ON DELETE CASCADE,requested_at TEXT NOT NULL)')
             db.execute('PRAGMA user_version=4')
+        if version < 5:
+            statements = """
+            CREATE TABLE workspaces (
+              id INTEGER PRIMARY KEY, title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 120),
+              purpose TEXT NOT NULL DEFAULT '' CHECK(length(purpose)<=10000),
+              questions TEXT NOT NULL DEFAULT '' CHECK(length(questions)<=10000),
+              status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','paused','completed')),
+              classification TEXT NOT NULL DEFAULT 'internal' CHECK(classification IN ('public','internal','restricted')),
+              archived INTEGER NOT NULL DEFAULT 0 CHECK(archived IN (0,1)),
+              created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
+            CREATE TABLE workspace_feeds (
+              workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+              feed_id INTEGER NOT NULL REFERENCES feeds(id) ON DELETE CASCADE,
+              PRIMARY KEY(workspace_id,feed_id)
+            );
+            CREATE TABLE workspace_articles (
+              workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+              article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+              PRIMARY KEY(workspace_id,article_id)
+            );
+            CREATE TABLE notes (
+              id INTEGER PRIMARY KEY, workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+              title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 120),
+              body TEXT NOT NULL DEFAULT '' CHECK(length(body)<=100000),
+              label TEXT NOT NULL DEFAULT 'hypothesis' CHECK(label IN ('fact','source-claim','hypothesis')),
+              archived INTEGER NOT NULL DEFAULT 0 CHECK(archived IN (0,1)),
+              revision INTEGER NOT NULL CHECK(revision>=1), created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
+            CREATE TABLE note_revisions (
+              note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+              revision INTEGER NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, label TEXT NOT NULL,
+              archived INTEGER NOT NULL CHECK(archived IN (0,1)), created_at TEXT NOT NULL,
+              PRIMARY KEY(note_id,revision)
+            );
+            CREATE TABLE tags (id INTEGER PRIMARY KEY,name TEXT NOT NULL COLLATE NOCASE UNIQUE CHECK(length(name) BETWEEN 1 AND 80));
+            CREATE TABLE workspace_tags (
+              workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+              tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,PRIMARY KEY(workspace_id,tag_id)
+            );
+            CREATE TABLE article_tags (
+              article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+              tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,PRIMARY KEY(article_id,tag_id)
+            );
+            CREATE TABLE note_tags (
+              note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+              tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,PRIMARY KEY(note_id,tag_id)
+            );
+            CREATE INDEX notes_workspace ON notes(workspace_id,archived,id);
+            CREATE INDEX workspace_feeds_reverse ON workspace_feeds(feed_id,workspace_id);
+            CREATE INDEX workspace_articles_reverse ON workspace_articles(article_id,workspace_id);
+            CREATE INDEX workspace_tags_reverse ON workspace_tags(tag_id,workspace_id);
+            CREATE INDEX article_tags_reverse ON article_tags(tag_id,article_id);
+            CREATE INDEX note_tags_reverse ON note_tags(tag_id,note_id);
+            """
+            for statement in statements.split(';'):
+                if statement.strip():
+                    db.execute(statement)
+            db.execute('PRAGMA user_version=5')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()

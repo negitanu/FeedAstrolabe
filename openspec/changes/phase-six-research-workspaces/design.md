@@ -2,7 +2,7 @@
 
 Articles and subscriptions are stored in one library, but research goals, questions and conclusions cannot be organized alongside them.
 
-Implementation prerequisite: implemented phases one to five (schema v4). This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: implemented phases one to five (schema v4). Prerequisites verified: deployed schema v4; phases one to five are implemented. This change upgrades to schema v5.
 
 ## Goals / Non-Goals
 
@@ -52,3 +52,17 @@ Connector/model endpoint quotas, licenses, model runtime choice and required cre
 - GET/POST /api/v1/workspaces/{id}/notes and GET/PATCH /api/v1/notes/{id}; PATCH requires expected_revision, label and Markdown body with atomic validation. Note revision history is immutable and authenticated.
 - Tags use a bounded name (1-80 characters), explicit rename and workspace/article/note association. Paginated list filters use validated workspace/tag IDs and the existing cursor convention.
 - Scope baseline: API reads require read or write keys; all mutations require write keys. UI POST requires CSRF. No mass deletion in this phase; archives are reversible.
+
+## Implementation contract refinement
+
+- Schema v5 adds only tables/indexes; old source/article IDs, flags and renderer isolation remain intact. Restore accepts v1-v5 and upgrades old backups.
+- A workspace article view is the distinct union of direct article links and current/future articles from associated feeds. Removing a direct link does not hide an article still included through a feed. Archive retains these live associations; immutable evidence capture is phase seven.
+- Archive allows only a PATCH containing `archived:false` to reopen. All workspace associations, note edits and note archive changes reject archived parents with409. Global article read/star and global tag rename remain shared-library operations.
+- Notes have title (1-120), body (0-100000), label (`fact`, `source-claim`, `hypothesis`, default hypothesis), archived boolean and revision starting at1. PATCH requires positive integer expected_revision plus at least one changed field; archival is the reversible delete operation. Each successful mutation records a full immutable revision, including archive state. No hard DELETE for workspaces/notes.
+- Purpose/questions bounds are10000 characters each; title/tag strings trim and reject control characters; Markdown preserves newlines. Status active/paused/completed; classification public/internal/restricted default internal. No external sending is implemented.
+- Association routes POST/DELETE `/workspaces/{id}/feeds/{feed_id}`, `/workspaces/{id}/articles/{article_id}`, and `/workspaces/{id}/tags/{tag_id}`; `/articles/{id}/tags/{tag_id}` and `/notes/{id}/tags/{tag_id}` for shared tags. Links are idempotent and changes atomic. GET workspace feeds/articles are paginated.
+- GET/POST `/tags`, GET/PATCH `/tags/{id}` (name only); names use SQLite NOCASE uniqueness (ASCII case insensitive; other Unicode exact matching). GET workspace notes and GET note revisions use the same limit/before_id/after_id convention as articles (revision history cursors use revision numbers). GET `/articles?workspace={id}&tag={id}` uses EXISTS without duplicate rows. Workspace/tag IDs must exist.
+- List workspaces/notes hide archived records by default, with archived=true/false query parameters; detail remains readable. UI pages bound size to30 and validate page identifiers. Note editor on conflict returns409 and preserves the submitted text for recovery.
+- Markdown3.11 is pinned (https://pypi.org/project/Markdown/); escape user HTML before conversion then Bleach allowlists structural tags and http/https links. Images are omitted; no script or remote image rendering.
+
+- Tag associations are bounded to100 per workspace/article/note; duplicate link retries remain successful at the bound. UI filters retain a selected older ID within the100 options.
