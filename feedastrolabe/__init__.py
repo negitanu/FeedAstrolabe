@@ -21,6 +21,8 @@ from .evidence_api import api as evidence_api
 from .evidence_ui import ui as evidence_ui
 from .triage_api import api as triage_api
 from .triage_ui import ui as triage_ui
+from .security_api import api as security_api
+from .security_ui import ui as security_ui
 from .entities_api import api as entities_api
 from .entities_ui import ui as entities_ui
 from werkzeug.exceptions import HTTPException, SecurityError
@@ -60,6 +62,8 @@ def create_app(test_config=None):
     app.register_blueprint(triage_ui)
     app.register_blueprint(entities_api)
     app.register_blueprint(entities_ui)
+    app.register_blueprint(security_api)
+    app.register_blueprint(security_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -250,6 +254,12 @@ def create_app(test_config=None):
         except ValueError as exc:
             raise click.ClickException(str(exc)) from exc
 
+    @app.cli.command('connector-jobs')
+    def connector_jobs_once():
+        from .connectors import process
+        from .security_intelligence import schedule
+        schedule();click.echo(process());schedule()
+
     @app.cli.command('extract-entities')
     def extract_entities_once():
         """Extract one bounded fixed-evidence batch; no network access."""
@@ -270,6 +280,9 @@ def create_app(test_config=None):
         while True:
             try:
                 result = refresh_feeds(due_only=True, interval_override=interval)
+                from .security_intelligence import schedule
+                from .connectors import process as connector_process
+                schedule();connector_process();schedule()
                 from .triage import process
                 process()
                 from .entities import extract

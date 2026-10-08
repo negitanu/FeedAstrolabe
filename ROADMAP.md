@@ -32,7 +32,7 @@
 
 変更 `phase-five-subscription-management` で API の購読設定変更・削除・全情報源の手動更新と、UI の RSS/ページ URL 修正を追加。記事・既読・スターを保持する編集、不正入力の原子的な拒否、収集中の排他、SNS 待機応答を検証する。Cloudflare の実接続と X の実資格情報検証は引き続き後段。
 
-## 第六〜第十四段階：情報収集・調査ワークスペース（第六〜第九段階実装済み）
+## 第六〜第十四段階：情報収集・調査ワークスペース（第六〜第十段階実装済み）
 
 [詳細計画](docs/research-workspace-plan.md) と各OpenSpec changeに、proposal/design/specs/tasksを用意しました。
 
@@ -40,10 +40,10 @@
 - 第七（実装済み）：根拠の不変保存・出典・引用・添付・復旧。`phase-seven-evidence-provenance`。
 - 第八（実装済み）：ウォッチリスト・保存検索・説明付き優先度・重複整理。`phase-eight-watchlists-triage`。
 - 第九（実装済み）：対象抽出・根拠付き関係・タイムライン。`phase-nine-entities-relations`。
-- 第十：KEV/EPSS等のセキュリティ情報と共通外部連携基盤。`phase-ten-security-intelligence`。
+- 第十（実装済み）：KEV/EPSS等のセキュリティ情報と共通外部連携基盤。`phase-ten-security-intelligence`。
 - 第十一：DNS/RDAP/CT/経路/RPKIの受動的観測。`phase-eleven-network-intelligence`。
 - 第十二：論文・モデル・リリース・評価条件の追跡。`phase-twelve-ai-research-tracking`。
 - 第十三：出典付き・外部送信制御付きAI調査補助。`phase-thirteen-grounded-assistant`。
 - 第十四：レポート・通知・バックアップ・監視・管理API。`phase-fourteen-reports-operations`。
 
-第六〜第八のMVPと第九の対象・関係管理を実装済みです。次の実装は第十のchangeを明示して進めます。Cloudflare/Xの未完了実接続を自動で先行させません。後続changeは依存する実装完了後に仕様を再確認します。第十〜第十四は未実装です。計画の作成・検証だけで実装タスクを完了扱いしません。
+第六〜第八のMVPと第九・第十の対象／関係・セキュリティ情報連携を実装済みです。次の実装は第十一のchangeを明示して進めます。Cloudflare/Xの未完了実接続を自動で先行させません。後続changeは依存する実装完了後に仕様を再確認します。第十一〜第十四は未実装です。計画の作成・検証だけで実装タスクを完了扱いしません。

@@ -20,3 +20,15 @@ The system SHALL enforce provider endpoint/input/rate/credential policies and re
 #### Scenario: Bounded connectors acceptance
 - **WHEN** a provider is rate-limited or returns a private redirect
 - **THEN** the job waits or fails safely without bypassing limits or leaking credentials
+
+#### Scenario: Independent signals and immutable provenance
+- **WHEN** KEV membership, EPSS probability and multiple CNA/ADP CVSS metrics are observed
+- **THEN** their dates, source versions and fixed evidence remain separate and are not combined into an unexplained confidence score
+
+#### Scenario: Explicit public identifier consent
+- **WHEN** an integration is disabled or an identifier has not been explicitly declared public
+- **THEN** no request is sent and private notes, products, versions and attachments remain local
+
+#### Scenario: Reviewed applicability revisions
+- **WHEN** a person confirms applicability with a quotation from the same workspace or attempts a stale or cross-workspace edit
+- **THEN** accepted assessments retain prior versions and invalid edits leave records unchanged

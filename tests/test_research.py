@@ -39,14 +39,14 @@ def test_v4_migration_and_research_backup(tmp_path):
     old_backup=tmp_path/'old.sqlite3';backup(path,old_backup)
     init_database(path);init_database(path)
     with connect(path) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==8
+        assert db.execute('PRAGMA user_version').fetchone()[0]==9
         assert tuple(db.execute('SELECT id,feed_id,is_read,is_starred FROM articles').fetchone())==(17,7,1,1)
         assert tuple(db.execute('SELECT snapshot,observation_seq,revision FROM feeds').fetchone())==('baseline',2,3)
         assert db.execute('SELECT count(*) FROM page_jobs').fetchone()[0]==1
         assert db.execute('SELECT count(*) FROM provider_cooldowns').fetchone()[0]==1
         assert not db.execute('PRAGMA foreign_key_check').fetchall()
     restored=tmp_path/'restored'/'feeds.sqlite3';restore(old_backup,restored)
-    assert connect(restored).execute('PRAGMA user_version').fetchone()[0]==8
+    assert connect(restored).execute('PRAGMA user_version').fetchone()[0]==9
     application=create_app({'TESTING':True,'DATA_DIR':str(tmp_path/'live')})
     with application.app_context():
         wid=r.create_workspace({'title':'Case','classification':'restricted'})

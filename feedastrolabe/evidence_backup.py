@@ -42,6 +42,9 @@ def references(db):
                 raise ValueError('言及の固定位置が不正です。')
         if db.execute('SELECT 1 FROM relation_versions v JOIN relations a ON a.id=v.relation_id JOIN quotations q ON q.id=v.quotation_id WHERE q.workspace_id!=a.workspace_id LIMIT 1').fetchone():
             raise ValueError('関係と引用の案件が一致しません。')
+    if db.execute('PRAGMA user_version').fetchone()[0]>=9:
+        if db.execute('SELECT 1 FROM security_reviews v JOIN security_watches w ON w.id=v.watch_id JOIN quotations q ON q.id=v.quotation_id WHERE w.workspace_id!=q.workspace_id LIMIT 1').fetchone() or db.execute('SELECT 1 FROM security_references v JOIN quotations q ON q.id=v.quotation_id WHERE v.workspace_id!=q.workspace_id LIMIT 1').fetchone():
+            raise ValueError('セキュリティ判断と引用の案件が一致しません。')
     return [{'hash':row['hash'],'size':row['size']} for row in db.execute('SELECT * FROM evidence_blobs ORDER BY hash')]
 
 
@@ -103,7 +106,7 @@ def restore_bundle(source,destination):
     destination.parent.mkdir(parents=True,exist_ok=True)
     destination.parent.chmod(0o700)
     with e.storage_lock(destination.parent),ExitStack() as locks:
-        for name in ['init.lock','refresh.lock','observer.lock']:
+        for name in ['init.lock','refresh.lock','observer.lock','connector.lock']:
             handle=locks.enter_context((destination.parent/name).open('a'))
             fcntl.flock(handle,fcntl.LOCK_EX|fcntl.LOCK_NB)
         # Copy validated bundle into private staging, then validate the copy against source races.

@@ -24,7 +24,7 @@ def main():
         if args.check_state:
             state=json.loads(marker.read_text())
             with app.app_context():
-                db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==8
+                db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==9
                 assert n.root(state['original_organization'])==state['merged_organization']
                 assert n.mention(state['mention_id'])['original_entity_id']==state['original_organization']
                 assert n.mention(state['mention_id'])['status']=='confirmed'
@@ -32,7 +32,7 @@ def main():
                 assert db.execute('SELECT count(*) FROM relations').fetchone()[0]==3
                 assert db.execute("SELECT count(*) FROM entity_audit WHERE kind='entity-unmerged'").fetchone()[0]==1
                 assert n.extract()['mentions_created']==0 and not db.execute('PRAGMA foreign_key_check').fetchall()
-            print('PASS: schema8 original mentions, merge/unmerge audit, quoted relation revisions and idempotent extraction retained after recreation');return
+            print('PASS: schema9 original mentions, merge/unmerge audit, quoted relation revisions and idempotent extraction retained after recreation');return
         old_fetch=collection.fetch
         text_a='ACME a.example observed 2001:db8::1 CVE-2026-123456 AS64512 https://github.com/Owner/Repo'
         text_b='b.example observed 2001:0DB8:0000:0000:0000:0000:0000:0001'
@@ -83,7 +83,7 @@ def main():
             assert request('GET',f'/entities/{org}/timeline?workspace={wid}')[0]==200
             with app.app_context():
                 bundle=Path(directory)/'bundle';backup_bundle(app.config['DATABASE'],bundle);restored=Path(directory)/'restored'/'feeds.sqlite3';restore_bundle(bundle,restored)
-                db=connect(restored);assert db.execute('SELECT count(*) FROM relations').fetchone()[0]==3;assert db.execute('PRAGMA user_version').fetchone()[0]==8;db.close()
+                db=connect(restored);assert db.execute('SELECT count(*) FROM relations').fetchone()[0]==3;assert db.execute('PRAGMA user_version').fetchone()[0]==9;db.close()
             state={'workspace_id':wid,'ip_id':ip,'original_organization':org,'merged_organization':other,'mention_id':mention,'relation_id':rid};marker.write_text(json.dumps(state))
             for path in ['/entities',f'/entities/{ip}?workspace={wid}',f'/entities/{other}?workspace={wid}',f'/entities/relations/{rid}',f'/entities/relations/new/{wid}']:
                 with urllib.request.urlopen(base+path) as response:assert response.status==200 and b'<script' not in response.read()

@@ -2,7 +2,7 @@
 
 Security news needs vulnerability-centric enrichment with clear separation of severity, observed exploitation and predictions.
 
-Implementation prerequisite: `phase-nine-entities-relations`. This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: `phase-nine-entities-relations`. Phase nine is archived, pushed and deployed at schema8 with a private pre-migration bundle. This change introduces schema9.
 
 ## Goals / Non-Goals
 
@@ -43,3 +43,11 @@ Before implementing, confirm prerequisite changes and deployed schema, assign th
 ## Open Questions
 
 Connector/model endpoint quotas, licenses, model runtime choice and required credential files are resolved in the listed research/configuration tasks before enabling that integration. Missing external configuration is reported as unverified, never converted to a successful acceptance check. Initial bounds are design defaults and can be revised with explicit specification updates.
+
+## Final adapter contracts (2026-10-08)
+
+CISA CC0 KEV uses the agency maintained cisagov/kev-data develop JSON mirror at a single fixed raw.githubusercontent.com path, explicitly attributed as a mirror. FIRST public API v1 uses one validated public CVE per request and no credentials; FIRST documents 1000 requests/minute, but our provider budget is 100/day with minimum60-second spacing. Public CVE Services GET /api/cve/{CVE} accepts CVE JSON5.x; containers retain provider attribution and version-specific CVSS/affected versions/references. CVE Terms of Use and copyright links accompany derived cards; FIRST/Empirical Security is attributed. No new library is needed.
+
+Generic jobs accept only registered provider/input contracts plus explicit public-identifier consent; arbitrary endpoints, request bodies, headers and credential values are rejected. Disabled by default, TTL24h (config1h..7d), dailybudget100 (1..1000), sequential batch3, retries3, safe error codes, bounded Retry-After up to7d, public-address validation/TLS DNS pinning, no redirects, identity encoding and5MiB responses. Cache total16MiB, pending100, historical jobs10000, watches100/workspace. Cache replacement occurs only after full adapter validation, preserving last-good data. API/UI expose cooldown, stale/unknown and request metadata without response error bodies. Providers here are public and load no credential files; future authenticated adapters must register a confined credential file contract rather than accepting user headers.
+
+Immutable selected-record observations keep dates, sourceversion, responsehash, evidence anchors, CNA/ADP severity attribution and remediation/reference claims; entire KEV stays only in bounded cache. Missing EPSS is unknown, never zero; old score remains stale on provider failure. Automatic watch matches are possible only for exact casefold product/vendor text; version strings never assert applicability. Confirmed manual applicability requires a same-workspace fixed quotation, expectedrevision and retained assessment history. Watches opt into public CVE requests only; product names/versions/notes/attachments are never transmitted. Refresh evidence is pinned to each active watching workspace so existing keyword watchlists can process it. Manual PoC references require reviewed=true and a fixed quotation; links are metadata only and never fetched/cloned/executed.

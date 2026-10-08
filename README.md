@@ -105,3 +105,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 ## 対象・根拠付き関係（第九段階）
 
 CVE／IP／ドメイン／ASN／ハッシュ／リポジトリの候補抽出、手動の組織・製品・モデル登録、出典付き元表記、確認・訂正、別名、取り消せる統合、引用付き関係の版履歴、案件内のグラフ／タイムラインを提供します。[操作と上限](docs/entities.md)、[検証記録](docs/verification-phase-nine.md)を参照してください。外部照会は次の第十段階です。
+
+## セキュリティ情報（第十段階）
+
+CISA KEV／FIRST EPSS／CVE Servicesの独立した日付・帰属・固定根拠、関心製品と人の引用付き適用性判断、確認済み参照リンクを提供します。公開CVEの明示許可と連携の有効化で取得し、失敗時は直前の成功データを保持します。[操作と取得上限](docs/security-intelligence.md)、[検証記録](docs/verification-phase-ten.md)を参照してください。

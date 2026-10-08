@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -2838,6 +2838,561 @@
             "$ref": "#/components/schemas/EntityGraph"
           }
         }
+      },
+      "ConnectorSettings": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          },
+          "daily_budget": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        },
+        "required": [
+          "provider",
+          "revision"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectorConfigure": {
+        "type": "object",
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          },
+          "daily_budget": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectorEnqueue": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "catalog for KEV; strict uppercase public CVE for EPSS/CVE"
+          },
+          "public_identifier": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "input",
+          "public_identifier"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectorJob": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "provider": {
+            "type": "string"
+          },
+          "input": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "success",
+              "failed"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "next_attempt": {
+            "type": "string"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "finished_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityWatchCreate": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "product": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "outbound_public": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "entity_id"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityWatchPatch": {
+        "type": "object",
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "product": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "outbound_public": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityReviewCreate": {
+        "type": "object",
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "possible",
+              "unknown"
+            ]
+          },
+          "quotation_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "author": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "expected_revision",
+          "status",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityReferenceCreate": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "poc",
+              "advisory",
+              "fix"
+            ]
+          },
+          "quotation_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "reviewed": {
+            "type": "boolean",
+            "const": true
+          },
+          "author": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "entity_id",
+          "url",
+          "kind",
+          "quotation_id",
+          "reviewed"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectorState": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed persisted record; full fields and state semantics in docs/security-intelligence.md"
+      },
+      "SecurityWatch": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed persisted record; full fields and state semantics in docs/security-intelligence.md"
+      },
+      "SecurityReview": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed persisted record; full fields and state semantics in docs/security-intelligence.md"
+      },
+      "SecurityReference": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed persisted record; full fields and state semantics in docs/security-intelligence.md"
+      },
+      "SecurityObservation": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed persisted record; full fields and state semantics in docs/security-intelligence.md"
+      },
+      "VulnerabilityCard": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed persisted record; full fields and state semantics in docs/security-intelligence.md"
+      },
+      "VulnerabilitySignals": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed persisted record; full fields and state semantics in docs/security-intelligence.md"
+      },
+      "ConnectorJobPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConnectorJob"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityWatchPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SecurityWatch"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityReviewPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SecurityReview"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityReferencePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SecurityReference"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityObservationPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SecurityObservation"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectorSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ConnectorSettings"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectorJobResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ConnectorJob"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "VulnerabilityCardResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/VulnerabilityCard"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "VulnerabilitySignalsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/VulnerabilitySignals"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "SecurityReferenceResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SecurityReference"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectorStateResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConnectorState"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
       }
     },
     "parameters": {
@@ -7875,6 +8430,880 @@
                 "schema": {
                   "$ref": "#/components/schemas/RelationRevisionPage"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connectors": {
+      "get": {
+        "summary": "Registered provider policies, budgets and cooldown",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorStateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      }
+    },
+    "/connectors/{provider}": {
+      "patch": {
+        "summary": "Configure opt-in public provider",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectorConfigure"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connector-jobs": {
+      "get": {
+        "summary": "Bounded connector job history",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorJobPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      }
+    },
+    "/connectors/{provider}/jobs": {
+      "post": {
+        "summary": "Queue registered public input; no arbitrary endpoint or headers",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorJobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectorEnqueue"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connector-jobs/{job_id}": {
+      "get": {
+        "summary": "Connector job state",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorJobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/security-watches": {
+      "get": {
+        "summary": "Watched products and CVE identifiers",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityWatchPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create local watch with explicit public CVE consent",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VulnerabilityCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityWatchCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security-watches/{watch_id}": {
+      "get": {
+        "summary": "Independent dated signals and qualified applicability",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VulnerabilityCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Change watch settings; prior review remains historical",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VulnerabilityCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityWatchPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security-watches/{watch_id}/reviews": {
+      "get": {
+        "summary": "Immutable applicability judgment history",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityReviewPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      },
+      "post": {
+        "summary": "Record review; confirmed requires same-case quotation",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VulnerabilityCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityReviewCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/security-observations": {
+      "get": {
+        "summary": "Fixed selected-record observations",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityObservationPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/vulnerability": {
+      "get": {
+        "summary": "Last-good KEV, EPSS and CVE with stale/unknown states",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VulnerabilitySignalsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/security-references": {
+      "get": {
+        "summary": "Manually reviewed references; no execution",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityReferencePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        }
+      },
+      "post": {
+        "summary": "Store quoted advisory/fix/PoC link metadata",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityReferenceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or limit"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace or integration disabled"
+          },
+          "429": {
+            "description": "Local API limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityReferenceCreate"
               }
             }
           }

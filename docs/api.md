@@ -214,3 +214,19 @@ PATCH メモの例：
 - `GET /api/v1/relations/{id}/revisions`：引用と判断を保持する不変版のcursor一覧。
 
 読み取りはread/write、変更はwriteキー、通常のレート制限に従います。古いexpected_revisionは409、原子的に拒否します。関係・統合の意味と上限は[対象の手順](entities.md)、定義はOpenAPI 0.9を参照してください。
+
+## セキュリティ情報・コネクター（第十段階）
+
+- `GET /api/v1/connectors`：登録済みkev/epss/cveの設定・送信先・帰属・UTC日budget・cooldown。
+- `PATCH /api/v1/connectors/{provider}`：`{"expected_revision":1,"enabled":true,"ttl_seconds":86400,"daily_budget":100}`。enabledはJSON真偽値、応答は0/1。初期停止。
+- `POST /api/v1/connectors/{provider}/jobs`：`{"input":"CVE-2021-44228","public_identifier":true}`。kevだけinput=catalog。202で共有ジョブを予約、HTTP内で外部取得しません。任意URL／認証値不可。
+- `GET /api/v1/connector-jobs`、`GET /api/v1/connector-jobs/{id}`：状態・試行・次の試行・安全なerrorコード。一覧はproviderと共通cursor。
+- `GET/POST /api/v1/workspaces/{id}/security-watches`：案件の監視一覧／登録。例 `{"entity_id":1,"product":"Log4j","version":"2.0","outbound_public":true}`。製品と版はローカルのみ。
+- `GET/PATCH /api/v1/security-watches/{id}`：独立したdated signals・適用性のカード／expected_revision付き設定編集。entity_id、product、version、outbound_public、enabledを変更可能。
+- `POST /api/v1/security-watches/{id}/reviews`：`{"expected_revision":1,"status":"confirmed","quotation_id":1,"reason":"固定資料を確認","author":"local-user"}`。statusはconfirmed/possible/unknown、confirmedには同じ案件の引用必須。
+- `GET /api/v1/security-watches/{id}/reviews`：判断の不変版cursor一覧。
+- `GET /api/v1/entities/{id}/vulnerability`：kev/epss/cveのcurrent/stale/unknown、原観測日時、最終確認、出典版、直前成功レコード、固定根拠。未提供EPSSはscore=null。
+- `GET /api/v1/entities/{id}/security-observations`：公開レコード投影の不変履歴cursor一覧。
+- `GET/POST /api/v1/workspaces/{id}/security-references`：引用と手動確認付きの参照一覧／作成。`{"entity_id":1,"url":"https://example.com/advisory","kind":"advisory","quotation_id":1,"reviewed":true}`。kindはadvisory/fix/poc。リンクを取得・実行しません。
+
+read/writeキーと既存APIレート制限、CSRF、親案件アーカイブ、409競合に従います。各項目の意味・帰属・上限・staleは[運用手順](security-intelligence.md)とOpenAPI0.10を参照してください。

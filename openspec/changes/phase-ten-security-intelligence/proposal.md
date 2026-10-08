@@ -21,4 +21,4 @@ None. Additive capabilities preserve existing RSS/SNS/page and API contracts.
 
 ## Impact
 
-Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Planned only: no runtime behavior changes in this planning delivery. Dependencies: `phase-nine-entities-relations`.
+Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Adds schema v9 after verified/deployed v8 entities and relations. All new providers default disabled; existing collection contracts remain unchanged.
