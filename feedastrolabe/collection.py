@@ -10,6 +10,7 @@ import feedparser
 from flask import current_app
 from .db import get_db
 from .fetch import fetch, safe_link
+from .preferences import preferences, is_due
 
 TAGS = {'p', 'br', 'a', 'strong', 'em', 'b', 'i', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'h2', 'h3', 'h4', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'}
 
@@ -82,12 +83,17 @@ def add_feed(url, folder):
         return cursor.lastrowid
 
 
-def refresh_feeds(feed_id=None):
+def refresh_feeds(feed_id=None, due_only=False, interval_override=None):
     db = get_db()
     succeeded = failed = 0
     with refresh_lock():
         feeds = db.execute('SELECT * FROM feeds' + (' WHERE id=?' if feed_id else ''), (feed_id,) if feed_id else ()).fetchall()
+        config = preferences()
         for feed in feeds:
+            if due_only and not is_due(feed, config, interval_override):
+                continue
+            if not due_only and not feed_id and not feed['enabled']:
+                continue
             try:
                 body, meta = fetch(feed['url'], feed['etag'], feed['modified'])
                 parsed = parse_feed(body) if body is not None else None
@@ -96,11 +102,11 @@ def refresh_feeds(feed_id=None):
                         ingest(db, feed['id'], parsed, meta['url'])
                         db.execute('UPDATE feeds SET title=?,etag=?,modified=? WHERE id=?',
                                    (bleach.clean(parsed.feed.get('title', feed['title']), tags=[], strip=True)[:1000], meta['etag'], meta['modified'], feed['id']))
-                    db.execute('UPDATE feeds SET checked_at=?,success_at=?,error=NULL WHERE id=?', (now(), now(), feed['id']))
+                    db.execute('UPDATE feeds SET checked_at=?,success_at=?,error=NULL,failures=0 WHERE id=?', (now(), now(), feed['id']))
                 succeeded += 1
             except Exception as exc:
                 current_app.logger.warning('Feed %s refresh failed: %s', feed['id'], exc)
                 with db:
-                    db.execute('UPDATE feeds SET checked_at=?,error=? WHERE id=?', (now(), str(exc)[:500], feed['id']))
+                    db.execute('UPDATE feeds SET checked_at=?,error=?,failures=failures+1 WHERE id=?', (now(), str(exc)[:500], feed['id']))
                 failed += 1
     return succeeded, failed

@@ -5,7 +5,8 @@ context: |
   Ordered phases: 1 RSS/UI; 2 containers and Cloudflare Zero Trust;
   3 SNS feeds including X; 4 Playwright fixed-page monitoring.
   Propose and validate requirements, design and tasks before implementation.
-  Phase 1 binds localhost and has no authentication. Do not expose it externally.
+  Native UI defaults to localhost. API always requires scoped Bearer keys.
+  External deployment uses Cloudflare mode, Access JWT verification and no origin ports.
 rules:
   specs:
     - Every requirement must include testable WHEN/THEN scenarios.

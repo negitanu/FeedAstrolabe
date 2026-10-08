@@ -6,7 +6,7 @@
 
 ## 第二段階：コンテナと Cloudflare Zero Trust
 
-次の独立した OpenSpec change で設計・実装する。対象は非 root のイメージ、Web/worker の Compose、永続ボリューム、healthcheck、Cloudflare Tunnel と Access、秘密情報の環境変数管理、復旧手順。
+変更 `phase-two-deployment-api-settings` でコンテナ・Access JWT 検証・API・設定・OPML を実装済み。ローカルコンテナで再作成・backup/restoreを検証。実Cloudflare接続はドメインと資格情報設定後の受入確認が残る。対象は非 root のイメージ、Web/worker の Compose、永続ボリューム、healthcheck、Cloudflare Tunnel と Access、秘密情報の環境変数管理、復旧手順。
 
 受入条件：コンテナ再作成後も記事状態が残る。許可ユーザーのみ Access を通って利用できる。origin の直接公開を防ぎ、Tunnel 停止時は外部アクセス不能。バックアップからの復元を確認する。Access の境界と origin 側の JWT 検証要否を設計し、TRUSTED_HOSTS と HTTPS cookie を設定する。
 

@@ -1,0 +1,357 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FeedAstrolabe API",
+    "version": "0.2.0",
+    "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Scoped expiring API key issued in /settings"
+      }
+    }
+  },
+  "paths": {
+    "/feeds": {
+      "get": {
+        "summary": "List subscriptions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JSON error response"
+          },
+          "403": {
+            "description": "JSON error response"
+          },
+          "429": {
+            "description": "JSON error response"
+          }
+        }
+      },
+      "post": {
+        "summary": "Subscribe to an RSS/Atom URL (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON error response"
+          },
+          "401": {
+            "description": "JSON error response"
+          },
+          "403": {
+            "description": "JSON error response"
+          },
+          "409": {
+            "description": "JSON error response"
+          },
+          "429": {
+            "description": "JSON error response"
+          },
+          "502": {
+            "description": "JSON error response"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "folder": {
+                    "type": "string",
+                    "maxLength": 80
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feeds/{feed_id}": {
+      "get": {
+        "summary": "Get subscription",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JSON error response"
+          },
+          "403": {
+            "description": "JSON error response"
+          },
+          "429": {
+            "description": "JSON error response"
+          }
+        },
+        "parameters": [
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/articles": {
+      "get": {
+        "summary": "List articles with cursor pagination",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JSON error response"
+          },
+          "403": {
+            "description": "JSON error response"
+          },
+          "429": {
+            "description": "JSON error response"
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 30
+            }
+          },
+          {
+            "name": "feed",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "is_read",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "is_starred",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "/articles/{article_id}": {
+      "get": {
+        "summary": "Get article",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JSON error response"
+          },
+          "403": {
+            "description": "JSON error response"
+          },
+          "429": {
+            "description": "JSON error response"
+          }
+        },
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "patch": {
+        "summary": "Update read/star state (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "JSON error response"
+          },
+          "403": {
+            "description": "JSON error response"
+          },
+          "429": {
+            "description": "JSON error response"
+          }
+        },
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "is_read": {
+                    "type": "boolean"
+                  },
+                  "is_starred": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

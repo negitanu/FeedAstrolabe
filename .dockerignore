@@ -1,0 +1,5 @@
+*
+!requirements-production-lock.txt
+!feedastrolabe/
+!feedastrolabe/**
+feedastrolabe/**/__pycache__/

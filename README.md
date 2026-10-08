@@ -1,6 +1,6 @@
 # FeedAstrolabe
 
-個人利用向けの RSS/Atom リーダー。第一段階の Web UI と収集機能を Flask / SQLite で実装しています。
+個人利用向けの RSS/Atom リーダー。第二段階のコンテナ、API・設定機能を Flask / SQLite で実装しています。Cloudflare の実公開は接続先の設定後に行います。
 
 ## 起動
 
@@ -17,7 +17,7 @@ http://127.0.0.1:5000 を開き、RSS / Atom の URL を登録してください
 別のターミナルで定期収集を起動します（既定 15 分、最小 60 秒）。
 
 ```sh
-.venv/bin/python -m flask --app feedastrolabe worker --interval 900
+.venv/bin/python -m flask --app feedastrolabe worker
 ```
 
 一回のみ更新する場合：
@@ -38,7 +38,7 @@ Web と worker は Ctrl-C で停止します。Web の起動だけでは定期�
 
 本文を開くだけでは既読になりません。「既読にする」で変更します。外部画像や埋め込みは表示しません。取得は標準 HTTP(S) ポート限定、最大 5 MiB、一度に最大 2,000 記事です。HTTP 応答には非圧縮の identity を要求します。手動更新は同期処理なので、通常は worker を使ってください。DNS 解決の所要時間は OS のリゾルバー設定に依存します。
 
-現段階は認証なしの localhost 専用です。起動コマンドは 127.0.0.1 に固定しています。外部アクセスは第二段階の受入条件を満たしてから行います。
+native の既定は認証なしの localhost UI です。API は常に Bearer キーを要求します。外部公開では Cloudflare Access mode を使用し、公開後の受入確認を行ってください。
 
 ## データとバックアップ
 
@@ -48,7 +48,7 @@ Web と worker は Ctrl-C で停止します。Web の起動だけでは定期�
 
 ## OpenSpec / SDD
 
-変更 `openspec/changes/phase-one-rss-reader/` に proposal、design、受入仕様、tasks があります。実装前に仕様を作成して厳格検証し、仕様に対応するテストで実装を検証します。初期化済みの Codex スキルは `.codex/skills/` にあります。
+変更 `openspec/changes/phase-one-rss-reader/` と `openspec/changes/phase-two-deployment-api-settings/` に proposal、design、受入仕様、tasks があります。実装前に仕様を作成して厳格検証し、仕様に対応するテストで実装を検証します。初期化済みの Codex スキルは `.codex/skills/` にあります。
 
 ```sh
 openspec validate --all --strict --no-interactive
@@ -56,6 +56,16 @@ openspec validate --all --strict --no-interactive
 ```
 
 実装確認後に仕様を同期・アーカイブします。新しい段階は別の change として作成してください。OpenSpec CLI は [公式手順](https://github.com/Fission-AI/OpenSpec) で導入できます（この環境は 1.3.1）。
+
+## API・設定とコンテナ
+
+`/settings` で全体/フィード別のポーリング間隔、pause、表示件数、初期ビュー、APIレート上限を変更できます。APIキーは読み取り/書き込み権限と1〜365日の期限を指定して発行・失効します。OPMLのインポート/エクスポートも利用できます。
+
+- [第二段階の検証記録](docs/verification-phase-two.md)：実施した検証と外部接続の未完了項目。
+- [API の利用方法](docs/api.md)：フィード・記事取得、cursor、購読追加、既読/スター更新。
+- [コンテナ・Cloudflare・復旧手順](docs/deployment.md)：localhost:5010でのCompose、Access検証、外部接続設定、backup/restore。
+
+通常のnative起動はlocalhost専用です。コンテナの外部公開はCloudflare用ComposeとAccess認証を組み合わせます。
 
 ## 次の段階
 

@@ -5,3 +5,7 @@ instance/
 *.pyc
 .env
 .DS_Store
+secrets/
+backups/
+.env.*
+!.env.example

@@ -10,6 +10,11 @@ from flask import Flask, abort, flash, redirect, render_template, request, sessi
 from .db import close_db, get_db, init_database
 from .collection import add_feed, refresh_feeds, sanitize
 from .fetch import normalize_url
+from .preferences import preferences
+from .access import configure_access, verify_access
+from .api import api
+from .settings import settings
+from werkzeug.exceptions import HTTPException, SecurityError
 
 
 def create_app(test_config=None):
@@ -18,6 +23,7 @@ def create_app(test_config=None):
         data_dir = Path(test_config['DATA_DIR']).resolve()
     app = Flask(__name__, instance_path=str(data_dir))
     data_dir.mkdir(parents=True, exist_ok=True)
+    data_dir.chmod(0o700)
     key_path = data_dir / 'secret.key'
     # Atomic initialization so Web and worker startup cannot produce different keys.
     import fcntl
@@ -28,15 +34,21 @@ def create_app(test_config=None):
             with os.fdopen(fd, 'w') as handle:
                 handle.write(secrets.token_hex(32))
         key = key_path.read_text().strip()
-    app.config.update(SECRET_KEY=key, DATABASE=str(data_dir / 'feeds.sqlite3'), MAX_CONTENT_LENGTH=65536,
+        init_database(str(data_dir / 'feeds.sqlite3'))
+    app.config.update(SECRET_KEY=key, DATABASE=str(data_dir / 'feeds.sqlite3'), MAX_CONTENT_LENGTH=1100000,
                       SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax', TRUSTED_HOSTS=['localhost', '127.0.0.1', '[::1]'])
     if test_config:
         app.config.update(test_config)
-    init_database(app.config['DATABASE'])
+    configure_access(app)
+    app.before_request(verify_access)
+    app.register_blueprint(api)
+    app.register_blueprint(settings)
     app.teardown_appcontext(close_db)
 
     @app.before_request
     def csrf_protect():
+        if request.path.startswith('/api/'):
+            return
         if 'csrf' not in session:
             session['csrf'] = secrets.token_hex(32)
         if request.method == 'POST' and not hmac.compare_digest(session['csrf'].encode(), request.form.get('csrf', '').encode()):
@@ -52,7 +64,7 @@ def create_app(test_config=None):
 
     def filters():
         source = request.values
-        view = source.get('view', 'all')
+        view = source.get('view', preferences()['default_view'])
         if view not in ('all', 'unread', 'starred'):
             view = 'all'
         feed_id = source.get('feed', type=int)
@@ -85,9 +97,10 @@ def create_app(test_config=None):
         db = get_db()
         where, params, selected = filters()
         total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
-        pages = max(1, (total + 29) // 30)
+        page_size = preferences()['page_size']
+        pages = max(1, (total + page_size - 1) // page_size)
         page = min(pages, max(1, request.args.get('page', 1, type=int)))
-        articles = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id' + where + ' ORDER BY a.published_at DESC,a.id DESC LIMIT 30 OFFSET ?', params + [(page - 1) * 30]).fetchall()
+        articles = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id' + where + ' ORDER BY a.published_at DESC,a.id DESC LIMIT ? OFFSET ?', params + [page_size, (page - 1) * page_size]).fetchall()
         feeds = db.execute('SELECT f.*,sum(CASE WHEN a.is_read=0 THEN 1 ELSE 0 END) AS unread FROM feeds f LEFT JOIN articles a ON a.feed_id=f.id GROUP BY f.id ORDER BY f.folder,f.title').fetchall()
         counts = db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles').fetchone()
         article_id = request.args.get('article', type=int)
@@ -166,10 +179,18 @@ def create_app(test_config=None):
         get_db().execute('SELECT 1').fetchone()
         return {'status': 'ok'}
 
-    @app.errorhandler(400)
-    @app.errorhandler(404)
-    @app.errorhandler(413)
+    @app.errorhandler(HTTPException)
     def error_page(error):
+        if isinstance(error, SecurityError):
+            return error.get_response()
+        if request.path.startswith('/api/'):
+            response = app.json.response({'error': {'code': error.code, 'message': error.description}})
+            response.status_code = error.code
+            if error.code == 401:
+                response.headers['WWW-Authenticate'] = 'Bearer'
+            if error.code == 429:
+                response.headers['Retry-After'] = str(60 - int(time.time()) % 60)
+            return response
         return render_template('error.html', error=error), error.code
 
     @app.cli.command('refresh')
@@ -181,17 +202,19 @@ def create_app(test_config=None):
             raise click.ClickException(str(exc)) from exc
 
     @app.cli.command('worker')
-    @click.option('--interval', default=900, type=click.IntRange(min=60), show_default=True)
+    @click.option('--interval', default=None, type=click.IntRange(min=60, max=86400), help='Override global interval; per-feed overrides still apply.')
     @click.option('--once', is_flag=True)
     def worker(interval, once):
         """Refresh periodically; stop with Ctrl-C."""
         while True:
             try:
-                click.echo('success={}, failed={}'.format(*refresh_feeds()))
+                result = refresh_feeds(due_only=True, interval_override=interval)
+                if once or any(result):
+                    click.echo('success={}, failed={}'.format(*result))
             except ValueError as exc:
                 click.echo(str(exc), err=True)
             if once:
                 break
-            time.sleep(interval)
+            time.sleep(10)
 
     return app

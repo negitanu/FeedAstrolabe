@@ -18,7 +18,8 @@
 {% else %}<p class="muted small">フィードを登録して、<br>あなたの情報源を集めましょう。</p>{% endfor %}
 </nav>
 <details class="subscribe" {% if not feeds %}open{% endif %}><summary>＋ フィードを追加</summary><form method="post" action="{{ url_for('subscribe') }}">{{ token() }}<label for="feed-url">RSS / Atom URL</label><input id="feed-url" name="url" type="url" placeholder="https://example.com/feed.xml" required maxlength="2048"><label for="folder">フォルダー</label><input id="folder" name="folder" placeholder="テクノロジー" maxlength="80"><button class="button">登録する</button></form></details>
-<div class="sidebar-footer"><span class="status-dot"></span> ローカルライブラリ<small>RSS & Atom · Phase 01</small></div>
+<a class="nav-item settings-link" href="{{ url_for('settings.index') }}">⚙ 設定・API キー</a>
+<div class="sidebar-footer"><span class="status-dot"></span> パーソナルライブラリ<small>RSS & Atom · Phase 02</small></div>
 </aside>
 <main class="workspace">
 <header class="topbar"><span class="breadcrumb">ライブラリ <span>/</span> {{ title }}</span><form method="post" action="{{ url_for('refresh') }}">{{ token() }}{% if selected.feed %}<input type="hidden" name="feed" value="{{ selected.feed }}">{% endif %}<button class="refresh-button">↻ フィードを更新</button></form></header>

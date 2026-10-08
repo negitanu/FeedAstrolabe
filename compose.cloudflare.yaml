@@ -1,0 +1,22 @@
+services:
+  web:
+    environment:
+      FEEDASTROLABE_ACCESS_MODE: cloudflare
+      CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN:?Set Cloudflare team HTTPS domain}
+      CF_ACCESS_AUD: ${CF_ACCESS_AUD:?Set Access application audience}
+      FEEDASTROLABE_PUBLIC_HOSTS: ${FEEDASTROLABE_PUBLIC_HOSTS:?Set public hostname}
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: [tunnel, --no-autoupdate, run, --token-file, /run/secrets/tunnel_token]
+    secrets: [tunnel_token]
+    networks: [reader]
+    depends_on:
+      web:
+        condition: service_healthy
+secrets:
+  tunnel_token:
+    file: ./secrets/tunnel-token.txt
