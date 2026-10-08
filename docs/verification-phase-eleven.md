@@ -11,3 +11,5 @@ OpenSpec `phase-eleven-network-intelligence`。schema9→10。DNS／IANA bootstr
 CTの実サービス取得は上記の通り未確認です。RDAPは5 RIRとVerisign com/netに限定、未知の登録局・referralを追跡しません。CT／RIS／RPKIの値を所有者認定・endpoint稼働・経路乗っ取りの結論に変えません。schema移行・Git検査・push・仕様同期は完了後記載します。Cloudflare実接続、X実資格情報、CIの権限拡張は延期を維持。
 
 実writer停止中に `/data/pre-phase-eleven/` に検証済みschema9 private bundle（DB600）を保存。4サービスをschema10へ再作成しhealthy。全旧購読ID／URL、記事ID／feed／GUID／既読／スターと全旧案件／根拠／整理／対象／関係／セキュリティの記録をEXCEPT比較し不一致0、FK正常。購読1・記事35・案件0、全9連携enabled=0。利用者DBへ検証fixtureや外部照会を追加しない。
+
+実装commit `dbf6d2f` をGitHub mainへpushしリモート一致。候補692件、履歴／全index Gitleaks検出なし。限定fingerprintのみ維持。正規仕様3要件・6シナリオを同期し `2026-10-08-phase-eleven-network-intelligence` へarchive、12/12タスク完了。

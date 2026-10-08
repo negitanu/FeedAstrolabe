@@ -80,7 +80,7 @@ Change：[phase-ten-security-intelligence](../openspec/changes/archive/2026-10-0
 
 ## 第十一段階：DNS・証明書・経路の観測
 
-Change：[phase-eleven-network-intelligence](../openspec/changes/phase-eleven-network-intelligence/proposal.md)
+Change：[phase-eleven-network-intelligence](../openspec/changes/archive/2026-10-08-phase-eleven-network-intelligence/proposal.md)
 
 - 公開DNS・RDAP、RIPEstatの経路／RPKI、CTの証明書メタデータを順に連携。
 - 時点付き観測、TTL・取得元・対象範囲、フィールドごとの差分。
