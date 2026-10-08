@@ -14,4 +14,4 @@ OpenSpec `phase-fourteen-reports-operations`、schema12→13。固定資料の�
 
 実writer停止中 `/data/pre-phase-fourteen/` にschema12 private bundleを保存・全hash検証、DB600を確認。schema13へ移行し旧60テーブルすべてを双方向EXCEPT比較、不一致0、FK正常。購読1・記事36・案件0（通常RSS収集による記事追加を保持）、public provider11件すべて無効、model profile0／notification profile0／report0、定期backup無効。4サービスを最終画像で再作成、正常起動。CUAで実5010の `/operations` にschema13、両workerの新しいheartbeat、無送信の初期設定を確認。実稼働processの共有runtime.lockに対する排他取得も非破壊で拒否を確認。
 
-OpenSpec strict17項目成功。Git除外・build allowlistを維持。秘密情報検査／push／archiveは結果を追記。
+OpenSpec strict17項目成功。Git除外・build allowlistを維持。source候補894件と履歴／全index Gitleaksの検査で漏洩0。source `a9f510d` をGitHub mainへpush、remote一致。正規reports-operationsへ4要件8シナリオを同期し、2026-10-08 archive、13/13タスク完了。

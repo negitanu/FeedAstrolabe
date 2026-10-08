@@ -120,7 +120,7 @@ Change：[phase-thirteen-grounded-assistant](../openspec/changes/archive/2026-10
 
 ## 第十四段階：レポート・通知・運用
 
-Change：[phase-fourteen-reports-operations](../openspec/changes/phase-fourteen-reports-operations/proposal.md)
+Change：[phase-fourteen-reports-operations](../openspec/changes/archive/2026-10-08-phase-fourteen-reports-operations/proposal.md)
 
 - 出典付きMarkdownレポート、根拠マニフェスト、JSON／CSV、検証したSTIX 2.1サブセット。
 - 任意のメール／Webhook送信、宛先・接続先・送信本文の確認、再試行と重複防止。
