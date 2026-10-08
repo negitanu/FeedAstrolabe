@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -51,7 +51,7 @@
         }
       },
       "post": {
-        "summary": "Subscribe to an RSS/Atom URL (write scope)",
+        "summary": "Subscribe to RSS/Atom or an SNS source (write scope)",
         "security": [
           {
             "BearerKey": []
@@ -92,20 +92,64 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "url"
-                ],
-                "properties": {
-                  "url": {
-                    "type": "string",
-                    "format": "uri"
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "url"
+                    ],
+                    "properties": {
+                      "source_type": {
+                        "const": "rss"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "folder": {
+                        "type": "string",
+                        "maxLength": 80
+                      }
+                    }
                   },
-                  "folder": {
-                    "type": "string",
-                    "maxLength": 80
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_type",
+                      "target"
+                    ],
+                    "properties": {
+                      "source_type": {
+                        "type": "string",
+                        "enum": [
+                          "x",
+                          "mastodon"
+                        ]
+                      },
+                      "source_kind": {
+                        "type": "string",
+                        "enum": [
+                          "account",
+                          "list"
+                        ],
+                        "default": "account"
+                      },
+                      "target": {
+                        "type": "string"
+                      },
+                      "instance_url": {
+                        "type": "string",
+                        "description": "Required HTTPS origin for Mastodon; empty for X"
+                      },
+                      "folder": {
+                        "type": "string",
+                        "maxLength": 80
+                      }
+                    }
                   }
-                }
+                ]
               }
             }
           }
@@ -245,6 +289,18 @@
               "enum": [
                 "true",
                 "false"
+              ]
+            }
+          },
+          {
+            "name": "source_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "rss",
+                "x",
+                "mastodon"
               ]
             }
           }

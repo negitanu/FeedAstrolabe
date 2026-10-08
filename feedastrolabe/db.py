@@ -37,7 +37,7 @@ def init_database(path):
         db.execute('PRAGMA journal_mode=WAL')
         db.execute('BEGIN IMMEDIATE')
         version = db.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, 1, 2):
+        if version not in (0, 1, 2, 3):
             raise RuntimeError(f'Unsupported database version: {version}')
         if version == 0:
             for statement in SCHEMA.split(';'):
@@ -60,6 +60,12 @@ def init_database(path):
               rate_window INTEGER NOT NULL DEFAULT 0, rate_count INTEGER NOT NULL DEFAULT 0
             )""")
             db.execute('PRAGMA user_version=2')
+        if version < 3:
+            db.execute("ALTER TABLE feeds ADD COLUMN source_type TEXT NOT NULL DEFAULT 'rss' CHECK(source_type IN ('rss','x','mastodon'))")
+            for name in ('source_kind', 'target', 'instance_url', 'provider_id', 'since_id', 'page_cursor', 'pending_newest', 'retry_at'):
+                db.execute(f'ALTER TABLE feeds ADD COLUMN {name} TEXT')
+            db.execute("CREATE TABLE provider_cooldowns (provider TEXT PRIMARY KEY, retry_at TEXT NOT NULL)")
+            db.execute('PRAGMA user_version=3')
         db.commit()
     except BaseException:
         db.rollback()

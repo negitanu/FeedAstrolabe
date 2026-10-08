@@ -9,3 +9,37 @@ secrets/
 backups/
 .env.*
 !.env.example
+
+# Runtime data and exports may contain reading history or API-key hashes.
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite*-wal
+*.sqlite*-shm
+*.db-wal
+*.db-shm
+*.opml
+*.log
+*.pid
+.coverage
+htmlcov/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+node_modules/
+# Credential files, including developer/OS credentials.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+credentials*.json
+*service-account*.json
+.aws/
+.ssh/
+.netrc
+.npmrc
+.envrc
+.env.*
+!.env.example

@@ -64,7 +64,7 @@ def export_opml():
     ET.SubElement(ET.SubElement(root, 'head'), 'title').text = 'FeedAstrolabe subscriptions'
     body = ET.SubElement(root, 'body')
     folders = {}
-    for feed in get_db().execute('SELECT * FROM feeds ORDER BY folder,title'):
+    for feed in get_db().execute("SELECT * FROM feeds WHERE source_type='rss' ORDER BY folder,title"):
         folder = feed['folder']
         parent = body
         if folder:

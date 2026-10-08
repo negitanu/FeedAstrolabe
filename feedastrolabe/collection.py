@@ -90,11 +90,20 @@ def refresh_feeds(feed_id=None, due_only=False, interval_override=None):
         feeds = db.execute('SELECT * FROM feeds' + (' WHERE id=?' if feed_id else ''), (feed_id,) if feed_id else ()).fetchall()
         config = preferences()
         for feed in feeds:
+            if feed['source_type'] != 'rss':
+                from .social import cooldown
+                if cooldown(feed):
+                    continue
             if due_only and not is_due(feed, config, interval_override):
                 continue
             if not due_only and not feed_id and not feed['enabled']:
                 continue
             try:
+                if feed['source_type'] != 'rss':
+                    from .social import refresh_social
+                    refresh_social(feed)
+                    succeeded += 1
+                    continue
                 body, meta = fetch(feed['url'], feed['etag'], feed['modified'])
                 parsed = parse_feed(body) if body is not None else None
                 with db:
@@ -105,6 +114,12 @@ def refresh_feeds(feed_id=None, due_only=False, interval_override=None):
                     db.execute('UPDATE feeds SET checked_at=?,success_at=?,error=NULL,failures=0 WHERE id=?', (now(), now(), feed['id']))
                 succeeded += 1
             except Exception as exc:
+                if feed['source_type'] != 'rss':
+                    from .social import record_retry
+                    from .social_http import SocialError
+                    if not isinstance(exc, SocialError):
+                        exc = SocialError('SNS 取得に失敗しました。設定・接続を確認してください。')
+                    record_retry(feed, exc.retry_at)
                 current_app.logger.warning('Feed %s refresh failed: %s', feed['id'], exc)
                 with db:
                     db.execute('UPDATE feeds SET checked_at=?,error=?,failures=failures+1 WHERE id=?', (now(), str(exc)[:500], feed['id']))

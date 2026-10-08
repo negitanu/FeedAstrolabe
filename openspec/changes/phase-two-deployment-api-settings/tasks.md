@@ -21,3 +21,5 @@
 - [x] 4.1 Test migration, scheduling, key lifecycle, API permission/pagination/rate limit, OPML and Access JWT rejection.
 - [x] 4.2 Validate OpenSpec, inspect settings UI, document deployment/API and commit source.
 - [ ] 4.3 Configure real Cloudflare domain/Tunnel/Access and verify permitted/denied external requests after required operator settings are supplied.
+
+Operator decision (2026-10-08): task 4.3 is explicitly deferred until after subsequent implementation phases.

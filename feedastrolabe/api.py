@@ -4,6 +4,7 @@ from .keys import authenticate_api
 from .collection import add_feed
 from .fetch import normalize_url
 from .preferences import bounded_int
+from .social import add_social
 
 api = Blueprint('api', __name__, url_prefix='/api/v1')
 api.before_request(authenticate_api)
@@ -12,6 +13,8 @@ api.before_request(authenticate_api)
 def feed_record(row):
     result = dict(row)
     result['enabled'] = bool(result['enabled'])
+    for field in ('page_cursor', 'pending_newest', 'since_id'):
+        result.pop(field, None)
     return result
 
 
@@ -46,7 +49,23 @@ def get_feed(feed_id):
 @api.post('/feeds')
 def create_feed():
     body = request.get_json()
-    if not isinstance(body, dict) or not isinstance(body.get('url'), str) or not isinstance(body.get('folder', ''), str):
+    if not isinstance(body, dict):
+        abort(400, description='Supply a JSON object')
+    source_type = body.get('source_type', 'rss')
+    allowed = {'source_type', 'url', 'folder'} if source_type == 'rss' else {'source_type', 'source_kind', 'target', 'instance_url', 'folder'}
+    if set(body) - allowed:
+        abort(400, description='Unsupported fields; credentials must use server secret files')
+    if source_type != 'rss':
+        if source_type not in ('x', 'mastodon'):
+            abort(400, description='Unsupported source_type')
+        try:
+            feed_id = add_social(source_type, body.get('source_kind', 'account'), body.get('target', ''), body.get('instance_url', ''), body.get('folder', ''))
+        except ValueError as exc:
+            if '登録済み' in str(exc):
+                abort(409, description='Feed already exists')
+            abort(400, description=str(exc))
+        return get_feed(feed_id), 201, {'Location': url_for('api.get_feed', feed_id=feed_id)}
+    if not isinstance(body.get('url'), str) or not isinstance(body.get('folder', ''), str):
         abort(400, description='url and folder must be strings')
     try:
         url = normalize_url(body['url'].strip())
@@ -66,6 +85,11 @@ def create_feed():
 @api.get('/articles')
 def list_articles():
     clauses, params = [], []
+    if 'source_type' in request.args:
+        if request.args['source_type'] not in ('rss', 'x', 'mastodon'):
+            abort(400, description='Unsupported source_type')
+        clauses.append('f.source_type=?')
+        params.append(request.args['source_type'])
     limit = integer_arg('limit', 30, maximum=100)
     feed_id = integer_arg('feed', None) if 'feed' in request.args else None
     before = integer_arg('before_id', None) if 'before_id' in request.args else None
@@ -96,7 +120,7 @@ def list_articles():
         params.append(after)
     where = ' WHERE ' + ' AND '.join(clauses) if clauses else ''
     direction = 'ASC' if after is not None else 'DESC'
-    rows = get_db().execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id' + where + f' ORDER BY a.id {direction} LIMIT ?', params + [limit + 1]).fetchall()
+    rows = get_db().execute('SELECT a.*,f.title AS feed_title,f.source_type AS source_type FROM articles a JOIN feeds f ON f.id=a.feed_id' + where + f' ORDER BY a.id {direction} LIMIT ?', params + [limit + 1]).fetchall()
     has_more = len(rows) > limit
     rows = rows[:limit]
     return {'data': [article_record(r) for r in rows], 'has_more': has_more,
@@ -106,7 +130,7 @@ def list_articles():
 
 @api.get('/articles/<int:article_id>')
 def get_article(article_id):
-    row = get_db().execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone()
+    row = get_db().execute('SELECT a.*,f.title AS feed_title,f.source_type AS source_type FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone()
     if row is None:
         abort(404, description='Article not found')
     return {'data': article_record(row)}

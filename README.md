@@ -67,6 +67,12 @@ openspec validate --all --strict --no-interactive
 
 通常のnative起動はlocalhost専用です。コンテナの外部公開はCloudflare用ComposeとAccess認証を組み合わせます。
 
+## SNS 連携
+
+設定画面で X アカウント／リストと Mastodon の公開アカウントを登録できます。RSS と共通の画面・記事 API で読み、既読・スター・検索を使えます。X の認証は Git 管理外のファイルから読み込みます。[SNS 設定と取得仕様](docs/social.md) と [第三段階の検証記録](docs/verification-phase-three.md) を参照してください。Cloudflare の実接続は後段へ延期しています。
+
+公開先は [GitHub](https://github.com/negitanu/FeedAstrolabe)。push 前に `python3 scripts/check_secrets.py --staged --history` を実行してください。[秘密情報の管理](docs/security.md) に検査範囲と限界を記載しています。
+
 ## 次の段階
 
 [ROADMAP.md](ROADMAP.md) に指定された四段階の順序、受入条件と必要な設定を記録しています。

@@ -1,0 +1,4 @@
+# False positive: English task description in phase-two task 2.1.
+# Narrow fingerprints only; no file-wide or rule-wide exclusions.
+dac1a455a139438a243ddd38f9c256ec5d738809:openspec/changes/phase-two-deployment-api-settings/tasks.md:generic-api-key:9
+openspec/changes/phase-two-deployment-api-settings/tasks.md:generic-api-key:9

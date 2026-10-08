@@ -1,0 +1,13 @@
+# Optional: keep the token out of environment values, images and the database.
+services:
+  web:
+    environment:
+      FEEDASTROLABE_X_TOKEN_FILE: /run/secrets/feedastrolabe_x_token
+    secrets: [feedastrolabe_x_token]
+  worker:
+    environment:
+      FEEDASTROLABE_X_TOKEN_FILE: /run/secrets/feedastrolabe_x_token
+    secrets: [feedastrolabe_x_token]
+secrets:
+  feedastrolabe_x_token:
+    file: ./secrets/x-bearer-token.txt

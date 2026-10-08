@@ -1,8 +1,11 @@
+import os
+
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for, Response
 from .db import get_db
 from .preferences import bounded_int, preferences, due_at, save_preferences
 from .collection import now
 from .keys import issue_key
+from .social import add_social, cooldown
 from .opml import import_opml, export_opml, MAX_OPML
 
 settings = Blueprint('settings', __name__)
@@ -15,10 +18,11 @@ def render_settings(issued_token=None):
     for row in db.execute('SELECT * FROM feeds ORDER BY folder,title'):
         feed = dict(row)
         due = due_at(feed, config)
+        feed['provider_retry'] = cooldown(feed) if feed['source_type'] != 'rss' else None
         feed['next_poll'] = due.strftime('%Y-%m-%d %H:%M:%S UTC') if due else '次の巡回で取得'
         feeds.append(feed)
     keys = db.execute('SELECT id,name,prefix,scope,created_at,expires_at,revoked_at,last_used_at FROM api_keys ORDER BY id DESC').fetchall()
-    return render_template('settings.html', config=config, feeds=feeds, keys=keys, issued_token=issued_token, access_mode=current_app.config['ACCESS_MODE'])
+    return render_template('settings.html', config=config, feeds=feeds, keys=keys, issued_token=issued_token, access_mode=current_app.config['ACCESS_MODE'], x_configured=bool(current_app.config.get('X_TOKEN_FILE') or os.environ.get('FEEDASTROLABE_X_TOKEN_FILE')))
 
 
 @settings.get('/settings')
@@ -88,3 +92,13 @@ def import_file():
     except ValueError as exc:
         flash(str(exc), 'error')
     return redirect(url_for('settings.index'))
+
+
+@settings.post('/settings/social')
+def subscribe_social():
+    try:
+        add_social(request.form.get('source_type', ''), request.form.get('source_kind', 'account'), request.form.get('target', ''), request.form.get('instance_url', ''), request.form.get('folder', ''))
+        flash('SNS を登録しました。次の巡回で取得します。ライブラリから手動更新もできます。', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'error')
+    return redirect(url_for('settings.index', _anchor='social'))

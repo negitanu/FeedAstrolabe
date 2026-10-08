@@ -30,12 +30,17 @@ def save_preferences(values):
 
 
 def due_at(feed, config, interval_override=None):
+    feed = dict(feed)
     if not feed['checked_at']:
         return None
     interval = feed['poll_interval'] or interval_override or config['poll_interval']
     delay = min(86400, interval * 2 ** min(feed['failures'], 10))
     checked = datetime.strptime(feed['checked_at'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-    return checked + timedelta(seconds=delay)
+    scheduled = checked + timedelta(seconds=delay)
+    if feed.get('retry_at'):
+        retry = datetime.strptime(feed['retry_at'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        scheduled = max(scheduled, retry)
+    return scheduled
 
 
 def is_due(feed, config, interval_override=None):

@@ -7,16 +7,23 @@ import json
 from pathlib import Path
 import subprocess
 import textwrap
+import tempfile
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--project', default='feedastrolabe-verify')
+    parser.add_argument('--port', default=5011, type=int)
     args = parser.parse_args()
+    if not 1024 <= args.port <= 65535:
+        parser.error('Choose a local test port from 1024 to 65535')
     if not args.project.endswith('-verify'):
         parser.error('Use an isolated project name ending in -verify')
     root = Path(__file__).resolve().parent.parent
-    command = ['docker', 'compose', '-p', args.project, '-f', 'compose.yaml', '-f', 'compose.local.yaml']
+    overlay = tempfile.NamedTemporaryFile(mode='w', suffix='.yaml')
+    overlay.write(f'services:\n  web:\n    ports: ["127.0.0.1:{args.port}:5000"]\n')
+    overlay.flush()
+    command = ['docker', 'compose', '-p', args.project, '-f', 'compose.yaml', '-f', overlay.name]
     def run(*arguments):
         subprocess.run(command + list(arguments), cwd=root, check=True)
     def python(code):
@@ -35,6 +42,7 @@ def main():
         from feedastrolabe.db import get_db, connect
         from feedastrolabe.collection import now
         from feedastrolabe.keys import issue_key
+        from feedastrolabe import social, collection
         from feedastrolabe.maintenance import backup, restore
         assert os.getuid() == 10001
         try:
@@ -49,10 +57,23 @@ def main():
                 db.execute("INSERT OR IGNORE INTO feeds(url,title,folder,created_at,enabled) VALUES('https://example.com/container-smoke.xml','Container verification','Verification',?,0)", (now(),))
                 feed_id = db.execute("SELECT id FROM feeds WHERE url='https://example.com/container-smoke.xml'").fetchone()[0]
                 db.execute("INSERT OR IGNORE INTO articles(feed_id,guid,title,content,search_text,published_at,is_read,is_starred) VALUES(?,'container-smoke-state','Persistent smoke article','<p>safe</p>','safe',?,1,1)", (feed_id, now()))
+            existing = db.execute("SELECT id FROM feeds WHERE url='https://example.com/@container_test'").fetchone()
+            social_id = existing['id'] if existing else social.add_social('mastodon', 'account', 'container_test', 'https://example.com', 'Verification')
+            with db:
+                db.execute('UPDATE feeds SET enabled=0 WHERE id=?', (social_id,))
+            def fixture_request(url, token=None):
+                if '/lookup?' in url:
+                    return {'id': '123'}, {}
+                return [{'id': '789', 'visibility': 'public', 'content': '<p>Container social verification</p>', 'url': 'https://example.com/@container_test/789', 'created_at': '2026-10-08T00:00:00Z'}], {}
+            social.request_json = fixture_request
+            assert collection.refresh_feeds(social_id) == (1, 0)
             key_id, token = issue_key('container-smoke', 'write', 1)
             request = urllib.request.Request('http://127.0.0.1:5000/api/v1/articles?is_starred=true', headers={'Authorization': 'Bearer ' + token})
             data = json.load(urllib.request.urlopen(request, timeout=10))
             assert any(a['guid']=='container-smoke-state' for a in data['data'])
+            sns_request = urllib.request.Request('http://127.0.0.1:5000/api/v1/articles?source_type=mastodon', headers={'Authorization': 'Bearer ' + token})
+            sns = json.load(urllib.request.urlopen(sns_request, timeout=10))
+            assert any(a['guid']=='mastodon:789' for a in sns['data'])
             with db:
                 db.execute('UPDATE api_keys SET revoked_at=? WHERE id=?', (now(), key_id))
             try:
@@ -78,10 +99,13 @@ def main():
         with app.app_context():
             row = get_db().execute("SELECT is_read,is_starred FROM articles WHERE guid='container-smoke-state'").fetchone()
             assert tuple(row)==(1,1)
+            assert get_db().execute("SELECT count(*) FROM articles WHERE guid='mastodon:789'").fetchone()[0] == 1
+            assert get_db().execute('PRAGMA user_version').fetchone()[0] == 3
         assert json.load(urllib.request.urlopen('http://127.0.0.1:5000/healthz'))['status']=='ok'
         print('PASS: Web/worker recreation retains read and star state')
     ''')
     run('down')
+    overlay.close()
     print('Container verification completed; isolated volume retained.')
 
 

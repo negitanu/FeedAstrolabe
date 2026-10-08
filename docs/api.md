@@ -15,6 +15,7 @@
 
 - `limit`：1〜100、既定30。
 - `feed`：フィード ID。
+- `source_type`：`rss`、`x`、`mastodon` で記事を絞り込み。
 - `is_read`、`is_starred`：`true` または `false`。
 - `q`：タイトル/本文の部分一致、最大200文字。`%` と `_` も文字として検索。
 - `before_id`：この ID より小さい記事を ID 降順で取得。
@@ -59,6 +60,22 @@
 ```
 
 初回取得に成功すると201、登録済みは409。通常の HTML URL からフィードを探索する機能はありません。同期取得のためクライアント側に十分なタイムアウトを設定してください。定期取得は worker が担当します。
+
+SNS の登録も同じエンドポイントを使います。ネットワーク取得を行わず201で登録し、worker または UI の手動更新で取得します。認証トークンなど未定義のフィールドは拒否します。
+
+```json
+{"source_type":"x","source_kind":"account","target":"username","folder":"SNS"}
+```
+
+```json
+{"source_type":"x","source_kind":"list","target":"123456789","folder":"SNS"}
+```
+
+```json
+{"source_type":"mastodon","source_kind":"account","target":"alice","instance_url":"https://mastodon.social","folder":"SNS"}
+```
+
+購読応答に `source_type`、`source_kind`、`target`、`instance_url`、`provider_id`、`retry_at` が追加されます。記事応答にも `source_type` を追加。内部ページ cursor と認証トークンは返しません。詳細は [SNS 連携手順](social.md) を参照してください。
 
 `PATCH /api/v1/articles/{id}`
 

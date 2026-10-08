@@ -39,7 +39,7 @@ def test_v1_migration_backup_restore(tmp_path):
     init_database(source)
     init_database(source)
     with connect(source) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0] == 2
+        assert db.execute('PRAGMA user_version').fetchone()[0] == 3
         assert tuple(db.execute('SELECT is_read,is_starred FROM articles').fetchone()) == (1, 1)
         assert db.execute('SELECT enabled FROM feeds').fetchone()[0] == 1
         assert db.execute('SELECT poll_interval FROM settings').fetchone()[0] == 900
@@ -47,7 +47,7 @@ def test_v1_migration_backup_restore(tmp_path):
     restore(snapshot, destination)
     with connect(destination) as db:
         assert db.execute('SELECT title FROM articles').fetchone()[0] == 'Saved'
-        assert db.execute('PRAGMA user_version').fetchone()[0] == 2
+        assert db.execute('PRAGMA user_version').fetchone()[0] == 3
     assert snapshot.stat().st_mode & 0o777 == 0o600
 
 
