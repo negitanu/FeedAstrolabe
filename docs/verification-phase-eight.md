@@ -12,3 +12,5 @@ OpenSpec change: `phase-eight-watchlists-triage`。案件のウォッチリス�
 照合は件数制限したID範囲を順番に処理します。FTSや正規表現検索は導入しません。過去根拠のタグ／関連付け変更は明示的再照合が必要。通知・グループにある根拠は参照保持のためretentionで削除せず、それらの保存期間管理は後段です。重複は完全一致と同じURLのみで、類似主張を自動統合しません。グループは共有ライブラリ全体、案件公開区分はユーザー権限分離ではありません。外部通知は未実装。
 
 Cloudflare実接続、X実資格情報、GitHub CI有効化は従来どおり未完了。fixture結果を実外部接続の結果として扱いません。配布時のGit秘密情報検査・push・仕様同期の結果は完了後追記します。
+
+実装 commit `8714940` をGitHub mainへpush、リモート一致を確認。Git候補500件の秘密情報パターン検査、Gitleaks履歴・全index候補に検出なし。限定fingerprintを維持。正規仕様 `openspec/specs/watchlists-triage/spec.md` に3要件・8シナリオを同期し `openspec/changes/archive/2026-10-08-phase-eight-watchlists-triage/` へarchive、11/11タスク完了。

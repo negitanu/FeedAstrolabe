@@ -39,7 +39,7 @@ Change：[phase-seven-evidence-provenance](../openspec/changes/archive/2026-10-0
 
 ## 第八段階：ウォッチリスト・保存検索・整理
 
-Change：[phase-eight-watchlists-triage](../openspec/changes/phase-eight-watchlists-triage/proposal.md)
+Change：[phase-eight-watchlists-triage](../openspec/changes/archive/2026-10-08-phase-eight-watchlists-triage/proposal.md)
 
 - 製品・組織・識別子・テーマの監視と、案件ごとの保存検索。
 - 含める／除外する条件、優先度ルールと判定理由。
