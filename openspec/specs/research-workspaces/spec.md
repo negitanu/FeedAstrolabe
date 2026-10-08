@@ -42,4 +42,3 @@ The system SHALL create and explicitly rename shared tags, associate them with w
 #### Scenario: Upgrade and backup preservation
 - **WHEN** a v4 library is upgraded or a v5 research backup is restored
 - **THEN** source/article IDs, read/star flags, workspace links and all note revisions survive with valid foreign keys
-
