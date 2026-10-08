@@ -1,0 +1,13 @@
+schema: spec-driven
+context: |
+  FeedAstrolabe is a single-user RSS/Atom reader. Python 3.11+, Flask, SQLite,
+  server-rendered Japanese responsive UI. Source and specs are tracked in Git.
+  Ordered phases: 1 RSS/UI; 2 containers and Cloudflare Zero Trust;
+  3 SNS feeds including X; 4 Playwright fixed-page monitoring.
+  Propose and validate requirements, design and tasks before implementation.
+  Phase 1 binds localhost and has no authentication. Do not expose it externally.
+rules:
+  specs:
+    - Every requirement must include testable WHEN/THEN scenarios.
+  tasks:
+    - Include meaningful tests, strict OpenSpec validation and documentation.
