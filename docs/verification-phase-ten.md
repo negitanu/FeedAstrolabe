@@ -12,3 +12,5 @@ OpenSpec change: `phase-ten-security-intelligence`。登録済み公開コネク
 EPSSは30日予測、CVSSは出典ごとの深刻度、KEVは取得版の掲載です。未掲載・欠損・古い値を安全と表示しません。モデル版不明は不明のまま表示。バージョン制約の自動解析・資産スキャンは提供せず、名前一致はpossible、確認済みには引用が必要です。累計ジョブ10000・16MiB cache等の上限に達した際の履歴purgeは後段です。共有ライブラリの案件分類はアクセス分離ではありません。
 
 Cloudflare実接続、X実資格情報、GitHub CI有効化は従来の延期を保持。秘密情報検査・push・仕様同期結果は完了後追記します。
+
+実装 commit `c5fdad0` をGitHub mainへpushしリモート一致を確認。候補631件、Git履歴／全indexのGitleaksで検出なし。限定fingerprintを維持。正規仕様3要件・6シナリオを同期し `openspec/changes/archive/2026-10-08-phase-ten-security-intelligence/` にarchive、12/12タスク完了。

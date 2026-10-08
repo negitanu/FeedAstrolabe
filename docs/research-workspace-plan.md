@@ -67,7 +67,7 @@ Change：[phase-nine-entities-relations](../openspec/changes/archive/2026-10-08-
 
 ## 第十段階：脆弱性・セキュリティ情報連携
 
-Change：[phase-ten-security-intelligence](../openspec/changes/phase-ten-security-intelligence/proposal.md)
+Change：[phase-ten-security-intelligence](../openspec/changes/archive/2026-10-08-phase-ten-security-intelligence/proposal.md)
 
 - 共通の外部連携ジョブ、許可接続先、キャッシュ、予算・レート待機、出典管理。
 - CISA KEV、FIRST EPSS、CVE／ベンダーの参照情報。
