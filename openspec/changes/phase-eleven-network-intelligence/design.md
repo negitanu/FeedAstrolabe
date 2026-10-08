@@ -2,7 +2,7 @@
 
 OSINT/network investigations need historical observations of public infrastructure instead of a single current lookup.
 
-Implementation prerequisite: `phase-nine-entities-relations`, `phase-ten-security-intelligence`. This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: `phase-nine-entities-relations`, `phase-ten-security-intelligence`. Both prerequisites are archived/pushed and deployed at schema9. This change introduces schema10.
 
 ## Goals / Non-Goals
 
@@ -43,3 +43,13 @@ Before implementing, confirm prerequisite changes and deployed schema, assign th
 ## Open Questions
 
 Connector/model endpoint quotas, licenses, model runtime choice and required credential files are resolved in the listed research/configuration tasks before enabling that integration. Missing external configuration is reported as unverified, never converted to a successful acceptance check. Initial bounds are design defaults and can be revised with explicit specification updates.
+
+## Final contracts and bounds (2026-10-08)
+
+Reuse the registered connector queue/TLS pinned transport/cache/budgets. Google DNS JSON uses exact normalized public domain + one RRtype (A/AAAA/MX/NS/TXT/SOA/CAA), DNSSEC validation on and ECS0/0; store query time, TTL, resolver scope/rcode/truncation; NXDOMAIN/NODATA are scoped observed absence, SERVFAIL is unknown and preserves last-good. TTL-only decay never creates an RRset change event.
+
+RDAP discovery downloads the explicit IANA dns/ipv4/ipv6/asn bootstrap with consent using fixed data.iana.org paths, caches24h, chooses longest suffix/prefix/ASN range, and permits only exact reviewed HTTPS bases (five RIRs and Verisign com/net in this delivery). Unreviewed authorities and every redirect are rejected before follow-up; output referrals are metadata only. Unsupported TLDs remain coverage-unknown rather than being routed to arbitrary servers. Registration metadata excludes contact vCards in the normalized fixed projection.
+
+RIPEstat network-info for public IP and announced-prefixes for ASN use RIS dated scope. RPKI requires an explicit canonical public prefix and origin AS pair; no guessing ownership or hijack. CT exact-domain crt.sh JSON (operator documented output=json) is best-effort metadata, max200 deduplicated certificates, and never verifies currently served certificates. Public IPs must be global and not mapped/private; domains reject special-use/private suffixes, wildcards and query metacharacters before enqueue. ASN syntactic validity is not allocation evidence. No credentials or active target connections.
+
+Network watch interval1h..7d, retention7..3650d, enabled/public consent perwatch, max100/workspace, fair20watch batches. A successful query produces an immutable attributed observation even if unchanged, and field-level events link both observation IDs when normalized semantic fields change. DNS TTL expiry, connector expiry, errors and coverage/truncation are explicit. Fixed projections cap150000 chars; retain sourceversion/rawresponsehash and bounded raw representation. Retention purges only old network metadata/events not referenced by current events/quotations/notes, keeps latest observation, and never deletes evidence or user pins. Empty/partial results are not global absence. New projected evidence is pinned into watch workspaces for keyword triage.

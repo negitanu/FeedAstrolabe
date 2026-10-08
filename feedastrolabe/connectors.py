@@ -5,7 +5,7 @@ import fcntl,json
 from flask import current_app
 from .db import get_db
 from . import research as r,evidence as e,triage as t
-from .security_adapters import PROVIDERS,endpoint,validate
+from .connector_registry import PROVIDERS,endpoint,validate,contract
 from .connector_http import retrieve,ConnectorError
 
 
@@ -31,7 +31,7 @@ def configure(provider,body):
 
 
 def enqueue(provider,body):
-    values=r.fields(body,{'input','public_identifier'});value=values.get('input');endpoint(provider,value)
+    values=r.fields(body,{'input','public_identifier'});value=values.get('input');contract(provider,value)
     if values.get('public_identifier') is not True:raise ValueError('公開識別子を送信する明示的確認が必要です。')
     with r.transaction() as db:
         if not setting(provider,db)['enabled']:raise r.ResearchConflict('連携は停止しています。')

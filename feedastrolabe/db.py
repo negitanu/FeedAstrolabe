@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from flask import current_app, g
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feeds (
@@ -202,6 +202,15 @@ def init_database(path):
                 db.execute('INSERT INTO connector_settings(provider) VALUES(?)',(provider,))
                 db.execute('INSERT INTO connector_state(provider) VALUES(?)',(provider,))
             db.execute('PRAGMA user_version=9')
+        if version < 10:
+            from .network_schema import SCHEMA as network_schema
+            from .network_adapters import PROVIDERS as network_providers
+            for provider in network_providers:
+                db.execute('INSERT INTO connector_settings(provider,ttl_seconds) VALUES(?,3600)',(provider,))
+                db.execute('INSERT INTO connector_state(provider) VALUES(?)',(provider,))
+            for statement in network_schema.split(';'):
+                if statement.strip():db.execute(statement)
+            db.execute('PRAGMA user_version=10')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()

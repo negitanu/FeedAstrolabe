@@ -5,7 +5,7 @@ from .research_api import errors,page
 from .api import integer_arg
 from .db import get_db
 from . import connectors as c,security_intelligence as s,research as r
-from .security_adapters import PROVIDERS
+from .connector_registry import PROVIDERS
 api=Blueprint('security_api',__name__,url_prefix='/api/v1');api.before_request(authenticate_api)
 
 @api.get('/connectors')

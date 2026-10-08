@@ -230,3 +230,5 @@ PATCH メモの例：
 - `GET/POST /api/v1/workspaces/{id}/security-references`：引用と手動確認付きの参照一覧／作成。`{"entity_id":1,"url":"https://example.com/advisory","kind":"advisory","quotation_id":1,"reviewed":true}`。kindはadvisory/fix/poc。リンクを取得・実行しません。
 
 read/writeキーと既存APIレート制限、CSRF、親案件アーカイブ、409競合に従います。各項目の意味・帰属・上限・staleは[運用手順](security-intelligence.md)とOpenAPI0.10を参照してください。
+
+第十一段階のネットワークウォッチ、固定観測、項目別変化、空bodyでの照会予約をOpenAPI0.11へ追加しました。[操作と取得制限](network-intelligence.md)を参照してください。

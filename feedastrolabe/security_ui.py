@@ -3,7 +3,7 @@ from flask import Blueprint,render_template,request,redirect,url_for,flash
 from .research_ui import errors,ui_page,identifier
 from . import security_intelligence as s,connectors as c,research as r
 from .db import get_db
-from .security_adapters import PROVIDERS
+from .connector_registry import PROVIDERS
 ui=Blueprint('security',__name__,url_prefix='/security')
 
 @ui.get('')

@@ -20,3 +20,15 @@ The system SHALL use opted-in public identifiers with read-only allowlisted prov
 #### Scenario: Passive bounded monitoring acceptance
 - **WHEN** a lookup requests a private target or an unapproved referral endpoint
 - **THEN** the request is rejected before accessing it
+
+#### Scenario: Scoped failure and DNS TTL semantics
+- **WHEN** DNS returns NXDOMAIN, TTL-only decay, SERVFAIL or an expired observed TTL
+- **THEN** scoped absence, unchanged RRset, unknown failure preserving last-good and stale TTL are distinguished without implying global absence
+
+#### Scenario: Prefix origin and consent validation
+- **WHEN** an RPKI lookup lacks an explicit public prefix-origin pair or a watch has no public consent
+- **THEN** no request is sent and a valid observed pair is never converted into ownership or hijack attribution
+
+#### Scenario: Bounded retention and historical anchors
+- **WHEN** configured network metadata retention runs
+- **THEN** the latest observation and referenced quotation/note anchors remain, while permitted old metadata is removed without deleting fixed evidence or article state

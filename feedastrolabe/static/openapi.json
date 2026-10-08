@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -2906,7 +2906,7 @@
         "properties": {
           "input": {
             "type": "string",
-            "description": "catalog for KEV; strict uppercase public CVE for EPSS/CVE"
+            "description": "KEV catalog; public CVE; DNS domain|RR; IANA dns/ipv4/ipv6/asn; RDAP domain|value, ip|value, asn|ASnum; routing ip|value or asn|ASnum; RPKI canonical-prefix|ASnum; CT exact public domain. No arbitrary endpoint."
           },
           "public_identifier": {
             "type": "boolean",
@@ -3391,6 +3391,333 @@
         },
         "required": [
           "data"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkWatchCreate": {
+        "type": "object",
+        "properties": {
+          "outbound_public": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          },
+          "retention_days": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 3650
+          },
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "dns",
+              "rdap",
+              "routing",
+              "rpki",
+              "ct"
+            ]
+          },
+          "rrtype": {
+            "type": "string",
+            "enum": [
+              "A",
+              "AAAA",
+              "MX",
+              "NS",
+              "TXT",
+              "SOA",
+              "CAA"
+            ]
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity_id",
+          "provider"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkWatchPatch": {
+        "type": "object",
+        "properties": {
+          "outbound_public": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          },
+          "retention_days": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 3650
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkWatch": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed passive record; TTL, scope, stale/unknown and fixed evidence semantics in docs/network-intelligence.md"
+      },
+      "NetworkWatchResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NetworkWatch"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkWatchPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetworkWatch"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkObservation": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed passive record; TTL, scope, stale/unknown and fixed evidence semantics in docs/network-intelligence.md"
+      },
+      "NetworkObservationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NetworkObservation"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkObservationPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetworkObservation"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkEvent": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed passive record; TTL, scope, stale/unknown and fixed evidence semantics in docs/network-intelligence.md"
+      },
+      "NetworkEventResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NetworkEvent"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkEventPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetworkEvent"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkCard": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed passive record; TTL, scope, stale/unknown and fixed evidence semantics in docs/network-intelligence.md"
+      },
+      "NetworkCardResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NetworkCard"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkCardPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetworkCard"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkLookup": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Attributed passive record; TTL, scope, stale/unknown and fixed evidence semantics in docs/network-intelligence.md"
+      },
+      "NetworkLookupResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NetworkLookup"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "NetworkLookupPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetworkLookup"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
         ],
         "additionalProperties": false
       }
@@ -9306,6 +9633,396 @@
                 "$ref": "#/components/schemas/SecurityReferenceCreate"
               }
             }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/network-watches": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkWatchPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkWatchCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/network-watches/{watch_id}": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Passive network patch",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkWatchPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/network-watches/{watch_id}/lookup": {
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkLookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "description": "Empty body required; queued acquisition only. RDAP may first reserve IANA bootstrap."
+      }
+    },
+    "/network-watches/{watch_id}/observations": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkObservationPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/network-watches/{watch_id}/events": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkEventPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
           }
         }
       }

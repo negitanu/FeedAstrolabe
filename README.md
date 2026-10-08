@@ -93,7 +93,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 
 ## 調査ワークスペースへの拡張計画
 
-セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。第六段階の調査案件・版付きメモ・共有タグは実装済みです。第七〜第十四段階は計画段階です。
+セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。第六段階の調査案件・版付きメモ・共有タグは実装済みです。第七〜第十一段階は実装済み、第十二〜第十四段階は後続計画です。
 
 
 `/workspaces` から調査案件を作成し、既存フィード・記事を複数の案件へ関連付けられます。Markdown メモは事実／情報源の主張／仮説と版履歴を持ち、同時編集は409で保護します。共有タグ、案件／記事タグによる検索、アーカイブ／再開、公開区分を UI・API から利用できます。[操作と制限](docs/research.md)、[第六段階の検証](docs/verification-phase-six.md) を参照してください。
@@ -104,8 +104,12 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 
 ## 対象・根拠付き関係（第九段階）
 
-CVE／IP／ドメイン／ASN／ハッシュ／リポジトリの候補抽出、手動の組織・製品・モデル登録、出典付き元表記、確認・訂正、別名、取り消せる統合、引用付き関係の版履歴、案件内のグラフ／タイムラインを提供します。[操作と上限](docs/entities.md)、[検証記録](docs/verification-phase-nine.md)を参照してください。外部照会は次の第十段階です。
+CVE／IP／ドメイン／ASN／ハッシュ／リポジトリの候補抽出、手動の組織・製品・モデル登録、出典付き元表記、確認・訂正、別名、取り消せる統合、引用付き関係の版履歴、案件内のグラフ／タイムラインを提供します。[操作と上限](docs/entities.md)、[検証記録](docs/verification-phase-nine.md)を参照してください。外部照会は第十・第十一段階で提供します。
 
 ## セキュリティ情報（第十段階）
 
 CISA KEV／FIRST EPSS／CVE Servicesの独立した日付・帰属・固定根拠、関心製品と人の引用付き適用性判断、確認済み参照リンクを提供します。公開CVEの明示許可と連携の有効化で取得し、失敗時は直前の成功データを保持します。[操作と取得上限](docs/security-intelligence.md)、[検証記録](docs/verification-phase-ten.md)を参照してください。
+
+## ネットワーク情報（第十一段階）
+
+DNS／RDAP／CT／経路／RPKIの受動観測、日付と固定根拠を持つ履歴、項目別変化、観測間隔と保存設定を提供します。[操作と観測範囲](docs/network-intelligence.md)、[検証記録](docs/verification-phase-eleven.md)を参照してください。

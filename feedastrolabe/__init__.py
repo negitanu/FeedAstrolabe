@@ -21,6 +21,8 @@ from .evidence_api import api as evidence_api
 from .evidence_ui import ui as evidence_ui
 from .triage_api import api as triage_api
 from .triage_ui import ui as triage_ui
+from .network_api import api as network_api
+from .network_ui import ui as network_ui
 from .security_api import api as security_api
 from .security_ui import ui as security_ui
 from .entities_api import api as entities_api
@@ -64,6 +66,8 @@ def create_app(test_config=None):
     app.register_blueprint(entities_ui)
     app.register_blueprint(security_api)
     app.register_blueprint(security_ui)
+    app.register_blueprint(network_api)
+    app.register_blueprint(network_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -258,7 +262,8 @@ def create_app(test_config=None):
     def connector_jobs_once():
         from .connectors import process
         from .security_intelligence import schedule
-        schedule();click.echo(process());schedule()
+        from .network_intelligence import schedule as network_schedule
+        schedule();network_schedule();click.echo(process());schedule();network_schedule()
 
     @app.cli.command('extract-entities')
     def extract_entities_once():
@@ -282,7 +287,8 @@ def create_app(test_config=None):
                 result = refresh_feeds(due_only=True, interval_override=interval)
                 from .security_intelligence import schedule
                 from .connectors import process as connector_process
-                schedule();connector_process();schedule()
+                from .network_intelligence import schedule as network_schedule
+                schedule();network_schedule();connector_process();schedule();network_schedule()
                 from .triage import process
                 process()
                 from .entities import extract

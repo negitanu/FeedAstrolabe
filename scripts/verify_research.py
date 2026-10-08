@@ -78,7 +78,7 @@ def main():
                     snapshot=Path(directory)/'backup.sqlite3';backup(app.config['DATABASE'],snapshot)
                     destination=Path(directory)/'restored'/'feeds.sqlite3';restore(snapshot,destination)
                     with connect(destination) as db:
-                        assert db.execute('PRAGMA user_version').fetchone()[0]==9
+                        assert db.execute('PRAGMA user_version').fetchone()[0]==10
                         assert db.execute('SELECT count(*) FROM note_revisions').fetchone()[0]==2
                         assert db.execute('SELECT count(*) FROM workspace_articles').fetchone()[0]==2
                         assert not db.execute('PRAGMA foreign_key_check').fetchall()
