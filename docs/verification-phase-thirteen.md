@@ -11,3 +11,5 @@ OpenSpec `phase-thirteen-grounded-assistant`、schema11→12。Ollama固定adapt
 引用の意味／生成内容の真偽は人の判断で、独立検証済みの事実へ昇格しない。ローカルcloud無効statusのない古いruntimeを安全側に拒否。生成中はpolicyと送信の競合を避けるためwriterを直列化、他の書き込みは待機／busyの場合あり。料金は確認日の利用者設定による概算で請求保証ではない。中断／エラーは自動再送しない。Cloudflare/X実接続とCIの権限拡張は延期を維持。
 
 実writer停止中 `/data/pre-phase-thirteen/` に検証済みschema11 private bundle（DB600）を保存。4サービスをschema12へ更新・再作成しhealthy。旧購読／記事既読・スターと全旧案件／根拠／整理／対象／関係／security／network／AI研究をEXCEPT比較し不一致0、FK正常。購読1・記事35・案件0、公開provider11件すべて無効、assistant profile0件で生成停止。利用者DBにfixtureや送信を追加しない。
+
+Git source `191a789`：candidate/history824件とGitleaks履歴21 commits・exported index検査は漏洩0、GitHub main一致。canonical grounded-assistantへ3要件6シナリオ同期、13/13タスクを2026-10-08 archive。

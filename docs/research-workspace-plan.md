@@ -107,7 +107,7 @@ Change：[phase-twelve-ai-research-tracking](../openspec/changes/archive/2026-10
 
 ## 第十三段階：出典付きAI調査補助
 
-Change：[phase-thirteen-grounded-assistant](../openspec/changes/phase-thirteen-grounded-assistant/proposal.md)
+Change：[phase-thirteen-grounded-assistant](../openspec/changes/archive/2026-10-08-phase-thirteen-grounded-assistant/proposal.md)
 
 - 日本語要約、翻訳、複数資料比較、案件内の質問応答。
 - 根拠の版・引用位置を検証した出典表示、不足／矛盾の提示。
