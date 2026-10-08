@@ -12,7 +12,7 @@ Cloudflare の実接続と X の実資格情報検証は既存タスクで延期
 
 ## 第六段階：調査案件・メモの基盤
 
-Change：[phase-six-research-workspaces](../openspec/changes/phase-six-research-workspaces/proposal.md)
+Change：[phase-six-research-workspaces](../openspec/changes/archive/2026-10-08-phase-six-research-workspaces/proposal.md)
 
 - 調査目的、確認したい問い、状態、アーカイブを持つワークスペース。
 - 同じ購読・記事を複数案件に関連付ける。記事の複製や購読の移動は不要。

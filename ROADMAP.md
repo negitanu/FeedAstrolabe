@@ -36,7 +36,7 @@
 
 [詳細計画](docs/research-workspace-plan.md) と各OpenSpec changeに、proposal/design/specs/tasksを用意しました。
 
-- 第六（実装済み）：調査案件・版付きメモ・タグ。`phase-six-research-workspaces`。
+- 第六（実装済み）：調査案件・版付きメモ・タグ。`phase-six-research-workspaces`（2026-10-08 archive、正規仕様 `openspec/specs/research-workspaces/`）。
 - 第七：根拠の不変保存・出典・引用・添付・復旧。`phase-seven-evidence-provenance`。
 - 第八：ウォッチリスト・保存検索・説明付き優先度・重複整理。`phase-eight-watchlists-triage`。
 - 第九：対象抽出・根拠付き関係・タイムライン。`phase-nine-entities-relations`。

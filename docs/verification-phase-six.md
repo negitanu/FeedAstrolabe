@@ -13,4 +13,4 @@ OpenSpec change: `phase-six-research-workspaces`。調査案件、複数案件�
 
 案件は共有ライブラリの整理単位です。公開区分は利用者ごとの権限分離・暗号化を提供しません。関連フィードの新着表示は archive 後も続き、記事削除時にはそのリンクも削除されます。不変な根拠保存・添付・ウォッチリストは第七段階以降の未実装機能です。
 
-Cloudflare実接続、X実資格情報取得とGitHub CI有効化は従来どおり未完了です。CIはテンプレートのみ更新しました。外部サービスの受入結果として fixture を扱いません。Git候補／履歴のパターン検査と Gitleaks 履歴・全index候補検査で検出なし。既存の第二段階英語タスク文だけの限定fingerprintを維持し、広い除外は追加していません。仕様同期・archive は受入後の完了処理で記録します。
+Cloudflare実接続、X実資格情報取得とGitHub CI有効化は従来どおり未完了です。CIはテンプレートのみ更新しました。外部サービスの受入結果として fixture を扱いません。Git候補／履歴のパターン検査と Gitleaks 履歴・全index候補検査で検出なし。既存の第二段階英語タスク文だけの限定fingerprintを維持し、広い除外は追加していません。実装 commit `035e01e` を GitHub main に push して一致を確認後、4要件・7シナリオを `openspec/specs/research-workspaces/spec.md` に同期し、`openspec/changes/archive/2026-10-08-phase-six-research-workspaces/` に archive。archive 自体のタスク3.5は処理成功後に完了し、11/11タスク完了。同期後の strict 検証も17項目成功。
