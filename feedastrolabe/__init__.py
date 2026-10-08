@@ -21,6 +21,8 @@ from .evidence_api import api as evidence_api
 from .evidence_ui import ui as evidence_ui
 from .triage_api import api as triage_api
 from .triage_ui import ui as triage_ui
+from .entities_api import api as entities_api
+from .entities_ui import ui as entities_ui
 from werkzeug.exceptions import HTTPException, SecurityError
 
 
@@ -56,6 +58,8 @@ def create_app(test_config=None):
     app.register_blueprint(evidence_ui)
     app.register_blueprint(triage_api)
     app.register_blueprint(triage_ui)
+    app.register_blueprint(entities_api)
+    app.register_blueprint(entities_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -246,6 +250,12 @@ def create_app(test_config=None):
         except ValueError as exc:
             raise click.ClickException(str(exc)) from exc
 
+    @app.cli.command('extract-entities')
+    def extract_entities_once():
+        """Extract one bounded fixed-evidence batch; no network access."""
+        from .entities import extract
+        click.echo(extract())
+
     @app.cli.command('triage')
     def triage_once():
         """Run one bounded matching/grouping batch without outbound notifications."""
@@ -262,6 +272,8 @@ def create_app(test_config=None):
                 result = refresh_feeds(due_only=True, interval_override=interval)
                 from .triage import process
                 process()
+                from .entities import extract
+                extract()
                 if once or any(result):
                     click.echo('success={}, failed={}'.format(*result))
             except ValueError as exc:

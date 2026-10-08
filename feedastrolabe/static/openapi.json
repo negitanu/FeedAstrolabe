@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -1737,6 +1737,1105 @@
             "enum": [
               100
             ]
+          }
+        }
+      },
+      "EntityCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cve",
+              "domain",
+              "ip",
+              "asn",
+              "hash",
+              "repository",
+              "organization",
+              "product",
+              "model"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      },
+      "Entity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "root_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cve",
+              "domain",
+              "ip",
+              "asn",
+              "hash",
+              "repository",
+              "organization",
+              "product",
+              "model"
+            ]
+          },
+          "merged_into": {
+            "type": "integer",
+            "nullable": true
+          },
+          "identity": {
+            "type": "string"
+          },
+          "canonical": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "AliasInput": {
+        "type": "object",
+        "required": [
+          "value",
+          "reviewed"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      },
+      "EntityAlias": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "value": {
+            "type": "string"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "reviewed": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "author": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "MentionCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entity_id",
+          "evidence_id",
+          "start",
+          "end",
+          "original"
+        ],
+        "properties": {
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "evidence_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 159999
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 160000
+          },
+          "original": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "candidate",
+              "confirmed",
+              "rejected"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      },
+      "MentionPatch": {
+        "type": "object",
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "candidate",
+              "confirmed",
+              "rejected"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      },
+      "EntityMention": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "evidence_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 159999
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 160000
+          },
+          "original": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "candidate",
+              "confirmed",
+              "rejected"
+            ]
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "original_entity_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "extracted_kind": {
+            "type": "string"
+          },
+          "text_hash": {
+            "type": "string"
+          },
+          "normalization": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "publisher": {
+            "type": "string"
+          }
+        }
+      },
+      "EntityUnmerge": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_revision",
+          "reason"
+        ],
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      },
+      "EntityMerge": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_revision",
+          "reason",
+          "target_id",
+          "reviewed"
+        ],
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "target_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "reviewed": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        }
+      },
+      "RelationCreate": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "target_id",
+          "quotation_id",
+          "predicate"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "target_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "quotation_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "predicate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_from": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_to": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          }
+        }
+      },
+      "RelationPatch": {
+        "type": "object",
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "target_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "quotation_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "predicate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_from": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_to": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        }
+      },
+      "Relation": {
+        "type": "object",
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "target_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "quotation_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "predicate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_from": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_to": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "workspace_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "version_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "evidence_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "recorded_at": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "text_hash": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          },
+          "end": {
+            "type": "integer"
+          }
+        }
+      },
+      "RelationRevision": {
+        "type": "object",
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "target_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "quotation_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "predicate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "label": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source-claim",
+              "hypothesis"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_from": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "valid_to": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "relation_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "recorded_at": {
+            "type": "string"
+          }
+        }
+      },
+      "EntityAudit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "kind": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          },
+          "author": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "evidence_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "UTC YYYY-MM-DD HH:MM:SS or null"
+          },
+          "recorded_at": {
+            "type": "string"
+          }
+        }
+      },
+      "EntityResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Entity"
+          }
+        }
+      },
+      "EntityPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entity"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "EntityAliasResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EntityAlias"
+          }
+        }
+      },
+      "EntityAliasPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityAlias"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "EntityMentionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EntityMention"
+          }
+        }
+      },
+      "EntityMentionPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityMention"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "family_truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "RelationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Relation"
+          }
+        }
+      },
+      "RelationPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Relation"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "RelationRevisionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RelationRevision"
+          }
+        }
+      },
+      "RelationRevisionPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelationRevision"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "EntityAuditResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EntityAudit"
+          }
+        }
+      },
+      "EntityAuditPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityAudit"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "family_truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "EvidenceMentionPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityMention"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "extraction": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "evidence_id": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9223372036854775807
+              },
+              "normalization": {
+                "type": "string"
+              },
+              "truncated": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "created_at": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "EntityExtractionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "evidence_scanned": {
+                "type": "integer"
+              },
+              "mentions_created": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "EntityGraph": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "maxItems": 200,
+            "items": {
+              "$ref": "#/components/schemas/Entity"
+            }
+          },
+          "edges": {
+            "type": "array",
+            "maxItems": 400,
+            "items": {
+              "$ref": "#/components/schemas/Relation"
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "node_limit": {
+            "type": "integer"
+          },
+          "edge_limit": {
+            "type": "integer"
+          },
+          "inference": {
+            "type": "string"
+          }
+        }
+      },
+      "EntityGraphResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EntityGraph"
           }
         }
       }
@@ -5534,6 +6633,1247 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DuplicateMemberPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities": {
+      "get": {
+        "summary": "Search attributed identifiers and homonymous manual names",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cve",
+                "domain",
+                "ip",
+                "asn",
+                "hash",
+                "repository",
+                "organization",
+                "product",
+                "model"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityPage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Normalize identifier or create distinct organization/product/model (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntityCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}": {
+      "get": {
+        "summary": "Read original identity and current representative",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/aliases": {
+      "get": {
+        "summary": "List explicitly reviewed aliases",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityAliasPage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add alias or change its explicit review state (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityAliasResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AliasInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/merge": {
+      "post": {
+        "summary": "Audited merge preserving all original IDs and anchors (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntityMerge"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/unmerge": {
+      "post": {
+        "summary": "Audited unmerge preserving all original IDs and anchors (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntityUnmerge"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/mentions": {
+      "get": {
+        "summary": "List original and corrected mentions in a bounded merged family",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityMentionPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evidence/{identifier}/mentions": {
+      "get": {
+        "summary": "List fixed-source mentions and extraction truncation status",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceMentionPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mentions": {
+      "post": {
+        "summary": "Add exact Unicode fixed-text mention anchor (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityMentionResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MentionCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mentions/{mention_id}": {
+      "get": {
+        "summary": "Read immutable original anchor and current review",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mention_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityMentionResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Audit correction without changing original source anchor (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mention_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityMentionResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MentionPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evidence/{identifier}/extract-entities": {
+      "post": {
+        "summary": "Retry bounded deterministic extraction; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityExtractionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/timeline": {
+      "get": {
+        "summary": "Page recorded review events with separate observation time",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityAuditPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entities/{entity_id}/graph": {
+      "get": {
+        "summary": "Quoted current assertions only; explicit truncation, no inferred ownership",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 2
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 200
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityGraphResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/relations": {
+      "get": {
+        "summary": "List current workspace/family assertions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "entity",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "archived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/relations": {
+      "post": {
+        "summary": "Create human assertion with verified quotation from same workspace (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/relations/{relation_id}": {
+      "get": {
+        "summary": "Read current attributed assertion and fixed quote",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "relation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Create immutable assessment revision; expected_revision required (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "relation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/relations/{relation_id}/revisions": {
+      "get": {
+        "summary": "List immutable quoted assertion revisions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "relation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid identifier, range, interval, assessment or bound"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing or unassociated record"
+          },
+          "409": {
+            "description": "Stale revision, archived workspace, duplicate mention or invalid merge root"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationRevisionPage"
                 }
               }
             }

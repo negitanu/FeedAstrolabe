@@ -32,3 +32,8 @@ textarea { width:100%; border:1px solid var(--border,#dce2df); border-radius:7px
 
 .research-page .hint { overflow-wrap: anywhere; }
 .research-page input[type="checkbox"] { width: auto; display: inline-block; margin: 0 8px 0 0; vertical-align: middle; }
+.research-page h1, .research-page h2, .research-page h3 { overflow-wrap: anywhere; }
+.entity-graph { width: 100%; height: auto; max-height: 450px; background: #f7faf9; border-radius: 12px; }
+.entity-edge { stroke: #89a7a1; stroke-width: 2; }
+.entity-node { fill: #22685d; }
+.entity-node-label { fill: white; font: 12px sans-serif; }

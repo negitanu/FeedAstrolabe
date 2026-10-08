@@ -19,11 +19,14 @@ def main():
     def code(value):run('run','--rm','--no-deps','-T','observer','python','-c',textwrap.dedent(value))
     triage_dir='/data/'+uuid.uuid4().hex+'-triage-verify'
     triage_script=(root/'scripts/verify_triage.py').read_text()
+    entity_dir='/data/'+uuid.uuid4().hex+'-entity-verify'
+    entity_script=(root/'scripts/verify_entities.py').read_text()
     try:
         run('up','--build','-d','--wait','--wait-timeout','120')
         run('stop','observer')
         subprocess.run(command+['exec','-T','web','python','-'],cwd=root,input=(root/'scripts/verify_evidence.py').read_text(),text=True,check=True)
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',triage_dir],cwd=root,input=triage_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir],cwd=root,input=entity_script,text=True,check=True)
         renderer=subprocess.check_output(command+['ps','-q','renderer'],cwd=root,text=True).strip()
         details=json.loads(subprocess.check_output(['docker','inspect',renderer],text=True))[0]
         assert details['HostConfig']['NetworkMode']=='none'
@@ -84,6 +87,7 @@ def main():
         ''')
         run('up','-d','--force-recreate','--wait','--wait-timeout','120')
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',triage_dir,'--check-state'],cwd=root,input=triage_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir,'--check-state'],cwd=root,input=entity_script,text=True,check=True)
         code('''
             from feedastrolabe import create_app
             from feedastrolabe.db import get_db
@@ -92,7 +96,7 @@ def main():
                 db=get_db()
                 row=db.execute("SELECT a.is_read,a.is_starred FROM articles a JOIN feeds f ON a.feed_id=f.id WHERE f.target='https://example.com/observer-fixture' AND a.guid='page:1'").fetchone()
                 assert tuple(row)==(1,1)
-                assert db.execute('PRAGMA user_version').fetchone()[0]==7
+                assert db.execute('PRAGMA user_version').fetchone()[0]==8
                 print('PASS: renderer/worker recreation preserves baseline and event state')
         ''')
     finally:

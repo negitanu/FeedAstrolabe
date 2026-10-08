@@ -28,7 +28,7 @@ def detail(eid):
     with errors():
         item=e.find(eid)
         if e.digest(item['text'].encode())!=item['text_hash']:abort(409)
-    return render_template('evidence_detail.html',item=item,workspaces=r.options('workspace'),notes=get_db().execute('SELECT n.id,n.title,n.workspace_id FROM notes n JOIN workspaces w ON w.id=n.workspace_id WHERE n.archived=0 AND w.archived=0 ORDER BY n.id DESC LIMIT 100').fetchall(),pins=get_db().execute('SELECT w.id,w.title FROM workspaces w JOIN workspace_evidence p ON p.workspace_id=w.id WHERE p.evidence_id=? ORDER BY w.id LIMIT 100',(eid,)).fetchall(),quotations=ui_page('SELECT q.*,w.title AS workspace_title FROM quotations q JOIN workspaces w ON w.id=q.workspace_id WHERE q.evidence_id=?',[eid],order='q.id DESC'))
+    return render_template('evidence_detail.html',item=item,extraction=get_db().execute('SELECT * FROM entity_extractions WHERE evidence_id=?',(eid,)).fetchone(),workspaces=r.options('workspace'),notes=get_db().execute('SELECT n.id,n.title,n.workspace_id FROM notes n JOIN workspaces w ON w.id=n.workspace_id WHERE n.archived=0 AND w.archived=0 ORDER BY n.id DESC LIMIT 100').fetchall(),pins=get_db().execute('SELECT w.id,w.title FROM workspaces w JOIN workspace_evidence p ON p.workspace_id=w.id WHERE p.evidence_id=? ORDER BY w.id LIMIT 100',(eid,)).fetchall(),quotations=ui_page('SELECT q.*,w.title AS workspace_title FROM quotations q JOIN workspaces w ON w.id=q.workspace_id WHERE q.evidence_id=?',[eid],order='q.id DESC'))
 
 
 @ui.get('/<int:identifier>/download')

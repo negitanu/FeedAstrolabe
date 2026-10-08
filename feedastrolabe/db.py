@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from flask import current_app, g
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feeds (
@@ -189,6 +189,11 @@ def init_database(path):
             for statement in triage_schema.split(';'):
                 if statement.strip(): db.execute(statement)
             db.execute('PRAGMA user_version=7')
+        if version < 8:
+            from .entity_schema import SCHEMA as entity_schema
+            for statement in entity_schema.split(';'):
+                if statement.strip(): db.execute(statement)
+            db.execute('PRAGMA user_version=8')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()

@@ -195,3 +195,22 @@ PATCH メモの例：
 - `PATCH /api/v1/duplicate-groups/{id}`：`{"suppressed":true}`で解除、falseで再び有効化。
 
 変更・処理にはwriteキーが必要です。アーカイブされた案件への変更は409。グループ操作は共有ライブラリ全体へ適用します。包含・除外条件の構文、処理と保存期間は[ウォッチの手順](triage.md)を参照してください。
+
+## 対象と関係（第九段階）
+
+- `GET/POST /api/v1/entities`：対象一覧／登録。kindとliteral q、workspace、共通cursor。例：`{"kind":"domain","value":"example.com","display_name":"調査対象"}`。組織／製品／モデルの同名登録は別対象です。
+- `GET /api/v1/entities/{id}`：現在の代表root_idを含む詳細。
+- `GET/POST /api/v1/entities/{id}/aliases`：別名のcursor一覧／手動登録。`{"value":"別表記","reviewed":true,"author":"local-user"}`。reviewedの応答は0/1。
+- `GET /api/v1/entities/{id}/mentions`、`GET /api/v1/evidence/{id}/mentions`：出典付き言及一覧。前者はworkspaceとfamily_truncated、後者はextraction（未処理null、truncatedは0/1）を返します。
+- `POST /api/v1/evidence/{id}/extract-entities`：空本文で再抽出。人の訂正は維持します。
+- `POST /api/v1/mentions`：`{"evidence_id":1,"entity_id":2,"start":0,"end":11,"original":"example.com","status":"confirmed","author":"local-user"}`。位置と元表記は固定本文の完全一致が必要。
+- `GET/PATCH /api/v1/mentions/{id}`：詳細／訂正。例：`{"expected_revision":1,"status":"rejected","author":"local-user"}`。entity_idも訂正可能。原位置は変更不可。
+- `POST /api/v1/entities/{id}/merge`：`{"target_id":2,"expected_revision":1,"reviewed":true,"reason":"手動照合","author":"local-user"}`。`/unmerge` はtarget_id／reviewedを除き現行版と理由で解除します。
+- `GET /api/v1/entities/{id}/timeline`：監査cursor一覧、workspace、family_truncated。
+- `GET /api/v1/entities/{id}/graph?workspace=1&depth=2&limit=200`：対象／引用付き関係／truncated。深さ0〜2、最大200対象／400関係。
+- `GET /api/v1/relations`：workspace／entity／archivedとcursor一覧。
+- `POST /api/v1/workspaces/{id}/relations`：`{"source_id":2,"target_id":3,"predicate":"observed-address","quotation_id":1,"label":"source-claim","confidence":"unknown","author":"local-user"}`。任意observed_at／valid_from／valid_toはUTC `YYYY-MM-DD HH:MM:SS` またはnull。引用は同じ案件に属する必要があります。
+- `GET/PATCH /api/v1/relations/{id}`：現行版／新しい判断版。PATCHは正のexpected_revisionと変更項目が必要。archived:trueで表示をアーカイブ。
+- `GET /api/v1/relations/{id}/revisions`：引用と判断を保持する不変版のcursor一覧。
+
+読み取りはread/write、変更はwriteキー、通常のレート制限に従います。古いexpected_revisionは409、原子的に拒否します。関係・統合の意味と上限は[対象の手順](entities.md)、定義はOpenAPI 0.9を参照してください。

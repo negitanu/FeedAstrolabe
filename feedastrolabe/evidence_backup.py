@@ -36,6 +36,12 @@ def references(db):
     for row in db.execute('SELECT q.*,e.text,e.text_hash AS actual_hash FROM quotations q JOIN evidence e ON e.id=q.evidence_id'):
         if row['text_hash']!=row['actual_hash'] or row['text'][row['start']:row['end']]!=row['quote']:
             raise ValueError('引用の整合性が不正です。')
+    if db.execute('PRAGMA user_version').fetchone()[0]>=8:
+        for row in db.execute('SELECT m.*,e.text,e.text_hash AS actual_hash FROM entity_mentions m JOIN evidence e ON e.id=m.evidence_id'):
+            if row['text_hash']!=row['actual_hash'] or row['text'][row['start']:row['end']]!=row['original']:
+                raise ValueError('言及の固定位置が不正です。')
+        if db.execute('SELECT 1 FROM relation_versions v JOIN relations a ON a.id=v.relation_id JOIN quotations q ON q.id=v.quotation_id WHERE q.workspace_id!=a.workspace_id LIMIT 1').fetchone():
+            raise ValueError('関係と引用の案件が一致しません。')
     return [{'hash':row['hash'],'size':row['size']} for row in db.execute('SELECT * FROM evidence_blobs ORDER BY hash')]
 
 

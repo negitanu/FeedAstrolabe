@@ -101,3 +101,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 第七段階以降、根拠を含むライブラリは DB／blob の一貫した `backup-bundle`／`restore-bundle` を使用します。旧 DB 単体の手順は根拠を持たない snapshot に限ります。現在の復元先は v7 になります。[根拠・添付・復旧の手順](docs/evidence.md)を参照してください。
 
 第八段階では案件の保存検索・ウォッチリスト、理由付き優先度、受信箱／UTC日次ダイジェスト、出典を残した重複整理を実装しました。[使い方](docs/triage.md)。
+
+## 対象・根拠付き関係（第九段階）
+
+CVE／IP／ドメイン／ASN／ハッシュ／リポジトリの候補抽出、手動の組織・製品・モデル登録、出典付き元表記、確認・訂正、別名、取り消せる統合、引用付き関係の版履歴、案件内のグラフ／タイムラインを提供します。[操作と上限](docs/entities.md)、[検証記録](docs/verification-phase-nine.md)を参照してください。外部照会は次の第十段階です。

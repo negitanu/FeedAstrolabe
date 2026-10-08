@@ -7,3 +7,4 @@ cryptography==50.0.2
 defusedxml==0.7.1
 Markdown==3.11
 pypdf==6.19.0
+idna==3.20
