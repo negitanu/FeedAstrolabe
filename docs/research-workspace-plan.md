@@ -93,7 +93,7 @@ Change：[phase-eleven-network-intelligence](../openspec/changes/archive/2026-10
 
 ## 第十二段階：生成AIの論文・モデル・実装追跡
 
-Change：[phase-twelve-ai-research-tracking](../openspec/changes/phase-twelve-ai-research-tracking/proposal.md)
+Change：[phase-twelve-ai-research-tracking](../openspec/changes/archive/2026-10-08-phase-twelve-ai-research-tracking/proposal.md)
 
 - arXivの検索・論文版、GitHubのリリースを増分収集。
 - 論文・モデル・コード・モデルカードの関連付け。

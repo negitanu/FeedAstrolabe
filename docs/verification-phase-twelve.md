@@ -11,3 +11,5 @@ OpenSpec `phase-twelve-ai-research-tracking`、schema10→11。公開Atom／リ�
 arXivは検索で返された最新版を観測し、未観測の中間改訂の全網羅ではありません。GitHubは公開releaseだけ。50件×20ページの周期と動的ページ変化の範囲を開示。論文本体／モデル／コードの権利をメタデータライセンスから推論しない。カードの主張・費用は引用に基づく転記、再現は利用者報告、条件一致でも順位や独立検証済み表示をしない。Cloudflare/X実接続とCIの権限拡張は延期を維持。
 
 実writer停止中 `/data/pre-phase-twelve/` にschema10 private bundle（DB600）を保存し検証。4サービスをschema11へ再作成しhealthy。全旧購読ID／URL、記事ID／feed／GUID／既読／スターと案件／根拠／triage／対象／関係／security／network記録をEXCEPT比較し不一致0、FK正常。購読1・記事35・案件0、11providerすべてenabled=0、利用者DBへfixture／照会を追加しない。OpenSpec strict17項目／pip check成功。秘密情報検査とGit結果は完了後記載。
+
+実装commit `4157961` をGitHub mainへpushしリモート一致。候補757件、履歴／全index Gitleaks検出なし。正規仕様3要件・6シナリオを同期し `2026-10-08-phase-twelve-ai-research-tracking` へarchive、12/12タスク完了。
