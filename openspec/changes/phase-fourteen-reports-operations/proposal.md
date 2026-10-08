@@ -21,4 +21,4 @@ None. Additive capabilities preserve existing RSS/SNS/page and API contracts.
 
 ## Impact
 
-Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Planned only: no runtime behavior changes in this planning delivery. Dependencies: `phase-eight-watchlists-triage`, `phase-eleven-network-intelligence`, `phase-twelve-ai-research-tracking`.
+Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Implementation refresh: additive schema13 after verified schema12 backup. Dependencies: `phase-eight-watchlists-triage`, `phase-eleven-network-intelligence`, `phase-twelve-ai-research-tracking`.

@@ -168,7 +168,7 @@ def test_bundle_integrity_partial_restore_and_legacy_refusal(app,client,tmp_path
         with pytest.raises(ValueError,match='bundle'):backup(source,tmp_path/'unsafe.sqlite3')
     destination=tmp_path/'restored'/'feeds.sqlite3';restore_bundle(bundle,destination)
     with connect(destination) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==12
+        assert db.execute('PRAGMA user_version').fetchone()[0]==13
         assert db.execute('SELECT count(*) FROM quotations').fetchone()[0]==1
         assert not db.execute('PRAGMA foreign_key_check').fetchall()
     old_bytes=destination.read_bytes();blob=bundle/'evidence-blobs'/item['blob_hash'];original=blob.read_bytes()
@@ -196,7 +196,7 @@ def test_v5_upgrade_preserves_research_and_does_not_backfill(tmp_path):
         db.execute('INSERT INTO workspace_articles VALUES(3,9)')
     init_database(path);init_database(path)
     with connect(path) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==12
+        assert db.execute('PRAGMA user_version').fetchone()[0]==13
         assert tuple(db.execute('SELECT id,is_read,is_starred,source_published_at FROM articles').fetchone())==(9,1,1,None)
         assert tuple(db.execute('SELECT * FROM workspace_articles').fetchone())==(3,9)
         assert db.execute('SELECT count(*) FROM evidence').fetchone()[0]==0

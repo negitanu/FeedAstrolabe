@@ -39,7 +39,8 @@ def _backup(source, destination):
 def restore(source, destination):
     from .evidence import storage_lock
     Path(destination).parent.mkdir(parents=True, exist_ok=True)
-    with storage_lock(Path(destination).parent):
+    from .operations import offline_lock
+    with offline_lock(Path(destination).parent), storage_lock(Path(destination).parent):
         return _restore(source, destination)
 
 

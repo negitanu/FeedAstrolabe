@@ -28,14 +28,14 @@ def main():
   if args.check_state:
    state=json.loads(marker.read_text())
    with app.app_context():
-    db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==12
+    db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==13
     item=s.detail(state['job']);assert item['job']['status']=='success' and item['job']['review_revision']==1
     assert item['job']['result']['statements'][0]['citations']==['C1']
     assert db.execute('SELECT count(*) FROM assistant_review_versions').fetchone()[0]==1
     assert s.detail(state['insufficient'])['job']['result']['status']=='insufficient'
     assert db.execute('SELECT calls FROM assistant_budget').fetchone()[0]==1
     assert not db.execute('PRAGMA foreign_key_check').fetchall()
-   print('PASS schema12 exact preview/hash/anchors/model lineage/usage/independent review/insufficient response and budget after recreation');return
+   print('PASS schema13 exact preview/hash/anchors/model lineage/usage/independent review/insufficient response and budget after recreation');return
   with app.app_context():_,token=issue_key('ephemeral grounded acceptance','write',1);_,read=issue_key('grounded read acceptance','read',1)
   server=make_server('127.0.0.1',args.serve_port,app);thread=Thread(target=server.serve_forever,daemon=True);thread.start();base='http://127.0.0.1:'+str(server.server_port)
   def request(method,path,body=None,key=None):

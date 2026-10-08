@@ -24,13 +24,13 @@ def main():
   if args.check_state:
    state=json.loads(marker.read_text())
    with app.app_context():
-    db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==12
+    db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==13
     assert db.execute('SELECT count(*) FROM ai_versions').fetchone()[0]==3
     assert s.card(state['card'])['card']['claims']['license'] is None
     assert s.compare(state['left'],state['right'])['state']=='incompatible'
     assert db.execute('SELECT count(*) FROM ai_links').fetchone()[0]==1
     assert not db.execute('PRAGMA foreign_key_check').fetchall()
-   print('PASS schema12 immutable paper/release versions, quoted model/link/evaluation conditions after recreation');return
+   print('PASS schema13 immutable paper/release versions, quoted model/link/evaluation conditions after recreation');return
   with app.app_context():_,token=issue_key('ephemeral AI metadata acceptance','write',1);_,read=issue_key('AI read acceptance','read',1)
   server=make_server('127.0.0.1',args.serve_port,app);thread=Thread(target=server.serve_forever,daemon=True);thread.start();base='http://127.0.0.1:'+str(server.server_port)
   def request(method,path,body=None,key=None):

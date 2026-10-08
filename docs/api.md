@@ -236,3 +236,19 @@ read/writeキーと既存APIレート制限、CSRF、親案件アーカイブ、
 第十二段階の研究ウォッチ／版／モデルカード／明示レビュー済み関連資料／条件付き評価比較をOpenAPI0.12へ追加しました。[操作と上限](ai-research.md)を参照してください。
 
 第十三段階のモデル設定／正確な入力プレビュー／hash承認／生成系譜／独立レビューをOpenAPI0.13へ追加。[制御と未確認事項](grounded-assistant.md)を参照してください。
+
+## 第十四段階：レポートと運用
+
+OpenAPI0.14は151 method/routes、schema13。すべて既存のBearer scopeとrate制限を継承します。[公開区分・送信・復元の契約](reports-operations.md)。
+
+- `POST/GET /workspaces/{id}/reports`、`GET /reports/{id}`、`GET /reports/{id}/download`：固定資料選択と不変出力、引用マニフェスト。作成はwrite、取得はread。非公開選択はローカル専用。
+- `GET/POST /delivery-profiles`、`PATCH /delivery-profiles/{id}`：正確な宛先、有効／無効とexpected_revision。資格情報はJSONに入力しません。
+- `POST /reports/{id}/delivery-previews`（profile_id）、`GET /delivery-previews/{id}`、`POST /delivery-previews/{id}/jobs`（approved=true／payload_hash）：正確なpayloadの確認→明示承認。後者202・同プレビューは同job。モデルや任意URLからの自動送信なし。
+- `GET /delivery-jobs`、`GET /delivery-jobs/{id}`：状態と安全な試行履歴。
+- `GET /operations`、`GET /operations/worker-runs`：stale／unknown／安全な履歴、CIとoffline restoreの状態。
+- `GET/PATCH /operations/config`：expected_revision付き定期バックアップと世代／容量設定。`GET/POST /operations/backups`：世代一覧／本文なしの1件予約202。DB復元APIはありません。
+- `GET/PATCH /settings`：全体設定、指定項目を既存設定と合成し全検証後に保存。API入力は数値／boolean、UIの文字列形式とは区別。
+- `POST /articles/bulk-state`：ids1〜100 unique、is_read／is_starred boolean。全ID存在確認後の原子的更新。read403／超過400／未知404は変更なし。
+- `GET/POST /opml`：RSS購読だけのXML出力／XML1MiB・100件の原子的登録（no inline fetch）、added／skipped。DTD/entity/private URL拒否。POSTはapplication/xml／text/xml／text/x-opml。
+
+通知profile／preview／reportは各上限と30分承認期限があり、変更された区分・設定版は409または送信前のfailedです。HTTP429/503のみ最大3回の待機再試行、成功／曖昧な送達結果は自動再送しません。外部Webhookの冪等制御も受信側で必要です。レポート一覧は本文を含まないメタデータ、一覧cursorは既存の最大100件契約。

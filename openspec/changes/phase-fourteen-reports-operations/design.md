@@ -2,7 +2,7 @@
 
 The research workspace needs portable sourced outputs and reliable operations with controlled external delivery.
 
-Implementation prerequisite: `phase-eight-watchlists-triage`, `phase-eleven-network-intelligence`, `phase-twelve-ai-research-tracking`. This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: `phase-eight-watchlists-triage`, `phase-eleven-network-intelligence`, `phase-twelve-ai-research-tracking`. All prerequisites and phase thirteen are archived and deployed at schema12. This change uses additive schema13.
 
 ## Goals / Non-Goals
 
@@ -43,3 +43,10 @@ Before implementing, confirm prerequisite changes and deployed schema, assign th
 ## Open Questions
 
 Connector/model endpoint quotas, licenses, model runtime choice and required credential files are resolved in the listed research/configuration tasks before enabling that integration. Missing external configuration is reported as unverified, never converted to a successful acceptance check. Initial bounds are design defaults and can be revised with explicit specification updates.
+
+## Refreshed implementation contract (2026-10-08)
+
+- Reports are immutable local snapshots, max100 fixed evidence/20000 chars each and4MiB total, explicit IDs or newest100 pinned records. Public is default; including internal/restricted requires explicit local flag. Shared nonpublic references are excluded from public output. Notes/observations only follow selected evidence. No credential or API-key tables export. Known secret markers fail closed. STIX2.1 subset domain/IP/ASN/CVE plus a sourced note; unsupported entity kinds remain in JSON/CSV, no invented indicator/relationship/TAXII.
+- Profiles max20, disabled initially, exact HTTPS443 endpoint without query/fragment/auth or exact email recipient. Ignored owner-only regular credential file selected by operator; webhook secret signs exact UTF-8 JSON payload, SMTP uses pinned TLS465. Preview immutable hash/profile revision with30min expiry; explicit approval creates one durable job. Successful deliveries are never repeated. Max3 attempts, retry only explicit429/503 responses; ambiguous timeout/interruption/SMTP outcome stops for manual investigation, no automatic replay. Receiver must honor stable Idempotency-Key. Remote dispatch rechecks classification/secret/profile under evidence and DB locks.
+- Web and worker app lifetimes hold a shared runtime.lock; both restore paths require exclusive lock before replacing any live data. Backups take consistent existing DB/blob bundle, validate it, cap2GiB generation and total quota, keep1..30 validated generations with safe-path checks. Schedule disabled initially, interval1h..7d. Online UI/API only schedules backups or presents offline instructions, never replaces DB. Worker loop start/end metrics and safe error codes, stale10min, history newest100; CLI one-shot jobs retain history.
+- Settings PATCH validates complete merged values atomically; bulk state1..100 unique positive IDs validates all before atomic mutation. OPML1MiB/max100 insertion-only atomic import (no inline fetching; regular RSS worker later resolves with public-address checks), returns added/skipped; export excludes non-RSS. CI template stays inactive while current GitHub OAuth lacks workflow permission. No permission expansion, recipient activation or real notifications during acceptance.

@@ -61,6 +61,21 @@ def references(db):
                 item=db.execute('SELECT * FROM evidence WHERE id=?',(anchor['evidence_id'],)).fetchone()
                 if not item or item['text_hash']!=anchor['text_hash'] or item['text'][anchor['start']:anchor['end']]!=anchor['quote']:raise ValueError('生成引用の固定位置が不正です。')
                 if not db.execute('SELECT 1 FROM assistant_sources WHERE preview_id=? AND evidence_id=?',(row['id'],item['id'])).fetchone():raise ValueError('生成引用の参照が不正です。')
+    if db.execute('PRAGMA user_version').fetchone()[0]>=13:
+        from .reports import encode,FORMATS
+        for row in db.execute('SELECT * FROM reports'):
+            if row['format'] not in FORMATS or e.digest(row['payload'].encode())!=row['payload_hash']:raise ValueError('レポートhash/形式が不正です。')
+            manifest=json.loads(row['manifest']);sources=manifest['sources']
+            if len(sources)>100 or manifest['workspace_id']!=row['workspace_id'] or manifest['include_nonpublic']!=bool(row['include_nonpublic']):raise ValueError('レポート区分・範囲が不正です。')
+            ids={x[0] for x in db.execute('SELECT evidence_id FROM report_sources WHERE report_id=?',(row['id'],))}
+            if ids!={x['id'] for x in sources}:raise ValueError('レポート参照が不正です。')
+            for src in sources:
+                item=db.execute('SELECT text_hash,blob_hash FROM evidence WHERE id=?',(src['id'],)).fetchone()
+                if not item or src['text_hash']!=item['text_hash'] or src['blob_hash']!=item['blob_hash']:raise ValueError('レポート根拠hashが不正です。')
+        for row in db.execute('SELECT * FROM delivery_previews'):
+            report=db.execute('SELECT * FROM reports WHERE id=?',(row['report_id'],)).fetchone()
+            expected=encode({'report_id':report['id'],'format':report['format'],'report_hash':report['payload_hash'],'content':report['payload'],'citation_manifest':json.loads(report['manifest'])})
+            if expected!=row['payload'] or e.digest(row['payload'].encode())!=row['payload_hash']:raise ValueError('通知payload hashが不正です。')
     return [{'hash':row['hash'],'size':row['size']} for row in db.execute('SELECT * FROM evidence_blobs ORDER BY hash')]
 
 
@@ -121,8 +136,9 @@ def restore_bundle(source,destination):
         raise ValueError('復元先が不正です。')
     destination.parent.mkdir(parents=True,exist_ok=True)
     destination.parent.chmod(0o700)
-    with e.storage_lock(destination.parent),ExitStack() as locks:
-        for name in ['init.lock','refresh.lock','observer.lock','connector.lock','assistant.lock']:
+    from .operations import offline_lock
+    with offline_lock(destination.parent),e.storage_lock(destination.parent),ExitStack() as locks:
+        for name in ['init.lock','refresh.lock','observer.lock','connector.lock','assistant.lock','delivery.lock','backup.lock']:
             handle=locks.enter_context((destination.parent/name).open('a'))
             fcntl.flock(handle,fcntl.LOCK_EX|fcntl.LOCK_NB)
         # Copy validated bundle into private staging, then validate the copy against source races.

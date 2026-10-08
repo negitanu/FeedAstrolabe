@@ -7,6 +7,8 @@ import time
 import click
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 
+from .operations_api import api as operations_api
+from .operations_ui import ui as operations_ui
 from .db import close_db, get_db, init_database
 from .collection import add_feed, refresh_feeds, sanitize
 from .fetch import normalize_url
@@ -41,6 +43,11 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_path=str(data_dir))
     data_dir.mkdir(parents=True, exist_ok=True)
     data_dir.chmod(0o700)
+    import fcntl,weakref
+    runtime_handle=(data_dir/'runtime.lock').open('a')
+    fcntl.flock(runtime_handle,fcntl.LOCK_SH)
+    app.extensions['runtime_lock']=runtime_handle
+    weakref.finalize(app,runtime_handle.close)
     key_path = data_dir / 'secret.key'
     # Atomic initialization so Web and worker startup cannot produce different keys.
     import fcntl
@@ -76,6 +83,8 @@ def create_app(test_config=None):
     app.register_blueprint(ai_ui)
     app.register_blueprint(assistant_api)
     app.register_blueprint(assistant_ui)
+    app.register_blueprint(operations_api)
+    app.register_blueprint(operations_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -291,12 +300,19 @@ def create_app(test_config=None):
         from .triage import process
         click.echo(process())
 
+    @app.cli.command('operation-jobs')
+    def operation_jobs():
+        from . import operations,delivery
+        operations.schedule();click.echo({'delivery':delivery.process(),'backup':operations.process()})
+
     @app.cli.command('worker')
     @click.option('--interval', default=None, type=click.IntRange(min=60, max=86400), help='Override global interval; per-feed overrides still apply.')
     @click.option('--once', is_flag=True)
     def worker(interval, once):
         """Refresh periodically; stop with Ctrl-C."""
+        from . import operations,delivery
         while True:
+            run=operations.start('worker');failure=None;result=(0,0)
             try:
                 result = refresh_feeds(due_only=True, interval_override=interval)
                 from .security_intelligence import schedule
@@ -306,14 +322,17 @@ def create_app(test_config=None):
                 schedule();network_schedule();ai_schedule();connector_process();schedule();network_schedule();ai_schedule()
                 from .assistant import process as assistant_process
                 assistant_process()
+                delivery.process();operations.schedule();operations.process()
                 from .triage import process
                 process()
                 from .entities import extract
                 extract()
                 if once or any(result):
                     click.echo('success={}, failed={}'.format(*result))
-            except ValueError as exc:
-                click.echo(str(exc), err=True)
+            except Exception:
+                failure='worker-cycle-failed';click.echo(failure,err=True)
+            finally:
+                operations.end(run,sum(result),failure)
             if once:
                 break
             time.sleep(10)
@@ -323,13 +342,17 @@ def create_app(test_config=None):
     def observer_worker(once):
         """Observe scheduled and queued public pages with a separate renderer."""
         from .observation import observe_pages
+        from . import operations
         while True:
+            run=operations.start('observer');failure=None;result=(0,0)
             try:
                 result=observe_pages()
                 if once or any(result):
                     click.echo('observed={}, failed={}'.format(*result))
-            except ValueError as exc:
-                click.echo(str(exc),err=True)
+            except Exception:
+                failure='observer-cycle-failed';click.echo(failure,err=True)
+            finally:
+                operations.end(run,sum(result),failure)
             if once:
                 break
             time.sleep(10)

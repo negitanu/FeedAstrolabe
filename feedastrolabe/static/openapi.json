@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.13.0",
+    "version": "0.14.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -4871,6 +4871,1178 @@
           "has_more"
         ],
         "additionalProperties": false
+      },
+      "ReportCreate": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "manifest",
+              "json",
+              "csv",
+              "stix"
+            ]
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "uniqueItems": true
+          },
+          "include_nonpublic": {
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "Report": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "workspace_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "format": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "payload": {
+            "type": "string",
+            "maxLength": 4194304
+          },
+          "payload_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "manifest": {
+            "type": "string",
+            "maxLength": 4194304
+          },
+          "include_nonpublic": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "created_at": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "payload_hash"
+        ]
+      },
+      "DeliveryProfileCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "webhook",
+              "email"
+            ]
+          },
+          "destination": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "destination"
+        ],
+        "additionalProperties": false
+      },
+      "DeliveryProfileUpdate": {
+        "type": "object",
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "enabled"
+        ],
+        "additionalProperties": false
+      },
+      "DeliveryProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "kind": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "destination": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "enabled": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "created_at": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "updated_at": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "destination",
+          "enabled",
+          "revision"
+        ]
+      },
+      "DeliveryPreviewCreate": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        },
+        "required": [
+          "profile_id"
+        ],
+        "additionalProperties": false
+      },
+      "DeliveryPreview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "report_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "profile_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "profile_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "payload": {
+            "type": "string",
+            "maxLength": 12582912
+          },
+          "payload_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "expires_at": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "created_at": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "payload",
+          "payload_hash",
+          "expires_at"
+        ]
+      },
+      "DeliveryApproval": {
+        "type": "object",
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "const": true
+          },
+          "payload_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "approved",
+          "payload_hash"
+        ],
+        "additionalProperties": false
+      },
+      "DeliveryAttempt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "job_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "attempt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "started_at": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ended_at": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "job_id",
+          "attempt",
+          "status"
+        ]
+      },
+      "DeliveryJob": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "preview_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "retry",
+              "success",
+              "failed"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "next_attempt": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "attempts_history": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "$ref": "#/components/schemas/DeliveryAttempt"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "preview_id",
+          "status",
+          "attempts"
+        ]
+      },
+      "OperationConfigUpdate": {
+        "type": "object",
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "backup_enabled": {
+            "type": "boolean"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          },
+          "generations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "quota_bytes": {
+            "type": "integer",
+            "minimum": 1048576,
+            "maximum": 107374182400
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false
+      },
+      "OperationConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "backup_enabled": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          },
+          "generations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "quota_bytes": {
+            "type": "integer",
+            "minimum": 1048576,
+            "maximum": 107374182400
+          },
+          "last_attempt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "backup_enabled"
+        ]
+      },
+      "BackupJob": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "generation": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "manifest_hash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "size_bytes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "retired_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "generation"
+        ]
+      },
+      "WorkerRun": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "processed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "started_at": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "processed"
+        ]
+      },
+      "OperationHealth": {
+        "type": "object",
+        "properties": {
+          "workers": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "object"
+            }
+          },
+          "counts": {
+            "type": "object"
+          },
+          "ci": {
+            "type": "object"
+          },
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "restore": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "workers",
+          "counts",
+          "ci",
+          "schema",
+          "restore"
+        ]
+      },
+      "SettingsUpdate": {
+        "type": "object",
+        "properties": {
+          "poll_interval": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "polling_enabled": {
+            "type": "boolean"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 100
+          },
+          "default_view": {
+            "type": "string",
+            "enum": [
+              "all",
+              "unread",
+              "starred"
+            ]
+          },
+          "api_rate_limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "ReaderSettings": {
+        "type": "object",
+        "properties": {
+          "poll_interval": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "polling_enabled": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 100
+          },
+          "default_view": {
+            "type": "string",
+            "enum": [
+              "all",
+              "unread",
+              "starred"
+            ]
+          },
+          "api_rate_limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "id",
+          "poll_interval",
+          "polling_enabled",
+          "page_size",
+          "default_view",
+          "api_rate_limit"
+        ]
+      },
+      "BulkArticleState": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "uniqueItems": true
+          },
+          "is_read": {
+            "type": "boolean"
+          },
+          "is_starred": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "additionalProperties": false
+      },
+      "OpmlResult": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "skipped": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "contract": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "added",
+          "skipped",
+          "contract"
+        ]
+      },
+      "ReportResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Report"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ReportPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/Report"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "DeliveryProfileResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DeliveryProfile"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "DeliveryProfilePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/DeliveryProfile"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "DeliveryPreviewResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DeliveryPreview"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "DeliveryPreviewPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/DeliveryPreview"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "DeliveryJobResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DeliveryJob"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "DeliveryJobPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/DeliveryJob"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "OperationConfigResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/OperationConfig"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "OperationConfigPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/OperationConfig"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "BackupJobResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BackupJob"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "BackupJobPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/BackupJob"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "WorkerRunResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WorkerRun"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "WorkerRunPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/WorkerRun"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "OperationHealthResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/OperationHealth"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "OperationHealthPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/OperationHealth"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "ReaderSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReaderSettings"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ReaderSettingsPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ReaderSettings"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "BulkArticleStateResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BulkArticleState"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "BulkArticleStatePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/BulkArticleState"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
+      },
+      "OpmlResultResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/OpmlResult"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "OpmlResultPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/OpmlResult"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ]
       }
     },
     "parameters": {
@@ -12416,6 +13588,1169 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssistantReviewCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/reports": {
+      "post": {
+        "summary": "Create immutable classified local report",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List report metadata without payload",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/reports/{report_id}": {
+      "get": {
+        "summary": "Read immutable report and manifest",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/reports/{report_id}/download": {
+      "get": {
+        "summary": "Attachment with format-specific MIME; Markdown/JSON/CSV/STIX",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/delivery-profiles": {
+      "get": {
+        "summary": "List exact notification destinations",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryProfilePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create disabled by default exact allowlist profile",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryProfileCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delivery-profiles/{profile_id}": {
+      "patch": {
+        "summary": "Explicit enable/disable with expected revision",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryProfileUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/{report_id}/delivery-previews": {
+      "post": {
+        "summary": "Prepare exact payload with hash and expiry; no send",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryPreviewCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delivery-previews/{preview_id}": {
+      "get": {
+        "summary": "Read exact approved-wire candidate",
+        "parameters": [
+          {
+            "name": "preview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/delivery-previews/{preview_id}/jobs": {
+      "post": {
+        "summary": "Approve hash once; same preview returns same job",
+        "parameters": [
+          {
+            "name": "preview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryJobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryApproval"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delivery-jobs": {
+      "get": {
+        "summary": "Bounded delivery history",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryJobPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/delivery-jobs/{job_id}": {
+      "get": {
+        "summary": "Delivery result and bounded attempt audit",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryJobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/operations": {
+      "get": {
+        "summary": "Safe workers, counts, offline restore and CI setup state",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationHealthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/operations/worker-runs": {
+      "get": {
+        "summary": "Safe bounded worker metrics",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkerRunPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/operations/config": {
+      "get": {
+        "summary": "Read backup schedule and limits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationConfigResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Set opt-in backup schedule with expected revision",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationConfigResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperationConfigUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/operations/backups": {
+      "get": {
+        "summary": "Backup generation metadata",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupJobPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      },
+      "post": {
+        "summary": "Empty body: enqueue one verified backup; never restore",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupJobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "summary": "Read current global reader settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Validate merged settings then atomically save",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReaderSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/bulk-state": {
+      "post": {
+        "summary": "Atomic update of 1..100 unique existing article IDs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkArticleStateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkArticleState"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/opml": {
+      "get": {
+        "summary": "Download RSS subscription OPML; excludes SNS/page",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      },
+      "post": {
+        "summary": "Atomic insertion-only XML import, 1MiB/100 feeds; no inline fetching",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpmlResultResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Expired preview, changed policy or stale revision"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "415": {
+            "description": "XML content type required"
+          },
+          "413": {
+            "description": "More than 1MiB"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/xml": {
+              "schema": {
+                "type": "string",
+                "maxLength": 1048576
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "type": "string",
+                "maxLength": 1048576
+              }
+            },
+            "text/x-opml": {
+              "schema": {
+                "type": "string",
+                "maxLength": 1048576
               }
             }
           }

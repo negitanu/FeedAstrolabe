@@ -93,7 +93,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 
 ## 調査ワークスペースへの拡張計画
 
-セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。第六段階の調査案件・版付きメモ・共有タグは実装済みです。第七〜第十三段階は実装済み、第十四段階は後続計画です。
+セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。第六段階の調査案件・版付きメモ・共有タグは実装済みです。第七〜第十四段階を実装・検証済みです。`/operations` からレポート・通知承認・ワーカー状態・世代バックアップを利用できます。[運用方法](docs/reports-operations.md)。実モデルと実通知は未設定、CIはworkflow権限待ちです。
 
 
 `/workspaces` から調査案件を作成し、既存フィード・記事を複数の案件へ関連付けられます。Markdown メモは事実／情報源の主張／仮説と版履歴を持ち、同時編集は409で保護します。共有タグ、案件／記事タグによる検索、アーカイブ／再開、公開区分を UI・API から利用できます。[操作と制限](docs/research.md)、[第六段階の検証](docs/verification-phase-six.md) を参照してください。

@@ -38,3 +38,6 @@ textarea { width:100%; border:1px solid var(--border,#dce2df); border-radius:7px
 .entity-node { fill: #22685d; }
 .entity-node-label { fill: white; font: 12px sans-serif; }
 .research-page p { overflow-wrap: anywhere; }
+
+.research-page form > label { display:block; margin:12px 0 6px; }
+.research-page form > label > select { display:block; width:100%; min-width:0; margin-top:4px; padding:9px 11px; border:1px solid #dbe2e4; border-radius:7px; background:#fff; color:var(--ink); font:inherit; }
