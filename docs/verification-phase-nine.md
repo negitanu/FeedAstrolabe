@@ -11,3 +11,5 @@ OpenSpec change: `phase-nine-entities-relations`。対象の正規化・出典�
 抽出は候補で、識別子の存在や所有者・攻撃者の同一性を認定しません。確信度と記録者は人の判断／自己申告です。graphの省略とfamily上限は明示し、一覧から辿れます。根拠の参照を保持するため言及・関係・監査のある本文はretentionで削除しません。共有ライブラリの案件分類は権限分離ではありません。
 
 Cloudflare実接続、X実資格情報、GitHub CI有効化は引き続き後段。外部の実照会は第九段階には含めず、fixture確認と区別します。秘密情報検査・push・仕様同期結果は完了後追記します。
+
+実装 commit `a810648` をGitHub mainへpushしリモート一致を確認。候補563件、Git履歴と全indexのGitleaksで検出なし。検査の限定fingerprintは維持。対象仕様3要件・7シナリオを正規仕様へ同期し、`openspec/changes/archive/2026-10-08-phase-nine-entities-relations/` にarchive、11/11タスク完了。

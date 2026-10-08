@@ -54,7 +54,7 @@ Change：[phase-eight-watchlists-triage](../openspec/changes/archive/2026-10-08-
 
 ## 第九段階：対象抽出・関係・タイムライン
 
-Change：[phase-nine-entities-relations](../openspec/changes/phase-nine-entities-relations/proposal.md)
+Change：[phase-nine-entities-relations](../openspec/changes/archive/2026-10-08-phase-nine-entities-relations/proposal.md)
 
 - CVE、ドメイン、IP、ASN、ハッシュ、リポジトリ識別子の抽出・正規化。
 - 組織・製品・モデルの別名と手動訂正、対象ごとの横断検索。
