@@ -25,7 +25,7 @@ Change：[phase-six-research-workspaces](../openspec/changes/archive/2026-10-08-
 
 ## 第七段階：根拠保存・出典管理
 
-Change：[phase-seven-evidence-provenance](../openspec/changes/phase-seven-evidence-provenance/proposal.md)
+Change：[phase-seven-evidence-provenance](../openspec/changes/archive/2026-10-08-phase-seven-evidence-provenance/proposal.md)
 
 - 取得時の本文／選択要素テキストを、変更されない根拠の版として保存。
 - URL、発行元、公開日時、観測日時、取得日時、取得方法、SHA-256、引用位置を保持。

@@ -12,3 +12,5 @@ OpenSpec change: `phase-seven-evidence-provenance`。不変な根拠版、公開
 根拠は加工済み表現、ハッシュは整合性確認であり真実性の認定ではありません。legacy記事の実公開日時は不明のまま移行します。添付はOCR／ブラウザー内PDF表示に対応せず、最大10MiB／200ページ／抽出10万文字。LinuxでCPU／アドレス空間／コンテナ制限を検証し、macOS nativeではアドレス空間制限を適用していません。[pypdfの抽出仕様とメモリー上の注意](https://pypdf.readthedocs.io/en/latest/user/extract-text.html)を確認して6.19.0に固定しました。
 
 外部接続の確認は区別します。Cloudflare実接続は指示どおり後段、X実資格情報とGitHub CI有効化は従来どおり未完了。添付・外部ページの受入は決定的fixtureで、利用者の調査内容を外部へ送信していません。配布時の秘密情報検査とGit/仕様同期の結果は完了後に追記します。
+
+実装 commit `6dfae28` を GitHub main へ push してリモート一致を確認。Git候補432件の秘密情報パターン検査、Gitleaks履歴・全index候補の検査で検出なし。既存の限定fingerprintを維持。正規仕様 `openspec/specs/evidence-provenance/spec.md` を同期し `openspec/changes/archive/2026-10-08-phase-seven-evidence-provenance/` に archive、12/12タスク完了。
