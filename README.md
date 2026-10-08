@@ -1,6 +1,6 @@
 # FeedAstrolabe
 
-個人利用向けの RSS/Atom リーダー。第二段階のコンテナ、API・設定機能を Flask / SQLite で実装しています。Cloudflare の実公開は接続先の設定後に行います。
+個人利用向けの RSS/Atom リーダー。RSS、SNS、API・設定と Playwright のページ観測を Flask / SQLite で実装しています。Cloudflare の実公開は接続先の設定後に行います。
 
 ## 起動
 
@@ -44,7 +44,7 @@ native の既定は認証なしの localhost UI です。API は常に Bearer �
 
 既定は `instance/feeds.sqlite3`、秘密鍵は `instance/secret.key`。Git に含めません。`FEEDASTROLABE_DATA_DIR` に絶対パスを指定すると保存先を変更できます。Web と worker には同じ値を設定します。
 
-バックアップは Web/worker を停止して `instance/` 全体をコピーするか、SQLite の backup API を使用します。稼働中に DB ファイルだけをコピーすると WAL の内容が漏れる場合があります。復元時も両プロセスを停止してから置き換えます。
+バックアップは Web/worker/observer を停止して `instance/` 全体をコピーするか、SQLite の backup API を使用します。稼働中に DB ファイルだけをコピーすると WAL の内容が漏れる場合があります。復元時も Web/worker/observer を停止してから置き換えます。
 
 ## OpenSpec / SDD
 
@@ -76,3 +76,13 @@ openspec validate --all --strict --no-interactive
 ## 次の段階
 
 [ROADMAP.md](ROADMAP.md) に指定された四段階の順序、受入条件と必要な設定を記録しています。
+
+## 固定ページの観測
+
+設定画面の「ページ観測」で公開 URL と CSS セレクターを登録します。初回は基準を保存し、その後のテキスト変化を差分記事として表示します。JavaScript 描画に対応し、未読・スター・検索・記事 API を共通で利用できます。
+
+```sh
+docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up --build -d --wait
+```
+
+描画コンテナはネットワークと DB を持たず、専用 observer が検証した同一 origin のリソースだけを仲介します。[観測の設定・制限](docs/observation.md) と [第四段階の検証記録](docs/verification-phase-four.md) を参照してください。ログインや画像比較は対象外です。

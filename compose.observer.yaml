@@ -1,0 +1,46 @@
+services:
+  observer:
+    build: .
+    image: feedastrolabe:local
+    command: [python, -m, flask, --app, feedastrolabe, observer-worker]
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m"]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    volumes: [reader-data:/data, renderer-ipc:/run/observer]
+    networks: [reader]
+    environment:
+      FEEDASTROLABE_RENDER_SOCKET: /run/observer/renderer.sock
+    depends_on:
+      web: {condition: service_healthy}
+      renderer: {condition: service_healthy}
+    stop_grace_period: 55s
+  renderer:
+    build: {context: ., dockerfile: Dockerfile.observer}
+    image: feedastrolabe-renderer:local
+    restart: unless-stopped
+    init: true
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=256m"]
+    shm_size: 128m
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+    volumes: [renderer-ipc:/run/observer]
+    healthcheck:
+      test: [CMD, python, -c, "import stat,os; assert stat.S_ISSOCK(os.stat('/run/observer/renderer.sock').st_mode)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    stop_grace_period: 50s
+volumes:
+  renderer-ipc:

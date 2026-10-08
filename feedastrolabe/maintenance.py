@@ -31,11 +31,12 @@ def restore(source, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     src = connect(str(source))
     try:
-        if src.execute('PRAGMA quick_check').fetchone()[0] != 'ok' or src.execute('PRAGMA user_version').fetchone()[0] not in (1, 2, 3):
+        if src.execute('PRAGMA quick_check').fetchone()[0] != 'ok' or src.execute('PRAGMA user_version').fetchone()[0] not in (1, 2, 3, 4):
             raise ValueError('Invalid backup schema')
-        with (destination.parent / 'init.lock').open('a') as init_lock, (destination.parent / 'refresh.lock').open('a') as refresh:
+        with (destination.parent / 'init.lock').open('a') as init_lock, (destination.parent / 'refresh.lock').open('a') as refresh, (destination.parent / 'observer.lock').open('a') as observer:
             fcntl.flock(init_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             fcntl.flock(refresh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(observer, fcntl.LOCK_EX | fcntl.LOCK_NB)
             dst = connect(str(destination))
             try:
                 src.backup(dst)
@@ -47,7 +48,7 @@ def restore(source, destination):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='SQLite backup/restore. Stop Web and worker before restore.')
+    parser = argparse.ArgumentParser(description='SQLite backup/restore. Stop Web, worker and observer before restore.')
     parser.add_argument('action', choices=['backup', 'restore'])
     parser.add_argument('file', type=Path)
     args = parser.parse_args()

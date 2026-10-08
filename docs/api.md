@@ -15,7 +15,7 @@
 
 - `limit`：1〜100、既定30。
 - `feed`：フィード ID。
-- `source_type`：`rss`、`x`、`mastodon` で記事を絞り込み。
+- `source_type`：`rss`、`x`、`mastodon`、`page` で記事を絞り込み。
 - `is_read`、`is_starred`：`true` または `false`。
 - `q`：タイトル/本文の部分一致、最大200文字。`%` と `_` も文字として検索。
 - `before_id`：この ID より小さい記事を ID 降順で取得。
@@ -115,3 +115,7 @@ with urllib.request.urlopen(request, timeout=45) as response:
 OpenAPI 定義は [openapi.json](../feedastrolabe/static/openapi.json) にあります。
 
 参考：[Cloudflare サービス認証](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/)。
+
+## ページ観測
+
+`POST /api/v1/feeds` は `source_type: "page"` と `url`、`selector`、`settle_ms`、`poll_interval`、`retention_days` を受け付けます。登録時は取得せず201で返します。書き込みキーの `POST /api/v1/feeds/{id}/observe` は専用ワーカーへの予約を202で返します。記事一覧の `source_type=page` で差分記事を取得できます。基準本文は購読 API に含めません。設定と制限は [観測手順](observation.md) を参照してください。

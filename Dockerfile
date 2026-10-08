@@ -6,7 +6,7 @@ COPY requirements-production-lock.txt ./
 RUN pip install --no-cache-dir -r requirements-production-lock.txt \
     && groupadd --gid 10001 feedastrolabe \
     && useradd --uid 10001 --gid 10001 --no-create-home feedastrolabe \
-    && mkdir /data && chown 10001:10001 /data
+    && mkdir -p /data /run/observer && chown 10001:10001 /data /run/observer
 COPY feedastrolabe ./feedastrolabe
 USER 10001:10001
 EXPOSE 5000

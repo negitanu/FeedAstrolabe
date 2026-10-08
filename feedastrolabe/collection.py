@@ -90,6 +90,11 @@ def refresh_feeds(feed_id=None, due_only=False, interval_override=None):
         feeds = db.execute('SELECT * FROM feeds' + (' WHERE id=?' if feed_id else ''), (feed_id,) if feed_id else ()).fetchall()
         config = preferences()
         for feed in feeds:
+            if feed['source_type'] == 'page':
+                if not due_only and (feed_id or feed['enabled']):
+                    from .observation import queue_page
+                    queue_page(feed['id'])
+                continue
             if feed['source_type'] != 'rss':
                 from .social import cooldown
                 if cooldown(feed):

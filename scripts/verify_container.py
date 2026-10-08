@@ -100,7 +100,7 @@ def main():
             row = get_db().execute("SELECT is_read,is_starred FROM articles WHERE guid='container-smoke-state'").fetchone()
             assert tuple(row)==(1,1)
             assert get_db().execute("SELECT count(*) FROM articles WHERE guid='mastodon:789'").fetchone()[0] == 1
-            assert get_db().execute('PRAGMA user_version').fetchone()[0] == 3
+            assert get_db().execute('PRAGMA user_version').fetchone()[0] == 4
         assert json.load(urllib.request.urlopen('http://127.0.0.1:5000/healthz'))['status']=='ok'
         print('PASS: Web/worker recreation retains read and star state')
     ''')

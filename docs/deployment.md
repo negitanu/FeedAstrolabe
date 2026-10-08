@@ -77,9 +77,9 @@ mkdir -p backups
 docker compose -f compose.yaml -f compose.local.yaml cp web:/data/library-20261008.sqlite3 backups/library-20261008.sqlite3
 ```
 
-復元前に Web と worker を停止します。元DBもbackupしてから実行してください。nativeではサービス停止後に `maintenance restore <snapshot>` を実行します。v1 snapshot は v2 に移行されます。
+復元前に Web、worker、ページ観測を使用している場合は observer を停止します。元DBもbackupしてから実行してください。nativeではサービス停止後に `maintenance restore <snapshot>` を実行します。v1〜v3 snapshot は v4 に移行されます。
 
-コンテナでは両サービスを停止し、snapshotを標準入力から one-off restore へ渡します。コンテナのUID10001が一時ファイルを作成するため、ホスト側のUIDやファイル所有者が違っていてもコピー時のpermission変更を必要としません。
+コンテナでは対象サービスを停止し、snapshotを標準入力から one-off restore へ渡します。コンテナのUID10001が一時ファイルを作成するため、ホスト側のUIDやファイル所有者が違っていてもコピー時のpermission変更を必要としません。
 
 ```sh
 docker compose -f compose.yaml -f compose.local.yaml stop web worker
@@ -89,7 +89,7 @@ docker compose -f compose.yaml -f compose.local.yaml up -d --wait
 
 native→コンテナも同じ標準入力の手順で移行できます。DB snapshot と別に `secret.key` を安全にバックアップするとセッションの署名鍵も保持できます。新しい保存先で新しい secret.key が作られた場合、既存 cookie は再発行されますがDBのAPIキーは引き続き利用できます。
 
-ローリング更新は今回の対象外です。コード更新・DB移行はbackupしてWeb/workerを停止して行い、旧版への復帰は対応するsnapshotも復元します。nativeで変更したDBを旧プロセスと併用しないでください。
+ローリング更新は今回の対象外です。コード更新・DB移行はbackupしてWeb/worker/observerを停止して行い、旧版への復帰は対応するsnapshotも復元します。nativeで変更したDBを旧プロセスと併用しないでください。
 
 ## 環境変数と運用設定
 
@@ -97,7 +97,7 @@ native→コンテナも同じ標準入力の手順で移行できます。DB sn
 
 ポーリング間隔・pause・一覧件数・初期ビュー・APIレート上限は `/settings` の永続設定です。worker は処理中の取得が終了してから次の10秒tickで再読み込みします。個別フィードの間隔を優先し、連続失敗時は2倍ずつ最大24時間まで待機します。成功で失敗数は0に戻ります。全体pauseは自動収集のみ停止し、明示的なフィードの手動取得は利用できます。
 
-旧 `worker --interval 900` も使えますが、明示指定すると画面の全体間隔を上書きします。通常は引数なしの worker を使ってください。表示の時刻はUTC。自動記事削除は行いません。
+旧 `worker --interval 900` も使えますが、明示指定すると画面の全体間隔を上書きします。通常は引数なしの worker を使ってください。表示の時刻はUTC。RSS/SNS の自動記事削除は行いません。ページ観測は設定した保存期間の未スター記事を削除します。
 
 ## 再現可能なコンテナ検証
 
@@ -105,6 +105,8 @@ native→コンテナも同じ標準入力の手順で移行できます。DB sn
 .venv/bin/python scripts/verify_container.py
 ```
 
-`feedastrolabe-verify` という独立したCompose projectのvolumeに検証記事を作り、実HTTP API、失効、backup/restore、container recreationを確認します。5010が空いている状態で実行してください。検証用volumeは終了後も保持します。既存ライブラリのprojectを対象にしません。
+`feedastrolabe-verify` という独立したCompose projectのvolumeに検証記事を作り、実HTTP API、失効、backup/restore、container recreationを確認します。検証用ポートは5011です。検証用volumeは終了後も保持します。既存ライブラリのprojectを対象にしません。
 
 参考：[Access JWT 検証](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)、[Tunnel token-file](https://developers.cloudflare.com/tunnel/reference/run-parameters/)、[サービス認証](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/)。
+
+ページ観測を使用している環境では、復元の各 Compose コマンドに `-f compose.observer.yaml` を追加し、停止対象に `observer` も追加します。[観測の起動と制限](observation.md) を参照してください。

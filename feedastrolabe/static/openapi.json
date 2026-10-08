@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -146,6 +146,51 @@
                       "folder": {
                         "type": "string",
                         "maxLength": 80
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_type",
+                      "url",
+                      "selector"
+                    ],
+                    "properties": {
+                      "source_type": {
+                        "const": "page"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "selector": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 500
+                      },
+                      "folder": {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      "settle_ms": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10000,
+                        "default": 1000
+                      },
+                      "poll_interval": {
+                        "type": "integer",
+                        "minimum": 60,
+                        "maximum": 86400,
+                        "default": 900
+                      },
+                      "retention_days": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 365,
+                        "default": 90
                       }
                     }
                   }
@@ -300,7 +345,8 @@
               "enum": [
                 "rss",
                 "x",
-                "mastodon"
+                "mastodon",
+                "page"
               ]
             }
           }
@@ -405,6 +451,41 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/feeds/{feed_id}/observe": {
+      "post": {
+        "summary": "Queue a page observation (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued"
+          },
+          "401": {
+            "description": "Invalid key"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Page observation not found"
           }
         }
       }

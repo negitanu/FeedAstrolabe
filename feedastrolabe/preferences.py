@@ -8,6 +8,8 @@ def preferences():
 
 def bounded_int(value, low, high, label):
     try:
+        if isinstance(value,(bool,float)):
+            raise ValueError()
         number = int(value)
     except (TypeError, ValueError):
         raise ValueError(f'{label}は整数で入力してください。') from None

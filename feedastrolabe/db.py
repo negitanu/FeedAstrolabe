@@ -35,9 +35,10 @@ def init_database(path):
     db = connect(path)
     try:
         db.execute('PRAGMA journal_mode=WAL')
+        db.execute('PRAGMA foreign_keys=OFF')
         db.execute('BEGIN IMMEDIATE')
         version = db.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, 1, 2, 3):
+        if version not in (0, 1, 2, 3, 4):
             raise RuntimeError(f'Unsupported database version: {version}')
         if version == 0:
             for statement in SCHEMA.split(';'):
@@ -66,7 +67,26 @@ def init_database(path):
                 db.execute(f'ALTER TABLE feeds ADD COLUMN {name} TEXT')
             db.execute("CREATE TABLE provider_cooldowns (provider TEXT PRIMARY KEY, retry_at TEXT NOT NULL)")
             db.execute('PRAGMA user_version=3')
+        if version < 4:
+            sql = db.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='feeds'").fetchone()[0]
+            sql = sql.replace('CREATE TABLE feeds', 'CREATE TABLE feeds_next', 1).replace("('rss','x','mastodon')", "('rss','x','mastodon','page')")
+            db.execute(sql)
+            columns = ','.join(row[1] for row in db.execute('PRAGMA table_info(feeds)'))
+            db.execute(f'INSERT INTO feeds_next({columns}) SELECT {columns} FROM feeds')
+            db.execute('DROP TABLE feeds')
+            db.execute('ALTER TABLE feeds_next RENAME TO feeds')
+            db.execute('ALTER TABLE feeds ADD COLUMN selector TEXT')
+            db.execute('ALTER TABLE feeds ADD COLUMN settle_ms INTEGER NOT NULL DEFAULT 1000 CHECK(settle_ms BETWEEN 0 AND 10000)')
+            db.execute('ALTER TABLE feeds ADD COLUMN snapshot TEXT')
+            db.execute('ALTER TABLE feeds ADD COLUMN observation_seq INTEGER NOT NULL DEFAULT 0')
+            db.execute('ALTER TABLE feeds ADD COLUMN revision INTEGER NOT NULL DEFAULT 0')
+            db.execute('ALTER TABLE feeds ADD COLUMN retention_days INTEGER NOT NULL DEFAULT 90 CHECK(retention_days BETWEEN 1 AND 365)')
+            db.execute('CREATE TABLE page_jobs (feed_id INTEGER PRIMARY KEY REFERENCES feeds(id) ON DELETE CASCADE,requested_at TEXT NOT NULL)')
+            db.execute('PRAGMA user_version=4')
+        if db.execute('PRAGMA foreign_key_check').fetchone():
+            raise RuntimeError('Database foreign key integrity check failed')
         db.commit()
+        db.execute('PRAGMA foreign_keys=ON')
     except BaseException:
         db.rollback()
         raise

@@ -148,7 +148,7 @@ def create_app(test_config=None):
     def refresh():
         try:
             succeeded, failed = refresh_feeds(request.form.get('feed', type=int))
-            flash(f'更新完了：{succeeded} 件成功、{failed} 件失敗。', 'error' if failed else 'success')
+            flash(f'更新完了：{succeeded} 件成功、{failed} 件失敗。ページ観測は専用ワーカーに予約しました。', 'error' if failed else 'success')
         except ValueError as exc:
             flash(str(exc), 'error')
         return return_to()
@@ -213,6 +213,22 @@ def create_app(test_config=None):
                     click.echo('success={}, failed={}'.format(*result))
             except ValueError as exc:
                 click.echo(str(exc), err=True)
+            if once:
+                break
+            time.sleep(10)
+
+    @app.cli.command('observer-worker')
+    @click.option('--once', is_flag=True)
+    def observer_worker(once):
+        """Observe scheduled and queued public pages with a separate renderer."""
+        from .observation import observe_pages
+        while True:
+            try:
+                result=observe_pages()
+                if once or any(result):
+                    click.echo('observed={}, failed={}'.format(*result))
+            except ValueError as exc:
+                click.echo(str(exc),err=True)
             if once:
                 break
             time.sleep(10)

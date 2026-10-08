@@ -5,6 +5,7 @@ from .collection import add_feed
 from .fetch import normalize_url
 from .preferences import bounded_int
 from .social import add_social
+from .observation import add_page, queue_page
 
 api = Blueprint('api', __name__, url_prefix='/api/v1')
 api.before_request(authenticate_api)
@@ -13,7 +14,10 @@ api.before_request(authenticate_api)
 def feed_record(row):
     result = dict(row)
     result['enabled'] = bool(result['enabled'])
-    for field in ('page_cursor', 'pending_newest', 'since_id'):
+    if result['source_type'] == 'page':
+        result['url'] = result['target']
+        result['has_baseline'] = result['snapshot'] is not None
+    for field in ('page_cursor', 'pending_newest', 'since_id', 'snapshot'):
         result.pop(field, None)
     return result
 
@@ -52,9 +56,20 @@ def create_feed():
     if not isinstance(body, dict):
         abort(400, description='Supply a JSON object')
     source_type = body.get('source_type', 'rss')
-    allowed = {'source_type', 'url', 'folder'} if source_type == 'rss' else {'source_type', 'source_kind', 'target', 'instance_url', 'folder'}
+    if source_type == 'page':
+        allowed = {'source_type','url','selector','settle_ms','poll_interval','retention_days','folder'}
+    else:
+        allowed = {'source_type', 'url', 'folder'} if source_type == 'rss' else {'source_type', 'source_kind', 'target', 'instance_url', 'folder'}
     if set(body) - allowed:
         abort(400, description='Unsupported fields; credentials must use server secret files')
+    if source_type == 'page':
+        try:
+            feed_id=add_page(body.get('url',''),body.get('selector',''),body.get('folder',''),body.get('settle_ms',1000),body.get('poll_interval',900),body.get('retention_days',90))
+        except ValueError as exc:
+            if '登録済み' in str(exc):
+                abort(409,description='Observation already exists')
+            abort(400,description=str(exc))
+        return get_feed(feed_id),201,{'Location':url_for('api.get_feed',feed_id=feed_id)}
     if source_type != 'rss':
         if source_type not in ('x', 'mastodon'):
             abort(400, description='Unsupported source_type')
@@ -86,7 +101,7 @@ def create_feed():
 def list_articles():
     clauses, params = [], []
     if 'source_type' in request.args:
-        if request.args['source_type'] not in ('rss', 'x', 'mastodon'):
+        if request.args['source_type'] not in ('rss', 'x', 'mastodon', 'page'):
             abort(400, description='Unsupported source_type')
         clauses.append('f.source_type=?')
         params.append(request.args['source_type'])
@@ -148,3 +163,12 @@ def update_article(article_id):
         if not result.rowcount:
             abort(404, description='Article not found')
     return get_article(article_id)
+
+
+@api.post('/feeds/<int:feed_id>/observe')
+def observe_feed(feed_id):
+    row=get_db().execute("SELECT id FROM feeds WHERE id=? AND source_type='page'",(feed_id,)).fetchone()
+    if row is None:
+        abort(404,description='Page observation not found')
+    queue_page(feed_id)
+    return {'data':{'feed_id':feed_id,'queued':True}},202

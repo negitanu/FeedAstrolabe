@@ -3,3 +3,4 @@
 !feedastrolabe/
 !feedastrolabe/**
 feedastrolabe/**/__pycache__/
+!requirements-observer.txt

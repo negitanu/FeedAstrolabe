@@ -43,3 +43,11 @@ credentials*.json
 .envrc
 .env.*
 !.env.example
+
+# Browser runtimes, observation IPC and local capture artifacts
+.playwright/
+ms-playwright/
+*.sock
+observer-runtime/
+playwright-report/
+test-results/
