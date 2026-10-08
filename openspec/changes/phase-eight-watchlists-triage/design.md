@@ -2,7 +2,7 @@
 
 Large mixed-topic feeds require repeatable triage and explanations for why an item is relevant.
 
-Implementation prerequisite: `phase-six-research-workspaces`, `phase-seven-evidence-provenance`. This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: `phase-six-research-workspaces`, `phase-seven-evidence-provenance`. Both prerequisites are implemented, accepted and archived; deployed schema is v6.
 
 ## Goals / Non-Goals
 
@@ -43,3 +43,17 @@ Before implementing, confirm prerequisite changes and deployed schema, assign th
 ## Open Questions
 
 Connector/model endpoint quotas, licenses, model runtime choice and required credential files are resolved in the listed research/configuration tasks before enabling that integration. Missing external configuration is reported as unverified, never converted to a successful acceptance check. Initial bounds are design defaults and can be revised with explicit specification updates.
+
+## Implementation contract (2026-10-08)
+
+Schema v7 adds workspace watchlists (kind saved-search/watchlist), immutable rule revisions, per-revision evidence cursor, durable included/excluded matches, exact duplicate fingerprints/groups and a bounded scan cursor. Evidence IDs become AUTOINCREMENT to prevent retention from reusing a processed ID. No article flags are repurposed.
+
+A query is a shallow JSON AST with all/any/none arrays of predicates {field,op,value}. Maximum total40 predicates across include and exclusion, serialized JSON2000 characters each, value200 characters. Fields: title/text/publisher/url/source_type/tag/published_at/captured_at. Text uses literal Unicode casefold contains/eq; date uses eq/gte/lte with real UTC timestamps; source_type and tag use eq. No SQL or regex is compiled from user input. Query evaluation uses indexed ID ranges and workspace associations (direct article, linked feed, pinned evidence/note or quotation). Mutable tags and new associations require explicit reprocessing of existing evidence.
+
+At most100 lists per workspace,20 current enabled lists per worker tick ordered by oldest processing time,100 evidence records per list,100 duplicate fingerprint records. Automatic processing pauses archived workspaces; explicit reprocessing also refuses archived parents and resets the cursor while preserving unique revision/evidence matches. Rule changes require expected_revision and create a new revision/cursor. Preview is read-only, bounded and reports its cursor.
+
+Inclusion and exclusion are evaluated independently. Exclusion wins but both matching predicate explanations are retained. Empty exclusion disables exclusion. Priority low/normal/high/critical and a human reason (500 characters) are deterministic rule metadata. Inbox lists all verdicts with per-event seen state; digest for a real UTC date lists included matches, with no external delivery. Match events keep their evidence via restrictive FK and are retention pins until a future explicit event-retention feature.
+
+Duplicates use nonempty exact text SHA-256 or a canonical HTTP(S) URL. Canonicalization removes only utm_* (case-insensitive), fbclid and gclid, drops fragments and sorts remaining query pairs preserving duplicates and blank values. A URL match is labelled same URL and is not asserted to be same text. Two distinct source identities are required; revisions of one source alone do not create a group. Fingerprints retain every evidence version. Group undo is durable suppression; worker retries do not restore suppressed groups, and explicit redo is available. Evidence/source/read/star records are untouched. No fuzzy duplicate matching is implemented.
+
+All processing is transactional under evidence.lock then SQLite; events/groups retain evidence through FK RESTRICT, and blob-aware backup accepts v6/v7 while restore upgrades to v7. Worker polls the triage task after collection and an explicit triage --once command is available. No FTS dependency or external calls are introduced.

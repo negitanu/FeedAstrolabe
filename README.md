@@ -44,7 +44,7 @@ native の既定は認証なしの localhost UI です。API は常に Bearer �
 
 既定は `instance/feeds.sqlite3`、秘密鍵は `instance/secret.key`。Git に含めません。`FEEDASTROLABE_DATA_DIR` に絶対パスを指定すると保存先を変更できます。Web と worker には同じ値を設定します。
 
-バックアップは Web/worker/observer を停止して `instance/` 全体をコピーするか、SQLite の backup API を使用します。稼働中に DB ファイルだけをコピーすると WAL の内容が漏れる場合があります。復元時も Web/worker/observer を停止してから置き換えます。
+バックアップは `maintenance backup-bundle` で DB と根拠ファイルの一貫した bundle を作成します。停止して `instance/` 全体をコピーする方法も利用できます。稼働中に DB ファイルだけをコピーすると WAL の内容が漏れる場合があります。復元時も Web/worker/observer を停止してから置き換えます。
 
 ## OpenSpec / SDD
 
@@ -98,4 +98,6 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 
 `/workspaces` から調査案件を作成し、既存フィード・記事を複数の案件へ関連付けられます。Markdown メモは事実／情報源の主張／仮説と版履歴を持ち、同時編集は409で保護します。共有タグ、案件／記事タグによる検索、アーカイブ／再開、公開区分を UI・API から利用できます。[操作と制限](docs/research.md)、[第六段階の検証](docs/verification-phase-six.md) を参照してください。
 
-第七段階以降、根拠を含むライブラリは DB／blob の一貫した `backup-bundle`／`restore-bundle` を使用します。旧 DB 単体の手順は根拠を持たない snapshot に限ります。v1〜v5 の復元先は v6 になります。[根拠・添付・復旧の手順](docs/evidence.md)を参照してください。
+第七段階以降、根拠を含むライブラリは DB／blob の一貫した `backup-bundle`／`restore-bundle` を使用します。旧 DB 単体の手順は根拠を持たない snapshot に限ります。現在の復元先は v7 になります。[根拠・添付・復旧の手順](docs/evidence.md)を参照してください。
+
+第八段階では案件の保存検索・ウォッチリスト、理由付き優先度、受信箱／UTC日次ダイジェスト、出典を残した重複整理を実装しました。[使い方](docs/triage.md)。

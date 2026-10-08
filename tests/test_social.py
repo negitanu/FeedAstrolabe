@@ -288,13 +288,13 @@ def test_v2_migration_and_v3_restore(app,tmp_path):
         db.execute("INSERT INTO articles(feed_id,guid,title,content,search_text,published_at,is_read,is_starred) VALUES(1,'one','Saved','safe','safe','2026-01-01',1,1)")
     init_database(source);init_database(source)
     with connect(source) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==6
+        assert db.execute('PRAGMA user_version').fetchone()[0]==7
         assert db.execute('SELECT source_type FROM feeds').fetchone()[0]=='rss'
         assert tuple(db.execute('SELECT is_read,is_starred FROM articles').fetchone())==(1,1)
     snapshot=tmp_path/'snapshot.sqlite3';backup(source,snapshot)
     restored=tmp_path/'restored'/'feeds.sqlite3';restore(snapshot,restored)
     with connect(restored) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==6
+        assert db.execute('PRAGMA user_version').fetchone()[0]==7
         assert db.execute('SELECT title FROM articles').fetchone()[0]=='Saved'
 
 

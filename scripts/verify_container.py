@@ -113,7 +113,7 @@ def main():
             row = get_db().execute("SELECT is_read,is_starred FROM articles WHERE guid='container-smoke-state'").fetchone()
             assert tuple(row)==(1,1)
             assert get_db().execute("SELECT count(*) FROM articles WHERE guid='mastodon:789'").fetchone()[0] == 1
-            assert get_db().execute('PRAGMA user_version').fetchone()[0] == 6
+            assert get_db().execute('PRAGMA user_version').fetchone()[0] == 7
             assert get_db().execute("SELECT count(*) FROM note_revisions nr JOIN notes n ON n.id=nr.note_id JOIN workspaces w ON w.id=n.workspace_id WHERE w.title='Container research fixture'").fetchone()[0]==2
             assert get_db().execute("SELECT n.body FROM notes n JOIN workspaces w ON w.id=n.workspace_id WHERE w.title='Container research fixture'").fetchone()[0]=='edited'
         assert json.load(urllib.request.urlopen('http://127.0.0.1:5000/healthz'))['status']=='ok'

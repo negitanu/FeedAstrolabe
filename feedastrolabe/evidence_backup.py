@@ -9,7 +9,7 @@ import shutil
 import sqlite3
 import tempfile
 
-from .db import connect,init_database
+from .db import connect,init_database,SCHEMA_VERSION
 from . import evidence as e
 
 
@@ -28,7 +28,7 @@ def regular(path):
 
 
 def references(db):
-    if db.execute('PRAGMA quick_check').fetchone()[0]!='ok' or db.execute('PRAGMA user_version').fetchone()[0]!=6 or db.execute('PRAGMA foreign_key_check').fetchone():
+    if db.execute('PRAGMA quick_check').fetchone()[0]!='ok' or db.execute('PRAGMA user_version').fetchone()[0] not in range(6,SCHEMA_VERSION+1) or db.execute('PRAGMA foreign_key_check').fetchone():
         raise ValueError('バックアップの DB 整合性が不正です。')
     for row in db.execute('SELECT text,text_hash FROM evidence'):
         if e.digest(row['text'].encode())!=row['text_hash']:
@@ -49,12 +49,14 @@ def backup_bundle(source,destination):
         with closing(connect(source)) as src,closing(connect(dbpath)) as dst:
             src.backup(dst)
             items=references(dst)
+        with closing(connect(dbpath)) as snapshot:
+            schema=snapshot.execute('PRAGMA user_version').fetchone()[0]
         dbpath.chmod(0o600)
         blobs=stage/'evidence-blobs';blobs.mkdir(mode=0o700)
         for item in items:
             data=e.read_blob(item['hash'],item['size'],source.parent)
             path=blobs/item['hash'];path.write_bytes(data);path.chmod(0o600)
-        manifest={'version':1,'schema':6,'database_hash':file_hash(dbpath),'blobs':items}
+        manifest={'version':1,'schema':schema,'database_hash':file_hash(dbpath),'blobs':items}
         (stage/'manifest.json').write_text(json.dumps(manifest,sort_keys=True)+'\n');(stage/'manifest.json').chmod(0o600)
         # Publish only after every referenced blob is verified.
         os.rename(stage,destination)
@@ -70,12 +72,15 @@ def validate_bundle(source):
         raise ValueError('バックアップマニフェストが大きすぎます。')
     try:manifest=json.loads(raw)
     except Exception:raise ValueError('バックアップマニフェストが不正です。') from None
-    if not isinstance(manifest,dict) or set(manifest)!={'version','schema','database_hash','blobs'} or manifest['version']!=1 or manifest['schema']!=6 or not isinstance(manifest['blobs'],list):
+    if not isinstance(manifest,dict) or set(manifest)!={'version','schema','database_hash','blobs'} or manifest['version']!=1 or manifest['schema'] not in range(6,SCHEMA_VERSION+1) or not isinstance(manifest['blobs'],list):
         raise ValueError('未対応のバックアップ形式です。')
     database=regular(source/'feeds.sqlite3')
     if file_hash(database)!=manifest['database_hash']:
         raise ValueError('バックアップ DB のハッシュが一致しません。')
-    with closing(connect(database)) as db:items=references(db)
+    with closing(connect(database)) as db:
+        items=references(db)
+        if db.execute('PRAGMA user_version').fetchone()[0]!=manifest['schema']:
+            raise ValueError('バックアップ schema が一致しません。')
     if items!=manifest['blobs']:
         raise ValueError('バックアップの参照一覧が一致しません。')
     blobs=source/'evidence-blobs'
@@ -90,6 +95,7 @@ def restore_bundle(source,destination):
     if destination.is_symlink() or source.resolve()==destination.parent.resolve():
         raise ValueError('復元先が不正です。')
     destination.parent.mkdir(parents=True,exist_ok=True)
+    destination.parent.chmod(0o700)
     with e.storage_lock(destination.parent),ExitStack() as locks:
         for name in ['init.lock','refresh.lock','observer.lock']:
             handle=locks.enter_context((destination.parent/name).open('a'))
@@ -100,6 +106,9 @@ def restore_bundle(source,destination):
             stage=Path(temporary)/'bundle';shutil.copytree(source,stage,symlinks=True)
             validate_bundle(stage)
             staged_db=stage/'feeds.sqlite3';init_database(staged_db)
+            staged_db.chmod(0o600)
+            (stage/'evidence-blobs').chmod(0o700)
+            for blob in (stage/'evidence-blobs').iterdir():blob.chmod(0o600)
             for suffix in ['-wal','-shm']:
                 if Path(str(destination)+suffix).exists():
                     raise ValueError('稼働中または WAL 未処理の DB には復元できません。サービスを停止し checkpoint してください。')

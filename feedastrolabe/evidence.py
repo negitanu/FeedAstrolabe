@@ -177,7 +177,7 @@ def prune():
     with storage_lock(),r.transaction() as db:
         days=db.execute('SELECT retention_days FROM evidence_settings').fetchone()[0]
         cutoff=(datetime.now(timezone.utc)-timedelta(days=days)).strftime('%Y-%m-%d %H:%M:%S')
-        cursor=db.execute('''DELETE FROM evidence WHERE captured_at<? AND NOT EXISTS(SELECT 1 FROM workspace_evidence w WHERE w.evidence_id=evidence.id) AND NOT EXISTS(SELECT 1 FROM note_evidence n WHERE n.evidence_id=evidence.id) AND NOT EXISTS(SELECT 1 FROM quotations q WHERE q.evidence_id=evidence.id)''',(cutoff,))
+        cursor=db.execute('''DELETE FROM evidence WHERE captured_at<? AND NOT EXISTS(SELECT 1 FROM workspace_evidence w WHERE w.evidence_id=evidence.id) AND NOT EXISTS(SELECT 1 FROM note_evidence n WHERE n.evidence_id=evidence.id) AND NOT EXISTS(SELECT 1 FROM quotations q WHERE q.evidence_id=evidence.id) AND NOT EXISTS(SELECT 1 FROM watch_events w WHERE w.evidence_id=evidence.id) AND NOT EXISTS(SELECT 1 FROM duplicate_members d WHERE d.evidence_id=evidence.id)''',(cutoff,))
         count=cursor.rowcount
         db.execute('DELETE FROM evidence_blobs WHERE NOT EXISTS(SELECT 1 FROM evidence e WHERE e.blob_hash=evidence_blobs.hash)')
     # DB commit precedes orphan removal; interrupted cleanup is retryable.

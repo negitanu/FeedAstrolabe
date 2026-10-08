@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -933,6 +933,812 @@
           "next_before_id",
           "next_after_id"
         ]
+      },
+      "QueryAST": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Shallow all/any/none. Combined include/exclusion at most40 terms. Each normalized JSON at most2000 characters. Literal casefold text contains/eq; source_type and tag only eq; UTC timestamps eq/gte/lte. Empty exclusion disabled. Exclusion wins.",
+        "properties": {
+          "all": {
+            "type": "array",
+            "maxItems": 40,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "op",
+                "value"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "enum": [
+                    "title",
+                    "text",
+                    "publisher",
+                    "url",
+                    "source_type",
+                    "tag",
+                    "published_at",
+                    "captured_at"
+                  ]
+                },
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "contains",
+                    "eq",
+                    "gte",
+                    "lte"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              }
+            }
+          },
+          "any": {
+            "type": "array",
+            "maxItems": 40,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "op",
+                "value"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "enum": [
+                    "title",
+                    "text",
+                    "publisher",
+                    "url",
+                    "source_type",
+                    "tag",
+                    "published_at",
+                    "captured_at"
+                  ]
+                },
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "contains",
+                    "eq",
+                    "gte",
+                    "lte"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              }
+            }
+          },
+          "none": {
+            "type": "array",
+            "maxItems": 40,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "op",
+                "value"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "enum": [
+                    "title",
+                    "text",
+                    "publisher",
+                    "url",
+                    "source_type",
+                    "tag",
+                    "published_at",
+                    "captured_at"
+                  ]
+                },
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "contains",
+                    "eq",
+                    "gte",
+                    "lte"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              }
+            }
+          }
+        }
+      },
+      "WatchlistCreate": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "watchlist",
+              "saved-search"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "query": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "exclusion": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "normal",
+              "high",
+              "critical"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "WatchlistPatch": {
+        "type": "object",
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "watchlist",
+              "saved-search"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "query": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "exclusion": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "normal",
+              "high",
+              "critical"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        }
+      },
+      "Watchlist": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "watchlist",
+              "saved-search"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "query": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "exclusion": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "normal",
+              "high",
+              "critical"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "workspace_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "version_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "cursor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "last_run": {
+            "type": "string"
+          }
+        }
+      },
+      "WatchlistRevision": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "watchlist_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "query": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "exclusion": {
+            "$ref": "#/components/schemas/QueryAST"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "normal",
+              "high",
+              "critical"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "cursor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "WatchEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "workspace_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "watchlist_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "version_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "evidence_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "evidence_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "included": {
+            "type": "boolean"
+          },
+          "seen": {
+            "type": "boolean"
+          },
+          "explanation": {
+            "type": "object",
+            "description": "Every evaluated predicate with matched flag, include/exclusion verdict, priority and reason"
+          },
+          "title": {
+            "type": "string"
+          },
+          "publisher": {
+            "type": "string"
+          },
+          "watchlist_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "article_id": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "DuplicateGroup": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "url",
+              "content"
+            ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "suppressed": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "member_count": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "DuplicateMember": {
+        "type": "object",
+        "properties": {
+          "source_key": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "publisher": {
+            "type": "string"
+          },
+          "source_guid": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "captured_at": {
+            "type": "string"
+          },
+          "blob_hash": {
+            "type": "string"
+          },
+          "text_hash": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "feed_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "article_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "published_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_read": {
+            "type": "integer",
+            "nullable": true,
+            "enum": [
+              0,
+              1,
+              null
+            ]
+          },
+          "is_starred": {
+            "type": "integer",
+            "nullable": true,
+            "enum": [
+              0,
+              1,
+              null
+            ]
+          }
+        }
+      },
+      "WatchlistResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Watchlist"
+          }
+        }
+      },
+      "WatchlistPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Watchlist"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "WatchlistRevisionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WatchlistRevision"
+          }
+        }
+      },
+      "WatchlistRevisionPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchlistRevision"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "WatchEventResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WatchEvent"
+          }
+        }
+      },
+      "WatchEventPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchEvent"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "DuplicateGroupResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DuplicateGroup"
+          }
+        }
+      },
+      "DuplicateGroupPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DuplicateGroup"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "DuplicateMemberResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DuplicateMember"
+          }
+        }
+      },
+      "DuplicateMemberPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DuplicateMember"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "WatchEventPatch": {
+        "type": "object",
+        "required": [
+          "seen"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "seen": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DuplicateGroupPatch": {
+        "type": "object",
+        "required": [
+          "suppressed"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "suppressed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TriageProcessResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "events_created": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "evidence_scanned": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "duplicate_records_scanned": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "TriagePreview": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "properties": {
+                "evidence_id": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9223372036854775807
+                },
+                "included": {
+                  "type": "boolean"
+                },
+                "explanation": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "next_after_id": {
+            "type": "integer"
+          },
+          "batch_limit": {
+            "type": "integer",
+            "enum": [
+              100
+            ]
+          }
+        }
       }
     },
     "parameters": {
@@ -3823,6 +4629,912 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/EvidenceSettingsPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/watchlists": {
+      "get": {
+        "summary": "List workspace saved conditions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistPage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create saved search/watchlist; at most100 per workspace (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchlistCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/{watchlist_id}": {
+      "get": {
+        "summary": "Read current immutable rule revision",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "watchlist_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Create rule revision with expected_revision (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "watchlist_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchlistPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/{watchlist_id}/revisions": {
+      "get": {
+        "summary": "List immutable rule revisions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "watchlist_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistRevisionPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/{watchlist_id}/preview": {
+      "get": {
+        "summary": "Read-only preview at most100 scoped evidence records",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "watchlist_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriagePreview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/{watchlist_id}/reprocess": {
+      "post": {
+        "summary": "Reset cursor and process at most100 scoped records; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "watchlist_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriageProcessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watchlists/{watchlist_id}/process": {
+      "post": {
+        "summary": "Continue processing at most100 scoped records; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "watchlist_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriageProcessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/watch-events": {
+      "get": {
+        "summary": "List watch-events; durable historical rule/evidence versions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "seen",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "included",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchEventPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/digest": {
+      "get": {
+        "summary": "List digest; durable historical rule/evidence versions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "seen",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "included",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Real UTC date, defaults to current UTC date; included matches only"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchEventPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watch-events/{event_id}": {
+      "patch": {
+        "summary": "Mark an event seen/unseen without changing article flags (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchEventResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchEventPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/duplicate-groups": {
+      "get": {
+        "summary": "List exact URL/content groups",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "suppressed",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateGroupPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/duplicate-groups/{group_id}": {
+      "get": {
+        "summary": "Read group metadata",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateGroupResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Durably suppress or redo grouping; keeps all sources (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateGroupResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DuplicateGroupPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/duplicate-groups/{group_id}/members": {
+      "get": {
+        "summary": "List provenance and current article read/star state",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid AST, bounds or filter"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Missing record"
+          },
+          "409": {
+            "description": "Archived parent or stale rule revision"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMemberPage"
+                }
               }
             }
           }

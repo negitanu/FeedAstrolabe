@@ -19,6 +19,8 @@ from .research_api import research_api
 from .research_ui import research_ui
 from .evidence_api import api as evidence_api
 from .evidence_ui import ui as evidence_ui
+from .triage_api import api as triage_api
+from .triage_ui import ui as triage_ui
 from werkzeug.exceptions import HTTPException, SecurityError
 
 
@@ -52,6 +54,8 @@ def create_app(test_config=None):
     app.register_blueprint(research_ui)
     app.register_blueprint(evidence_api)
     app.register_blueprint(evidence_ui)
+    app.register_blueprint(triage_api)
+    app.register_blueprint(triage_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -242,6 +246,12 @@ def create_app(test_config=None):
         except ValueError as exc:
             raise click.ClickException(str(exc)) from exc
 
+    @app.cli.command('triage')
+    def triage_once():
+        """Run one bounded matching/grouping batch without outbound notifications."""
+        from .triage import process
+        click.echo(process())
+
     @app.cli.command('worker')
     @click.option('--interval', default=None, type=click.IntRange(min=60, max=86400), help='Override global interval; per-feed overrides still apply.')
     @click.option('--once', is_flag=True)
@@ -250,6 +260,8 @@ def create_app(test_config=None):
         while True:
             try:
                 result = refresh_feeds(due_only=True, interval_override=interval)
+                from .triage import process
+                process()
                 if once or any(result):
                     click.echo('success={}, failed={}'.format(*result))
             except ValueError as exc:

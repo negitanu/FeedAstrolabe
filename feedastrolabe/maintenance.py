@@ -6,7 +6,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from .db import connect, init_database
+from .db import connect, init_database, SCHEMA_VERSION
 
 
 def backup(source, destination):
@@ -50,7 +50,7 @@ def _restore(source, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     src = connect(str(source))
     try:
-        if src.execute('PRAGMA quick_check').fetchone()[0] != 'ok' or src.execute('PRAGMA user_version').fetchone()[0] not in (1, 2, 3, 4, 5, 6):
+        if src.execute('PRAGMA quick_check').fetchone()[0] != 'ok' or src.execute('PRAGMA user_version').fetchone()[0] not in range(1, SCHEMA_VERSION+1):
             raise ValueError('Invalid backup schema')
         if src.execute('PRAGMA user_version').fetchone()[0] >= 6 and src.execute('SELECT count(*) FROM evidence_blobs').fetchone()[0]:
             raise ValueError('Evidence-bearing databases require restore-bundle.')

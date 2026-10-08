@@ -77,7 +77,7 @@ mkdir -p backups
 docker compose -f compose.yaml -f compose.local.yaml cp web:/data/library-20261008.sqlite3 backups/library-20261008.sqlite3
 ```
 
-復元前に Web、worker、ページ観測を使用している場合は observer を停止します。元DBもbackupしてから実行してください。nativeではサービス停止後に `maintenance restore <snapshot>` を実行します。v1〜v4 snapshot は v5 に移行されます。調査案件・タグ・メモの版履歴も同じ SQLite バックアップに含まれます。
+復元前に Web、worker、ページ観測を使用している場合は observer を停止します。元DBもbackupしてから実行してください。nativeではサービス停止後に `maintenance restore <snapshot>` を実行します。根拠を含まない v1〜v6 snapshot は v7 に移行されます。調査案件・タグ・メモの版履歴も同じ SQLite バックアップに含まれます。
 
 コンテナでは対象サービスを停止し、snapshotを標準入力から one-off restore へ渡します。コンテナのUID10001が一時ファイルを作成するため、ホスト側のUIDやファイル所有者が違っていてもコピー時のpermission変更を必要としません。
 
@@ -111,4 +111,4 @@ native→コンテナも同じ標準入力の手順で移行できます。DB sn
 
 ページ観測を使用している環境では、復元の各 Compose コマンドに `-f compose.observer.yaml` を追加し、停止対象に `observer` も追加します。[観測の起動と制限](observation.md) を参照してください。
 
-第七段階以降、根拠を含むライブラリは DB／blob の一貫した `backup-bundle`／`restore-bundle` を使用します。旧 DB 単体の手順は根拠を持たない snapshot に限ります。v1〜v5 の復元先は v6 になります。[根拠・添付・復旧の手順](evidence.md)を参照してください。
+第七段階以降、根拠を含むライブラリは DB／blob の一貫した `backup-bundle`／`restore-bundle` を使用します。旧 DB 単体の手順は根拠を持たない snapshot に限ります。現在の復元先は v7 になります。[根拠・添付・復旧の手順](evidence.md)を参照してください。

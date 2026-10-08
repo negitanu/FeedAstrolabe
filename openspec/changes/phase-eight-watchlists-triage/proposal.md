@@ -21,4 +21,4 @@ None. Additive capabilities preserve existing RSS/SNS/page and API contracts.
 
 ## Impact
 
-Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Planned only: no runtime behavior changes in this planning delivery. Dependencies: `phase-six-research-workspaces`, `phase-seven-evidence-provenance`.
+Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Adds schema v7 and bounded triage processing to the accepted evidence foundation. Dependencies: `phase-six-research-workspaces`, `phase-seven-evidence-provenance`.

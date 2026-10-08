@@ -29,3 +29,6 @@ textarea { width:100%; border:1px solid var(--border,#dce2df); border-radius:7px
 .research-page .inline-form {flex-wrap:wrap;max-width:100%;}.research-page .inline-form label {flex:0 0 auto;margin:0;}.research-page .inline-form select {width:auto;flex:1 1 160px;min-width:0;}.research-page .inline-form button {flex-shrink:0;}
 
 .provenance {display:grid;grid-template-columns:160px minmax(0,1fr);gap:8px 18px;font-size:12px;}.provenance dd {margin:0;overflow-wrap:anywhere;}.evidence-text {white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-height:600px;overflow:auto;line-height:1.8;}.quote-card {border-left:3px solid var(--accent);padding:8px 18px;margin:18px 0;background:var(--light);}@media(max-width:700px){.provenance {grid-template-columns:1fr;gap:3px;}.provenance dd {margin-bottom:10px;}}
+
+.research-page .hint { overflow-wrap: anywhere; }
+.research-page input[type="checkbox"] { width: auto; display: inline-block; margin: 0 8px 0 0; vertical-align: middle; }

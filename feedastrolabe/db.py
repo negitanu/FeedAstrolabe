@@ -2,6 +2,8 @@ import sqlite3
 from pathlib import Path
 from flask import current_app, g
 
+SCHEMA_VERSION = 7
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feeds (
  id INTEGER PRIMARY KEY, url TEXT NOT NULL UNIQUE, title TEXT NOT NULL,
@@ -38,7 +40,7 @@ def init_database(path):
         db.execute('PRAGMA foreign_keys=OFF')
         db.execute('BEGIN IMMEDIATE')
         version = db.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, 1, 2, 3, 4, 5, 6):
+        if version not in range(SCHEMA_VERSION+1):
             raise RuntimeError(f'Unsupported database version: {version}')
         if version == 0:
             for statement in SCHEMA.split(';'):
@@ -172,6 +174,21 @@ def init_database(path):
                     db.execute(statement)
             db.execute('ALTER TABLE articles ADD COLUMN source_published_at TEXT')
             db.execute('PRAGMA user_version=6')
+        if version < 7:
+            # Stable increasing IDs are required for incremental processing after retention.
+            sql = db.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='evidence'").fetchone()[0]
+            sql = sql.replace('CREATE TABLE evidence', 'CREATE TABLE evidence_next', 1).replace('id INTEGER PRIMARY KEY', 'id INTEGER PRIMARY KEY AUTOINCREMENT', 1)
+            db.execute(sql)
+            columns = ','.join(row[1] for row in db.execute('PRAGMA table_info(evidence)'))
+            db.execute(f'INSERT INTO evidence_next({columns}) SELECT {columns} FROM evidence')
+            db.execute('DROP TABLE evidence')
+            db.execute('ALTER TABLE evidence_next RENAME TO evidence')
+            db.execute('CREATE INDEX evidence_source ON evidence(source_key,id DESC)')
+            db.execute('CREATE INDEX evidence_article ON evidence(article_id,id DESC)')
+            from .triage_schema import SCHEMA as triage_schema
+            for statement in triage_schema.split(';'):
+                if statement.strip(): db.execute(statement)
+            db.execute('PRAGMA user_version=7')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()

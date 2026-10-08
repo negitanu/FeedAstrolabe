@@ -180,3 +180,18 @@ PATCH メモの例：
 - `GET`／`PATCH /api/v1/evidence-settings`：容量 bytes、保存日数、登録済み使用量、保存エラー先頭100件。PATCH例：`{"quota_bytes":524288000,"retention_days":90}`。
 
 書き込みには write キーが必要です。根拠の本文や出典を上書きするAPIはありません。記事の `source_published_at` は情報源が明示した公開日時（不明時null）です。表示用 `published_at` の取得日時代用とは区別します。ファイル整合性不正や容量超過は保存せず400、固定本文ハッシュ不正の detail は409。上限超過のリクエストは413です。[保存・添付・復旧の手順](evidence.md)を参照してください。
+
+## ウォッチと整理（第八段階）
+
+- `GET`／`POST /api/v1/workspaces/{id}/watchlists`：条件一覧／作成（201）。作成例：`{"name":"CVE監視","query":{"any":[{"field":"text","op":"contains","value":"CVE-"}]},"priority":"high","reason":"利用製品の調査"}`。
+- `GET`／`PATCH /api/v1/watchlists/{id}`：現行条件／新しい版。PATCHはexpected_revision必須、古い版は409。
+- `GET /api/v1/watchlists/{id}/revisions`：条件の全版履歴（共通cursor一覧）。
+- `GET /api/v1/watchlists/{id}/preview?after_id=0`：読み取りだけの照合、最大100根拠、next_after_idで続き。通知を作りません。
+- `POST /api/v1/watchlists/{id}/reprocess`：空本文で現行版のcursorをリセットして最大100件再照合。`/process` はcursorを維持して続きの最大100件。
+- `GET /api/v1/workspaces/{id}/watch-events`：採用／除外を含む受信箱。seen／included=true/falseと共通cursor一覧。
+- `GET /api/v1/workspaces/{id}/digest?date=2026-10-08`：実在するUTC日付の採用通知。省略時は現在UTC日付。
+- `PATCH /api/v1/watch-events/{id}`：`{"seen":true}`で確認状態を変更。
+- `GET /api/v1/duplicate-groups?suppressed=false`：グループ一覧。`GET /api/v1/duplicate-groups/{id}` はメタデータ、`/{id}/members` は根拠と元の記事状態の共通cursor一覧。
+- `PATCH /api/v1/duplicate-groups/{id}`：`{"suppressed":true}`で解除、falseで再び有効化。
+
+変更・処理にはwriteキーが必要です。アーカイブされた案件への変更は409。グループ操作は共有ライブラリ全体へ適用します。包含・除外条件の構文、処理と保存期間は[ウォッチの手順](triage.md)を参照してください。
