@@ -25,13 +25,13 @@ def main():
         if args.check_state:
             state=json.loads(marker.read_text())
             with app.app_context():
-                db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==10
+                db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==11
                 assert db.execute('SELECT count(*) FROM watch_events WHERE version_id=?',(state['version_id'],)).fetchone()[0]==2
                 assert db.execute('SELECT included,seen FROM watch_events WHERE id=?',(state['event_id'],)).fetchone()[:]==(1,1)
                 assert t.group(state['group_id'])['suppressed']==1
                 assert t.process()['events_created']==0
                 assert not db.execute('PRAGMA foreign_key_check').fetchall()
-            print('PASS: schema10 immutable rule/events/seen/group suppression retained after container recreation');return
+            print('PASS: schema11 immutable rule/events/seen/group suppression retained after container recreation');return
         old_fetch=collection.fetch
         def fixture(url,*unused):
             publisher='Publisher A' if url.endswith('/a') else 'Publisher B'
@@ -66,7 +66,7 @@ def main():
                 t.process();assert t.group(group_id)['suppressed']==1
                 bundle=Path(directory)/'bundle';backup_bundle(app.config['DATABASE'],bundle)
                 restored=Path(directory)/'restored'/'feeds.sqlite3';restore_bundle(bundle,restored)
-                db=connect(restored);assert db.execute('SELECT count(*) FROM watch_events').fetchone()[0]==2;assert db.execute('PRAGMA user_version').fetchone()[0]==10;db.close()
+                db=connect(restored);assert db.execute('SELECT count(*) FROM watch_events').fetchone()[0]==2;assert db.execute('PRAGMA user_version').fetchone()[0]==11;db.close()
             state={'workspace_id':wid,'rule_id':rule_id,'version_id':version_id,'event_id':event_id,'group_id':group_id};marker.write_text(json.dumps(state))
             for path in [f'/triage/{wid}',f'/triage/watchlists/{rule_id}',f'/triage/groups/{group_id}']:
                 with urllib.request.urlopen(base+path) as response:assert response.status==200 and b'<script' not in response.read()

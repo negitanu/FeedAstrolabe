@@ -1,6 +1,6 @@
 [project]
 name = "feed-astrolabe"
-version = "0.11.0"
+version = "0.12.0"
 description = "Personal RSS and Atom reader"
 requires-python = ">=3.11"
 dynamic = ["dependencies"]

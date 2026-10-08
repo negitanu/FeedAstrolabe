@@ -2,7 +2,7 @@
 
 AI research needs traceable connections between papers, model versions, code releases, licenses and evaluation conditions.
 
-Implementation prerequisite: `phase-nine-entities-relations`, `phase-ten-security-intelligence`. This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: `phase-nine-entities-relations`, `phase-ten-security-intelligence`. Prerequisites are implemented and archived. Current deployment is schema10; this change uses schema11.
 
 ## Goals / Non-Goals
 
@@ -43,3 +43,11 @@ Before implementing, confirm prerequisite changes and deployed schema, assign th
 ## Open Questions
 
 Connector/model endpoint quotas, licenses, model runtime choice and required credential files are resolved in the listed research/configuration tasks before enabling that integration. Missing external configuration is reported as unverified, never converted to a successful acceptance check. Initial bounds are design defaults and can be revised with explicit specification updates.
+
+## Refreshed implementation bounds
+
+Use unauthenticated GitHub release API (official version 2026-03-10) and arXiv Atom metadata only. Credentials are unnecessary for this public-only phase and not added. Registered inputs: arXiv id (new/legacy optional vN) or one of cs.AI/cs.CL/cs.LG/cs.CV/stat.ML with an optional literal title term; GitHub normalized owner/repository. No arbitrary query expressions. Serialized query includes a bounded page 0..19 with 50 results. Resume the same page until validated cache records and cursor commit atomically; repeat from page0 each polling cycle and deduplicate immutable version+projection hash. Observe latest paper revisions returned by search, not a guarantee of all intervening revisions. Dynamic pagination can shift; retain scope and a 1000-record cycle cap rather than claim exhaustive coverage.
+
+Existing sequential global connector lock and minimum60s/provider exceed arXiv's single-request/3-second minimum and bound unauthenticated GitHub's60/hour. Existing daily100 budget/cache/retry apply. GitHub403 rate-limit-reset and429 preserve prior data. arXiv Atom parsing uses existing defusedxml with bounded bytes/nodes/entries; no entity expansion or PDF/asset retrieval. Metadata license and paper/code/model licenses are separate; unknown source fields remain unknown.
+
+Append-only model card versions and manually reviewed paper/repository/model-card links require same-case fixed quotations. Benchmarks keep dataset/version/split, metric/unit/direction, harness/settings, hardware/context and author provenance. Claimed entries require quotation; user reproductions require notes and remain user-reported. Compare conditions exactly, missing fields qualify and differing fields are incompatible. No automatic ranking, spending, execution or inference from name similarity. API/UI search filters and triage use captured fixed projections. Up to100watches/case,1000cards/case,100links/card,1000benchmarks/card,10000versions/watch.

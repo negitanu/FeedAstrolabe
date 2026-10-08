@@ -93,7 +93,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 
 ## 調査ワークスペースへの拡張計画
 
-セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。第六段階の調査案件・版付きメモ・共有タグは実装済みです。第七〜第十一段階は実装済み、第十二〜第十四段階は後続計画です。
+セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。第六段階の調査案件・版付きメモ・共有タグは実装済みです。第七〜第十二段階は実装済み、第十三〜第十四段階は後続計画です。
 
 
 `/workspaces` から調査案件を作成し、既存フィード・記事を複数の案件へ関連付けられます。Markdown メモは事実／情報源の主張／仮説と版履歴を持ち、同時編集は409で保護します。共有タグ、案件／記事タグによる検索、アーカイブ／再開、公開区分を UI・API から利用できます。[操作と制限](docs/research.md)、[第六段階の検証](docs/verification-phase-six.md) を参照してください。
@@ -113,3 +113,7 @@ CISA KEV／FIRST EPSS／CVE Servicesの独立した日付・帰属・固定根�
 ## ネットワーク情報（第十一段階）
 
 DNS／RDAP／CT／経路／RPKIの受動観測、日付と固定根拠を持つ履歴、項目別変化、観測間隔と保存設定を提供します。[操作と観測範囲](docs/network-intelligence.md)、[検証記録](docs/verification-phase-eleven.md)を参照してください。
+
+## AI研究（第十二段階）
+
+arXiv論文版とGitHub公開リリース、引用付きモデル版カード、ライセンス・条件の不明状態、評価／再現メモと条件比較を提供します。[操作と範囲](docs/ai-research.md)、[検証記録](docs/verification-phase-twelve.md)を参照してください。

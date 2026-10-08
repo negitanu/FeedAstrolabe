@@ -232,3 +232,5 @@ PATCH メモの例：
 read/writeキーと既存APIレート制限、CSRF、親案件アーカイブ、409競合に従います。各項目の意味・帰属・上限・staleは[運用手順](security-intelligence.md)とOpenAPI0.10を参照してください。
 
 第十一段階のネットワークウォッチ、固定観測、項目別変化、空bodyでの照会予約をOpenAPI0.11へ追加しました。[操作と取得制限](network-intelligence.md)を参照してください。
+
+第十二段階の研究ウォッチ／版／モデルカード／明示レビュー済み関連資料／条件付き評価比較をOpenAPI0.12へ追加しました。[操作と上限](ai-research.md)を参照してください。

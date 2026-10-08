@@ -18,9 +18,11 @@ def retrieve(url,max_bytes=5*1024*1024):
         remaining=deadline-time.monotonic()
         if remaining<=0:raise ConnectorError('timeout')
         conn=PinnedHTTP(p.hostname,443,address,True,min(10,remaining))
-        conn.request('GET',urlunsplit(('','',p.path or '/',p.query,'')),headers={'User-Agent':'FeedAstrolabe/0.10','Accept':'application/json','Accept-Encoding':'identity'})
+        headers={'User-Agent':'FeedAstrolabe/0.12','Accept':'application/atom+xml' if p.hostname=='export.arxiv.org' else 'application/json','Accept-Encoding':'identity'}
+        if p.hostname=='api.github.com':headers['Accept']='application/vnd.github+json';headers['X-GitHub-Api-Version']='2026-03-10'
+        conn.request('GET',urlunsplit(('','',p.path or '/',p.query,'')),headers=headers)
         response=conn.getresponse();headers={k.lower():v for k,v in response.getheaders()}
-        if response.status==429:raise ConnectorError('rate-limited',retry_time(headers))
+        if response.status==429 or (response.status==403 and p.hostname=='api.github.com' and headers.get('x-ratelimit-remaining')=='0'):raise ConnectorError('rate-limited',retry_time(headers))
         if 300<=response.status<400:raise ConnectorError('redirect-rejected')
         if response.status!=200:raise ConnectorError('http-'+str(response.status))
         if headers.get('content-encoding','identity').lower() not in ('','identity'):raise ConnectorError('encoding-rejected')
@@ -34,6 +36,9 @@ def retrieve(url,max_bytes=5*1024*1024):
             if not part:break
             raw.extend(part)
             if len(raw)>max_bytes:raise ConnectorError('response-size')
+        if p.hostname=='export.arxiv.org':
+            from .ai_research_adapters import atom
+            return atom(bytes(raw)),bytes(raw)
         # JSON duplicate keys/non-finite numbers are rejected before accepting cache.
         def pairs(items):
             result={}

@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from flask import current_app, g
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feeds (
@@ -211,6 +211,14 @@ def init_database(path):
             for statement in network_schema.split(';'):
                 if statement.strip():db.execute(statement)
             db.execute('PRAGMA user_version=10')
+        if version < 11:
+            from .ai_research_schema import SCHEMA as ai_schema
+            for provider in ('arxiv','github-releases'):
+                db.execute('INSERT INTO connector_settings(provider) VALUES(?)',(provider,))
+                db.execute('INSERT INTO connector_state(provider) VALUES(?)',(provider,))
+            for statement in ai_schema.split(';'):
+                if statement.strip():db.execute(statement)
+            db.execute('PRAGMA user_version=11')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()

@@ -25,6 +25,8 @@ def main():
     security_script=(root/'scripts/verify_security.py').read_text()
     network_dir='/data/'+uuid.uuid4().hex+'-network-verify'
     network_script=(root/'scripts/verify_network.py').read_text()
+    ai_dir='/data/'+uuid.uuid4().hex+'-ai-verify'
+    ai_script=(root/'scripts/verify_ai_research.py').read_text()
     try:
         run('up','--build','-d','--wait','--wait-timeout','120')
         run('stop','observer')
@@ -33,6 +35,7 @@ def main():
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir],cwd=root,input=entity_script,text=True,check=True)
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',security_dir],cwd=root,input=security_script,text=True,check=True)
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',network_dir],cwd=root,input=network_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',ai_dir],cwd=root,input=ai_script,text=True,check=True)
         renderer=subprocess.check_output(command+['ps','-q','renderer'],cwd=root,text=True).strip()
         details=json.loads(subprocess.check_output(['docker','inspect',renderer],text=True))[0]
         assert details['HostConfig']['NetworkMode']=='none'
@@ -96,6 +99,7 @@ def main():
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir,'--check-state'],cwd=root,input=entity_script,text=True,check=True)
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',security_dir,'--check-state'],cwd=root,input=security_script,text=True,check=True)
         subprocess.run(command+['exec','-T','web','python','-','--data-dir',network_dir,'--check-state'],cwd=root,input=network_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',ai_dir,'--check-state'],cwd=root,input=ai_script,text=True,check=True)
         code('''
             from feedastrolabe import create_app
             from feedastrolabe.db import get_db
@@ -104,7 +108,7 @@ def main():
                 db=get_db()
                 row=db.execute("SELECT a.is_read,a.is_starred FROM articles a JOIN feeds f ON a.feed_id=f.id WHERE f.target='https://example.com/observer-fixture' AND a.guid='page:1'").fetchone()
                 assert tuple(row)==(1,1)
-                assert db.execute('PRAGMA user_version').fetchone()[0]==10
+                assert db.execute('PRAGMA user_version').fetchone()[0]==11
                 print('PASS: renderer/worker recreation preserves baseline and event state')
         ''')
     finally:

@@ -45,6 +45,13 @@ def references(db):
     if db.execute('PRAGMA user_version').fetchone()[0]>=9:
         if db.execute('SELECT 1 FROM security_reviews v JOIN security_watches w ON w.id=v.watch_id JOIN quotations q ON q.id=v.quotation_id WHERE w.workspace_id!=q.workspace_id LIMIT 1').fetchone() or db.execute('SELECT 1 FROM security_references v JOIN quotations q ON q.id=v.quotation_id WHERE v.workspace_id!=q.workspace_id LIMIT 1').fetchone():
             raise ValueError('セキュリティ判断と引用の案件が一致しません。')
+    if db.execute('PRAGMA user_version').fetchone()[0]>=11:
+        queries=[
+            'SELECT 1 FROM ai_cards c JOIN quotations q ON q.id=c.quotation_id WHERE c.workspace_id!=q.workspace_id LIMIT 1',
+            'SELECT 1 FROM ai_links l JOIN ai_cards c ON c.id=l.card_id JOIN quotations q ON q.id=l.quotation_id WHERE c.workspace_id!=q.workspace_id LIMIT 1',
+            'SELECT 1 FROM ai_benchmarks b JOIN ai_cards c ON c.id=b.card_id JOIN quotations q ON q.id=b.quotation_id WHERE c.workspace_id!=q.workspace_id LIMIT 1',
+            'SELECT 1 FROM ai_links l JOIN ai_cards c ON c.id=l.card_id JOIN ai_versions v ON v.id=l.version_id JOIN ai_watches w ON w.id=v.watch_id WHERE c.workspace_id!=w.workspace_id LIMIT 1']
+        if any(db.execute(sql).fetchone() for sql in queries):raise ValueError('研究記録と引用・版の案件が一致しません。')
     return [{'hash':row['hash'],'size':row['size']} for row in db.execute('SELECT * FROM evidence_blobs ORDER BY hash')]
 
 

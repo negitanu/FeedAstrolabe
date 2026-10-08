@@ -166,7 +166,7 @@ def test_retry_exhaustion_idempotent_parallel_queue_and_config_conflict(app,monk
 def test_v8_migration_and_v9_bundle_preserves_security_assessment(app,tmp_path,monkeypatch):
  prior=tmp_path/'v8';prior.mkdir();db=connect(prior/'feeds.sqlite3');db.executescript(Path('tests/fixtures/v8_schema.sql').read_text());db.close()
  bundle=tmp_path/'v8-bundle';backup_bundle(prior/'feeds.sqlite3',bundle);restored=tmp_path/'restore'/'feeds.sqlite3';restore_bundle(bundle,restored)
- db=connect(restored);assert db.execute('PRAGMA user_version').fetchone()[0]==10;assert db.execute('SELECT sum(enabled) FROM connector_settings').fetchone()[0]==0;db.close()
+ db=connect(restored);assert db.execute('PRAGMA user_version').fetchone()[0]==11;assert db.execute('SELECT sum(enabled) FROM connector_settings').fetchone()[0]==0;db.close()
  wid,qid,cid,watch=setup(app)
  with app.app_context():
   configure('epss');run('epss',monkeypatch);s.sync(cid);s.review(watch,{'expected_revision':1,'status':'confirmed','quotation_id':qid,'reason':'fixture'})

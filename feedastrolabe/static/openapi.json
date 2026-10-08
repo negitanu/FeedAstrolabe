@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.11.0",
+    "version": "0.12.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -2906,7 +2906,7 @@
         "properties": {
           "input": {
             "type": "string",
-            "description": "KEV catalog; public CVE; DNS domain|RR; IANA dns/ipv4/ipv6/asn; RDAP domain|value, ip|value, asn|ASnum; routing ip|value or asn|ASnum; RPKI canonical-prefix|ASnum; CT exact public domain. No arbitrary endpoint."
+            "description": "KEV catalog; public CVE; DNS domain|RR; IANA dns/ipv4/ipv6/asn; RDAP domain|value, ip|value, asn|ASnum; routing ip|value or asn|ASnum; RPKI canonical-prefix|ASnum; CT exact public domain. No arbitrary endpoint. arXiv id:ID||0 or cat:category|literal title|page; GitHub lowercase owner/repo||page, page0..19."
           },
           "public_identifier": {
             "type": "boolean",
@@ -3697,6 +3697,684 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NetworkLookup"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiWatchCreate": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "arxiv",
+              "github-releases"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "term": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "outbound_public": {
+            "type": "boolean"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          }
+        },
+        "required": [
+          "provider",
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "AiWatchPatch": {
+        "type": "object",
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "outbound_public": {
+            "type": "boolean"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "minimum": 3600,
+            "maximum": 604800
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false
+      },
+      "AiCardCreate": {
+        "type": "object",
+        "properties": {
+          "license": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "use_constraints": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "hardware": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "context": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "cost": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            "required": [
+              "amount",
+              "currency",
+              "unit",
+              "date"
+            ],
+            "additionalProperties": false
+          },
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "quotation_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "entity_id",
+          "version",
+          "quotation_id"
+        ],
+        "additionalProperties": false
+      },
+      "AiLinkCreate": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "repository",
+              "model-card"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "version_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "quotation_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reviewed": {
+            "type": "boolean",
+            "const": true
+          },
+          "author": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "url",
+          "quotation_id",
+          "reviewed"
+        ],
+        "additionalProperties": false
+      },
+      "AiBenchmarkCreate": {
+        "type": "object",
+        "properties": {
+          "dataset": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "dataset_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "split": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "metric": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "direction": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "harness": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "settings": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "hardware": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "context": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "claimed",
+              "reproduced",
+              "unverified"
+            ]
+          },
+          "result": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "quotation_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "author": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "result"
+        ],
+        "additionalProperties": false
+      },
+      "AiWatch": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiWatchResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiWatch"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiWatchPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiWatch"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiVersion": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiVersionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiVersion"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiVersionPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiVersion"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiCard": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiCardResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiCard"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiCardPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiCard"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiCardDetail": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiCardDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiCardDetail"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiCardDetailPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiCardDetail"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiWatchDetail": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiWatchDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiWatchDetail"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiWatchDetailPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiWatchDetail"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiBenchmark": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiBenchmarkResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiBenchmark"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiBenchmarkPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiBenchmark"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiComparison": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiComparison"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiComparisonPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiComparison"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AiIdentifier": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Immutable attributed research metadata; docs/ai-research.md defines scope, cursor, unknown license and evaluation conditions."
+      },
+      "AiIdentifierResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AiIdentifier"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AiIdentifierPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiIdentifier"
             }
           },
           "has_more": {
@@ -10005,6 +10683,721 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NetworkEventPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/ai-watches": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiWatchPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiWatchDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiWatchCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai-watches/{watch_id}": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiWatchDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Passive network patch",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiWatchDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiWatchPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai-watches/{watch_id}/lookup": {
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiIdentifierResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "description": "Empty body required; queued acquisition only. RDAP may first reserve IANA bootstrap."
+      }
+    },
+    "/ai-watches/{watch_id}/versions": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiVersionPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/ai-cards": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiCardPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiCardDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiCardCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai-cards/{card_id}": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiCardDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/ai-cards/{card_id}/links": {
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiIdentifierResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiLinkCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai-cards/{card_id}/benchmarks": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiBenchmarkPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiIdentifierResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiBenchmarkCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai-benchmarks/{left_id}/compare/{right_id}": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "left_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "right_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiComparisonResponse"
                 }
               }
             }

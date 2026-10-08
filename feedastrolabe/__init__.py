@@ -21,6 +21,8 @@ from .evidence_api import api as evidence_api
 from .evidence_ui import ui as evidence_ui
 from .triage_api import api as triage_api
 from .triage_ui import ui as triage_ui
+from .ai_research_api import api as ai_api
+from .ai_research_ui import ui as ai_ui
 from .network_api import api as network_api
 from .network_ui import ui as network_ui
 from .security_api import api as security_api
@@ -68,6 +70,8 @@ def create_app(test_config=None):
     app.register_blueprint(security_ui)
     app.register_blueprint(network_api)
     app.register_blueprint(network_ui)
+    app.register_blueprint(ai_api)
+    app.register_blueprint(ai_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -263,7 +267,8 @@ def create_app(test_config=None):
         from .connectors import process
         from .security_intelligence import schedule
         from .network_intelligence import schedule as network_schedule
-        schedule();network_schedule();click.echo(process());schedule();network_schedule()
+        from .ai_research import schedule as ai_schedule
+        schedule();network_schedule();ai_schedule();click.echo(process());schedule();network_schedule();ai_schedule()
 
     @app.cli.command('extract-entities')
     def extract_entities_once():
@@ -288,7 +293,8 @@ def create_app(test_config=None):
                 from .security_intelligence import schedule
                 from .connectors import process as connector_process
                 from .network_intelligence import schedule as network_schedule
-                schedule();network_schedule();connector_process();schedule();network_schedule()
+                from .ai_research import schedule as ai_schedule
+                schedule();network_schedule();ai_schedule();connector_process();schedule();network_schedule();ai_schedule()
                 from .triage import process
                 process()
                 from .entities import extract
