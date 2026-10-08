@@ -11,6 +11,7 @@ from .db import close_db, get_db, init_database
 from .collection import add_feed, refresh_feeds, sanitize
 from .fetch import normalize_url
 from .preferences import preferences
+from .subscriptions import update_subscription, delete_subscription, SubscriptionMissing
 from .access import configure_access, verify_access
 from .api import api
 from .settings import settings
@@ -126,22 +127,24 @@ def create_app(test_config=None):
 
     @app.post('/feeds/<int:feed_id>/folder')
     def folder(feed_id):
-        db = get_db()
-        with db:
-            result = db.execute('UPDATE feeds SET folder=? WHERE id=?', (request.form.get('folder', '').strip()[:80], feed_id))
-            if not result.rowcount:
-                abort(404)
-        flash('フォルダーを変更しました。', 'success')
+        try:
+            update_subscription(feed_id, {'folder': request.form.get('folder', '')})
+            flash('フォルダーを変更しました。', 'success')
+        except SubscriptionMissing:
+            abort(404)
+        except ValueError as exc:
+            flash(str(exc), 'error')
         return return_to()
 
     @app.post('/feeds/<int:feed_id>/delete')
     def delete_feed(feed_id):
-        db = get_db()
-        with db:
-            result = db.execute('DELETE FROM feeds WHERE id=?', (feed_id,))
-            if not result.rowcount:
-                abort(404)
-        flash('フィードと記事を削除しました。', 'success')
+        try:
+            delete_subscription(feed_id)
+            flash('フィードと記事を削除しました。', 'success')
+        except SubscriptionMissing:
+            abort(404)
+        except ValueError as exc:
+            flash(str(exc), 'error')
         return redirect(url_for('index'))
 
     @app.post('/refresh')

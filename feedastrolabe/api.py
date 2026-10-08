@@ -1,11 +1,17 @@
+from contextlib import contextmanager
+from datetime import datetime, timezone
+import math
+
 from flask import Blueprint, abort, request, url_for
 from .db import get_db
 from .keys import authenticate_api
-from .collection import add_feed
+from .collection import add_feed, refresh_feeds, RefreshBusy
 from .fetch import normalize_url
 from .preferences import bounded_int
 from .social import add_social
 from .observation import add_page, queue_page
+
+from .subscriptions import update_subscription, delete_subscription, SubscriptionMissing, SubscriptionDuplicate
 
 api = Blueprint('api', __name__, url_prefix='/api/v1')
 api.before_request(authenticate_api)
@@ -170,5 +176,70 @@ def observe_feed(feed_id):
     row=get_db().execute("SELECT id FROM feeds WHERE id=? AND source_type='page'",(feed_id,)).fetchone()
     if row is None:
         abort(404,description='Page observation not found')
-    queue_page(feed_id)
+    if not queue_page(feed_id):
+        abort(404, description='Page observation not found')
     return {'data':{'feed_id':feed_id,'queued':True}},202
+
+
+@contextmanager
+def management_errors():
+    try:
+        yield
+    except SubscriptionMissing as exc:
+        abort(404, description=str(exc))
+    except (SubscriptionDuplicate, RefreshBusy) as exc:
+        abort(409, description=str(exc))
+    except ValueError as exc:
+        abort(400, description=str(exc))
+
+
+@api.patch('/feeds/<int:feed_id>')
+def update_feed(feed_id):
+    body = request.get_json()
+    if isinstance(body, dict):
+        for name in ('poll_interval', 'settle_ms', 'retention_days'):
+            if name in body and not (name == 'poll_interval' and body[name] is None) and type(body[name]) is not int:
+                abort(400, description=name + ' must be an integer')
+    with management_errors():
+        update_subscription(feed_id, body)
+    return get_feed(feed_id)
+
+
+@api.delete('/feeds/<int:feed_id>')
+def delete_feed(feed_id):
+    with management_errors():
+        delete_subscription(feed_id)
+    return '', 204
+
+
+@api.post('/feeds/<int:feed_id>/refresh')
+def refresh_feed(feed_id):
+    row = get_db().execute('SELECT * FROM feeds WHERE id=?', (feed_id,)).fetchone()
+    if row is None:
+        abort(404, description='Feed not found')
+    if row['source_type'] == 'page':
+        if not queue_page(feed_id):
+            abort(404, description='Page observation not found')
+        return {'data': {'feed_id': feed_id, 'queued': True}}, 202
+    wait = provider_wait(row)
+    if wait:
+        return wait
+    with management_errors():
+        succeeded, failed = refresh_feeds(feed_id)
+    current = get_feed(feed_id)['data']
+    if not succeeded and not failed:
+        wait = provider_wait(current)
+        if wait:
+            return wait
+    return {'data': {'feed_id': feed_id, 'succeeded': succeeded, 'failed': failed, 'feed': current}}
+
+
+def provider_wait(feed):
+    if feed['source_type'] not in ('x', 'mastodon'):
+        return None
+    from .social import cooldown
+    retry = cooldown(feed)
+    if not retry:
+        return None
+    seconds = max(1, math.ceil((datetime.strptime(retry, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc) - datetime.now(timezone.utc)).total_seconds()))
+    return {'error': {'code': 429, 'message': 'Provider cooldown', 'retry_at': retry}}, 429, {'Retry-After': str(seconds)}

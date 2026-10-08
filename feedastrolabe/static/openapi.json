@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -241,6 +241,115 @@
             }
           }
         ]
+      },
+      "patch": {
+        "summary": "Partially edit a subscription (write scope)",
+        "description": "Common fields: folder, enabled, poll_interval. URL: RSS/page only. selector/settle_ms/retention_days: page only. Source type and SNS identity are immutable. URL edits preserve history; page target changes reset baseline. No fetch during edits.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "folder": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "poll_interval": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 60,
+                    "maximum": 86400
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048
+                  },
+                  "selector": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "settle_ms": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "retention_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 365
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated subscription in data"
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Subscription not found"
+          },
+          "409": {
+            "description": "Duplicate target or collection busy"
+          },
+          "429": {
+            "description": "Key rate limit or provider cooldown"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete subscription and all its articles/jobs (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted; empty body"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Subscription not found"
+          },
+          "409": {
+            "description": "Duplicate target or collection busy"
+          },
+          "429": {
+            "description": "Key rate limit or provider cooldown"
+          }
+        }
       }
     },
     "/articles": {
@@ -486,6 +595,54 @@
           },
           "404": {
             "description": "Page observation not found"
+          }
+        }
+      }
+    },
+    "/feeds/{feed_id}/refresh": {
+      "post": {
+        "summary": "Manually refresh any source (write scope)",
+        "description": "RSS/SNS is synchronous and returns succeeded/failed counts and feed status; page is uniquely queued. Manual refresh works during pause, subject to provider cooldown.",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Synchronous refresh counts and feed status"
+          },
+          "202": {
+            "description": "Durable page reservation"
+          },
+          "400": {
+            "description": "Invalid input; no partial mutation"
+          },
+          "401": {
+            "description": "API key required"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "404": {
+            "description": "Subscription not found"
+          },
+          "409": {
+            "description": "Duplicate target or collection busy"
+          },
+          "429": {
+            "description": "Key rate limit or provider cooldown"
           }
         }
       }

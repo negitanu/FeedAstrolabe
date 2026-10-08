@@ -49,19 +49,11 @@ def add_page(url,selector,folder='',settle_ms=1000,poll_interval=900,retention_d
 
 
 def edit_page(feed_id,selector,settle_ms,retention_days):
-    db=get_db()
-    old=db.execute("SELECT * FROM feeds WHERE id=? AND source_type='page'",(feed_id,)).fetchone()
-    if old is None:
+    from .subscriptions import update_subscription, find_feed
+    old = find_feed(get_db(), feed_id)
+    if old['source_type'] != 'page':
         raise ValueError('ページ観測が見つかりません。')
-    url,selector,settle,_,retention=page_values(old['target'],selector,settle_ms,old['poll_interval'] or 900,retention_days)
-    identity=canonical(url,selector)
-    if db.execute('SELECT id FROM feeds WHERE url=? AND id<>?',(identity,feed_id)).fetchone():
-        raise ValueError('同じ URL とセレクターは登録済みです。')
-    reset=selector!=old['selector'] or settle!=old['settle_ms']
-    with db:
-        db.execute('''UPDATE feeds SET url=?,title=?,selector=?,settle_ms=?,retention_days=?,revision=revision+1,
-          snapshot=CASE WHEN ? THEN NULL ELSE snapshot END,checked_at=CASE WHEN ? THEN NULL ELSE checked_at END,
-          error=NULL,failures=0 WHERE id=?''',(identity,'ページ観測 · '+selector,selector,settle,retention,reset,reset,feed_id))
+    update_subscription(feed_id, {'selector': selector, 'settle_ms': settle_ms, 'retention_days': retention_days})
 
 
 def normalize_text(text):
@@ -105,7 +97,8 @@ def save_observation(feed,text):
 def queue_page(feed_id):
     db=get_db()
     with db:
-        db.execute('INSERT OR IGNORE INTO page_jobs(feed_id,requested_at) VALUES(?,?)',(feed_id,now()))
+        db.execute("INSERT OR IGNORE INTO page_jobs(feed_id,requested_at) SELECT id,? FROM feeds WHERE id=? AND source_type='page'", (now(),feed_id))
+        return db.execute("SELECT 1 FROM feeds WHERE id=? AND source_type='page'", (feed_id,)).fetchone() is not None
 
 
 @contextmanager

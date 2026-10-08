@@ -119,3 +119,29 @@ OpenAPI 定義は [openapi.json](../feedastrolabe/static/openapi.json) にあり
 ## ページ観測
 
 `POST /api/v1/feeds` は `source_type: "page"` と `url`、`selector`、`settle_ms`、`poll_interval`、`retention_days` を受け付けます。登録時は取得せず201で返します。書き込みキーの `POST /api/v1/feeds/{id}/observe` は専用ワーカーへの予約を202で返します。記事一覧の `source_type=page` で差分記事を取得できます。基準本文は購読 API に含めません。設定と制限は [観測手順](observation.md) を参照してください。
+
+## 購読の変更・削除・手動更新（第五段階）
+
+書き込みキーで `PATCH /api/v1/feeds/{id}` を呼ぶと設定を部分変更できます。未指定の設定は保持します。`folder` は80文字以下、`enabled` は JSON boolean、`poll_interval` は60〜86400秒の整数または `null`（全体設定を継承）です。
+
+```json
+{"folder":"技術","enabled":true,"poll_interval":1800}
+```
+
+RSS とページ観測は `url` も編集できます。ページ観測では `selector`、`settle_ms`、`retention_days` を変更できます。URL は認証情報を含まない公開 HTTP(S) URL に限定します。編集時は取得せず、次回収集で公開 DNS を検証・pin します。SNS の取得対象、source_type は変更できません。
+
+```json
+{"url":"https://example.com/new-feed.xml"}
+```
+
+URL 修正後も購読・記事 ID と既読・スターは保持します。RSS は ETag/Last-Modified をリセットして次回は無条件取得。ページ観測の URL・セレクター・待機時間を変えると次回は新しい基準だけを保存し、過去記事と変更番号は保持します。フォルダー・保存期間だけの変更では基準を保持します。RSS の GUID が同じ記事は引き続き同一記事として扱います。
+
+不正な設定は400、同じ取得対象の重複は409、存在しない ID は404です。複数設定のうち一つが不正でも、部分的には保存しません。RSS/SNS が収集中の編集・削除・同期更新は409で再試行します。
+
+`DELETE /api/v1/feeds/{id}` は購読とその全記事・観測予約を削除し204（本文なし）を返します。スター記事も削除対象です。必要な場合はバックアップを保存してください。
+
+`POST /api/v1/feeds/{id}/refresh` はすべての情報源で使えます。RSS/SNS は同期処理で200、`data.succeeded` / `data.failed` と最新の `data.feed` 状態を返します。失敗件数が1の場合は feed.error を確認してください。タイムアウトは通常取得処理の上限を考慮し、クライアントに余裕を持たせてください。通常の継続収集は worker を利用します。
+
+ページ観測は202で `queued: true` を返し、専用 observer が処理します。既存 `/observe` も引き続き使えます。手動更新は pause 中にも実行できますが、SNS のプロバイダー待機中は429と `Retry-After` 秒数・`retry_at` を返し、外部 API を呼びません。
+
+設定画面の「フィード別の収集設定」に URL 修正フォームがあります。API と同じ検証を使い、CSRF を必要とします。

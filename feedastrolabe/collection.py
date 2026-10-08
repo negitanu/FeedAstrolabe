@@ -32,6 +32,10 @@ def parse_feed(body):
     return parsed
 
 
+class RefreshBusy(ValueError):
+    pass
+
+
 @contextmanager
 def refresh_lock():
     path = Path(current_app.instance_path) / 'refresh.lock'
@@ -39,7 +43,7 @@ def refresh_lock():
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
-            raise ValueError('更新処理が実行中です。しばらく待ってから再度お試しください。') from None
+            raise RefreshBusy('更新処理が実行中です。しばらく待ってから再度お試しください。') from None
         try:
             yield
         finally:

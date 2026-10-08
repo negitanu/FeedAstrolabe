@@ -7,6 +7,7 @@ from .collection import now
 from .keys import issue_key
 from .social import add_social, cooldown
 from .observation import add_page, edit_page
+from .subscriptions import update_subscription, SubscriptionMissing
 from .opml import import_opml, export_opml, MAX_OPML
 
 settings = Blueprint('settings', __name__)
@@ -47,12 +48,10 @@ def save_feed(feed_id):
     try:
         value = request.form.get('poll_interval', '').strip()
         interval = bounded_int(value, 60, 86400, '個別ポーリング間隔') if value else None
-        db = get_db()
-        with db:
-            result = db.execute('UPDATE feeds SET poll_interval=?,enabled=? WHERE id=?', (interval, int(request.form.get('enabled') == '1'), feed_id))
-            if not result.rowcount:
-                abort(404)
+        update_subscription(feed_id, {'poll_interval': interval, 'enabled': request.form.get('enabled') == '1'})
         flash('フィード設定を保存しました。', 'success')
+    except SubscriptionMissing:
+        abort(404)
     except ValueError as exc:
         flash(str(exc), 'error')
     return redirect(url_for('settings.index'))
@@ -121,6 +120,20 @@ def save_page(feed_id):
     try:
         edit_page(feed_id,request.form.get('selector',''),request.form.get('settle_ms','1000'),request.form.get('retention_days','90'))
         flash('観測設定を保存しました。対象・待機時間を変えると次回に基準を取り直します。既存記事は保持します。','success')
+    except SubscriptionMissing:
+        abort(404)
     except ValueError as exc:
         flash(str(exc),'error')
     return redirect(url_for('settings.index',_anchor='pages'))
+
+
+@settings.post('/settings/feeds/<int:feed_id>/url')
+def repair_url(feed_id):
+    try:
+        update_subscription(feed_id, {'url': request.form.get('url', '')})
+        flash('取得 URL を保存しました。既存記事は保持し、次の巡回で取得します。', 'success')
+    except SubscriptionMissing:
+        abort(404)
+    except ValueError as exc:
+        flash(str(exc), 'error')
+    return redirect(url_for('settings.index', _anchor='subscriptions'))

@@ -86,3 +86,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 ```
 
 描画コンテナはネットワークと DB を持たず、専用 observer が検証した同一 origin のリソースだけを仲介します。[観測の設定・制限](docs/observation.md) と [第四段階の検証記録](docs/verification-phase-four.md) を参照してください。ログインや画像比較は対象外です。
+
+## 購読管理
+
+設定画面で RSS/ページ観測の取得 URL を修正できます。既存記事・既読・スターを保持し、次回収集で取得情報や観測基準を取り直します。API は `PATCH /api/v1/feeds/{id}`、`DELETE /api/v1/feeds/{id}`、`POST /api/v1/feeds/{id}/refresh` に対応します。すべて書き込みキーが必要です。[API 手順](docs/api.md) と [第五段階の検証記録](docs/verification-phase-five.md) を参照してください。
