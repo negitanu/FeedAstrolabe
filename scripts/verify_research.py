@@ -15,7 +15,7 @@ from werkzeug.serving import make_server
 from feedastrolabe import create_app, collection
 from feedastrolabe.db import connect, get_db
 from feedastrolabe.keys import issue_key
-from feedastrolabe.maintenance import backup, restore
+from feedastrolabe.evidence_backup import backup_bundle as backup, restore_bundle as restore
 
 RSS=b'<rss version="2.0"><channel><title>Security fixture</title><item><guid>one</guid><title>Security bulletin</title><description>Research fixture only</description></item></channel></rss>'
 
@@ -78,7 +78,7 @@ def main():
                     snapshot=Path(directory)/'backup.sqlite3';backup(app.config['DATABASE'],snapshot)
                     destination=Path(directory)/'restored'/'feeds.sqlite3';restore(snapshot,destination)
                     with connect(destination) as db:
-                        assert db.execute('PRAGMA user_version').fetchone()[0]==5
+                        assert db.execute('PRAGMA user_version').fetchone()[0]==6
                         assert db.execute('SELECT count(*) FROM note_revisions').fetchone()[0]==2
                         assert db.execute('SELECT count(*) FROM workspace_articles').fetchone()[0]==2
                         assert not db.execute('PRAGMA foreign_key_check').fetchall()

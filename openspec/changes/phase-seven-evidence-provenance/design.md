@@ -2,7 +2,7 @@
 
 Mutable feed entries and page baselines are insufficient for reproducible research and citations after upstream edits or subscription deletion.
 
-Implementation prerequisite: `phase-six-research-workspaces`. This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: `phase-six-research-workspaces`. Verified implemented prerequisite: schema v5 research workspaces (archived 2026-10-08). This change upgrades to v6.
 
 ## Goals / Non-Goals
 
@@ -43,3 +43,15 @@ Before implementing, confirm prerequisite changes and deployed schema, assign th
 ## Open Questions
 
 Connector/model endpoint quotas, licenses, model runtime choice and required credential files are resolved in the listed research/configuration tasks before enabling that integration. Missing external configuration is reported as unverified, never converted to a successful acceptance check. Initial bounds are design defaults and can be revised with explicit specification updates.
+
+
+## Concrete implementation contract
+
+- Schema v6: evidence immutable metadata/text records, blobs keyed by SHA-256, workspace/note evidence pins and exact quotations. Source FKs SET NULL; copy publisher/source identity, publication/capture/observation timestamps. Methods feed-derived, page-selected-text, article-backfill-now and attachment-text/markdown/pdf. Title/publisher/method are distinct provenance; hashes prove byte consistency only.
+- Capture feed/SNS representations after upsert, page-selected text including initial baseline, and explicitly capture existing articles on demand. Content-identical retries reuse the same source version; content changes including reverting create new versions. Stored text max160000 characters; feed capture over bounds/quota records a separate bounded capture error while ordinary collection survives. No retroactive capture during migration.
+- Quota default500MiB, attachment max10MiB, extracted text max100000 characters, retention default90 days for unpinned evidence; configurable via UI/write API. Pins and quotes prevent retention deletion. Explicit retention CLI never deletes pinned records.
+- Use network-isolated renderer IPC for text/Markdown/PDF parsing in per-job fork with CPU15s, memory384MiB and hard wall45s (native renderer is process isolation only; address-space bound is Linux-only, Docker is required for the verified network/filesystem/memory boundary). pypdf6.19.0 (https://pypi.org/project/pypdf/) pinned; encrypted PDF rejected, max200 pages, decompressed content per page4MiB, no OCR/scripts/actions/embedded-file execution. MIME/extension/magic and UTF-8 checks mandatory; extraction failure does not publish evidence. Web gains IPC mount, renderer retains no DB or credentials and network_mode:none.
+- GET /evidence, /evidence/{id}, /evidence/{id}/download; POST /articles/{id}/evidence (backfill-now), POST /workspaces/{id}/attachments multipart file. POST/DELETE /workspaces/{id}/evidence/{eid} and /notes/{id}/evidence/{eid}; POST /workspaces/{id}/quotations with evidence_id,start,end,quote and optional note_id. Anchors use Unicode code-point offsets and exact text/hash; quotations immutable and pinned. Existing bearer scopes/CSRF and archived parent checks apply. Bounded cursor lists; JSON objects reject unknown fields.
+- UI evidence list/detail, workspace pins/upload/quote forms and article capture action. Download Content-Disposition attachment + application/octet-stream, filename sanitized; authenticated API download and UI same current access policy, never static URLs.
+- Content-addressed private blob store with symlink refusal, atomic writes and hash verification. All evidence writes/pin/retention/backup/restore serialize under evidence.lock plus SQLite transactions; no externally supplied storage paths.
+- Bundle backup is explicit `backup-bundle`/`restore-bundle` (directory, DB + manifest + blobs). Lock writers, validate every referenced size/hash and foreign keys, staged restore with rollback, refuse missing/extraneous/path-traversal/symlink blobs before replacing any live DB. Legacy DB-only backup/restore remains for v1-v5 and evidence-free v6; refuse evidence-bearing DB-only backup/restore with a clear bundle requirement. Rollback to prior image uses pre-phase-seven v5 backup.

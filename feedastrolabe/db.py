@@ -38,7 +38,7 @@ def init_database(path):
         db.execute('PRAGMA foreign_keys=OFF')
         db.execute('BEGIN IMMEDIATE')
         version = db.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, 1, 2, 3, 4, 5):
+        if version not in (0, 1, 2, 3, 4, 5, 6):
             raise RuntimeError(f'Unsupported database version: {version}')
         if version == 0:
             for statement in SCHEMA.split(';'):
@@ -142,6 +142,36 @@ def init_database(path):
                 if statement.strip():
                     db.execute(statement)
             db.execute('PRAGMA user_version=5')
+        if version < 6:
+            statements = """
+            CREATE TABLE evidence_settings (id INTEGER PRIMARY KEY CHECK(id=1),quota_bytes INTEGER NOT NULL DEFAULT 524288000 CHECK(quota_bytes BETWEEN 10485760 AND 10737418240),retention_days INTEGER NOT NULL DEFAULT 90 CHECK(retention_days BETWEEN 1 AND 3650));
+            INSERT INTO evidence_settings(id) VALUES(1);
+            CREATE TABLE evidence_blobs (hash TEXT PRIMARY KEY CHECK(length(hash)=64),size INTEGER NOT NULL CHECK(size BETWEEN 0 AND 10485760));
+            CREATE TABLE evidence (
+              id INTEGER PRIMARY KEY, source_key TEXT NOT NULL, version INTEGER NOT NULL CHECK(version>=1),
+              feed_id INTEGER REFERENCES feeds(id) ON DELETE SET NULL,
+              article_id INTEGER REFERENCES articles(id) ON DELETE SET NULL,
+              source_url TEXT NOT NULL, publisher TEXT NOT NULL, source_guid TEXT NOT NULL,
+              title TEXT NOT NULL, method TEXT NOT NULL, published_at TEXT, observed_at TEXT,
+              captured_at TEXT NOT NULL, blob_hash TEXT NOT NULL REFERENCES evidence_blobs(hash),
+              text_hash TEXT NOT NULL CHECK(length(text_hash)=64), text TEXT NOT NULL CHECK(length(text)<=160000),
+              mime TEXT NOT NULL, filename TEXT NOT NULL DEFAULT '',UNIQUE(source_key,version)
+            );
+            CREATE INDEX evidence_source ON evidence(source_key,id DESC);
+            CREATE INDEX evidence_article ON evidence(article_id,id DESC);
+            CREATE TABLE workspace_evidence (workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,evidence_id INTEGER NOT NULL REFERENCES evidence(id) ON DELETE RESTRICT,PRIMARY KEY(workspace_id,evidence_id));
+            CREATE TABLE note_evidence (note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,evidence_id INTEGER NOT NULL REFERENCES evidence(id) ON DELETE RESTRICT,PRIMARY KEY(note_id,evidence_id));
+            CREATE TABLE quotations (id INTEGER PRIMARY KEY,workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,note_id INTEGER REFERENCES notes(id) ON DELETE SET NULL,evidence_id INTEGER NOT NULL REFERENCES evidence(id) ON DELETE RESTRICT,text_hash TEXT NOT NULL,start INTEGER NOT NULL,end INTEGER NOT NULL,quote TEXT NOT NULL CHECK(length(quote) BETWEEN 1 AND 10000),created_at TEXT NOT NULL,CHECK(start>=0 AND end>start),UNIQUE(workspace_id,evidence_id,start,end,note_id));
+            CREATE INDEX workspace_evidence_reverse ON workspace_evidence(evidence_id);
+            CREATE INDEX note_evidence_reverse ON note_evidence(evidence_id);
+            CREATE INDEX quotations_evidence ON quotations(evidence_id);
+            CREATE TABLE evidence_capture_errors (feed_id INTEGER PRIMARY KEY REFERENCES feeds(id) ON DELETE CASCADE,message TEXT NOT NULL,occurred_at TEXT NOT NULL);
+            """
+            for statement in statements.split(';'):
+                if statement.strip():
+                    db.execute(statement)
+            db.execute('ALTER TABLE articles ADD COLUMN source_published_at TEXT')
+            db.execute('PRAGMA user_version=6')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()

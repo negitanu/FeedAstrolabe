@@ -201,13 +201,15 @@ def entries(feed, rows):
         content = sanitize(content)
         plain = html.unescape(bleach.clean(content, tags=[], strip=True))
         try:
+            source_date_known=True
             published = datetime.fromisoformat(row.get('created_at', '').replace('Z', '+00:00'))
             if published.tzinfo is None:
                 raise ValueError()
             published = published.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         except (TypeError, ValueError, AttributeError):
+            source_date_known=False
             published = now()
-        result.append((feed['id'], feed['source_type'] + ':' + row['id'], title, link, content, plain, published))
+        result.append((feed['id'], feed['source_type'] + ':' + row['id'], title, link, content, plain, published,published if source_date_known else None))
     return result
 
 
@@ -227,11 +229,14 @@ def refresh_social(feed):
         if initial:
             next_cursor = None  # Recent baseline, not a historical archive.
         with db:
-            db.executemany('''INSERT INTO articles(feed_id,guid,title,link,content,search_text,published_at)
-              VALUES(?,?,?,?,?,?,?) ON CONFLICT(feed_id,guid) DO UPDATE SET
-              title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text''', items)
+            db.executemany('''INSERT INTO articles(feed_id,guid,title,link,content,search_text,published_at,source_published_at)
+              VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(feed_id,guid) DO UPDATE SET
+              title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text,source_published_at=excluded.source_published_at''', items)
             db.execute('''UPDATE feeds SET since_id=?,page_cursor=?,pending_newest=?,checked_at=?,success_at=?,error=NULL,failures=0,retry_at=NULL WHERE id=?''',
                        (feed['since_id'] if next_cursor else newest, next_cursor, newest if next_cursor else None, now(), now(), feed['id']))
+        from .evidence import capture_articles
+        identifiers=[db.execute('SELECT id FROM articles WHERE feed_id=? AND guid=?',(feed['id'],item[1])).fetchone()[0] for item in items]
+        capture_articles(identifiers,feed['id'])
         feed['page_cursor'] = next_cursor
         feed['pending_newest'] = newest if next_cursor else None
         if not next_cursor:

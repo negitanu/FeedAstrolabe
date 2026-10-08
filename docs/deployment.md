@@ -110,3 +110,5 @@ native→コンテナも同じ標準入力の手順で移行できます。DB sn
 参考：[Access JWT 検証](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)、[Tunnel token-file](https://developers.cloudflare.com/tunnel/reference/run-parameters/)、[サービス認証](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/)。
 
 ページ観測を使用している環境では、復元の各 Compose コマンドに `-f compose.observer.yaml` を追加し、停止対象に `observer` も追加します。[観測の起動と制限](observation.md) を参照してください。
+
+第七段階以降、根拠を含むライブラリは DB／blob の一貫した `backup-bundle`／`restore-bundle` を使用します。旧 DB 単体の手順は根拠を持たない snapshot に限ります。v1〜v5 の復元先は v6 になります。[根拠・添付・復旧の手順](evidence.md)を参照してください。

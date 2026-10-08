@@ -19,6 +19,7 @@ def main():
     try:
         run('up','--build','-d','--wait','--wait-timeout','120')
         run('stop','observer')
+        subprocess.run(command+['exec','-T','web','python','-'],cwd=root,input=(root/'scripts/verify_evidence.py').read_text(),text=True,check=True)
         renderer=subprocess.check_output(command+['ps','-q','renderer'],cwd=root,text=True).strip()
         details=json.loads(subprocess.check_output(['docker','inspect',renderer],text=True))[0]
         assert details['HostConfig']['NetworkMode']=='none'
@@ -44,7 +45,7 @@ def main():
             from feedastrolabe import create_app, observation, collection, page_broker
             from feedastrolabe.db import get_db
             from feedastrolabe.keys import issue_key
-            from feedastrolabe.maintenance import backup, restore
+            from feedastrolabe.evidence_backup import backup_bundle as backup, restore_bundle as restore
             from feedastrolabe.collection import now
             value='Baseline'
             def fixture(self,url,method='GET'):
@@ -86,7 +87,7 @@ def main():
                 db=get_db()
                 row=db.execute("SELECT a.is_read,a.is_starred FROM articles a JOIN feeds f ON a.feed_id=f.id WHERE f.target='https://example.com/observer-fixture' AND a.guid='page:1'").fetchone()
                 assert tuple(row)==(1,1)
-                assert db.execute('PRAGMA user_version').fetchone()[0]==5
+                assert db.execute('PRAGMA user_version').fetchone()[0]==6
                 print('PASS: renderer/worker recreation preserves baseline and event state')
         ''')
     finally:

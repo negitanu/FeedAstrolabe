@@ -20,6 +20,8 @@ api.before_request(authenticate_api)
 def feed_record(row):
     result = dict(row)
     result['enabled'] = bool(result['enabled'])
+    error=get_db().execute('SELECT message,occurred_at FROM evidence_capture_errors WHERE feed_id=?',(result['id'],)).fetchone()
+    result['evidence_capture_error']=dict(error) if error else None
     if result['source_type'] == 'page':
         result['url'] = result['target']
         result['has_baseline'] = result['snapshot'] is not None

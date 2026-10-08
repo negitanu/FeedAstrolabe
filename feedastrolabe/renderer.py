@@ -87,11 +87,15 @@ def handle_connection(conn):
     conn.settimeout(40)
     with conn, conn.makefile('rwb') as stream:
         try:
-            job = receive_message(stream)
+            job = receive_message(stream, maximum=18*1024*1024)
             def fetch(url, method):
                 send_message(stream, {'type':'fetch','url':url,'method':method})
                 return receive_message(stream)
-            text = render(job, fetch)
+            if job.get('type') == 'extract':
+                from .attachment_parser import extract
+                text = extract(job)
+            else:
+                text = render(job, fetch)
             send_message(stream, {'type':'result','text':text})
         except ObservationError as exc:
             try:

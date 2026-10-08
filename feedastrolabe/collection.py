@@ -52,6 +52,7 @@ def refresh_lock():
 
 def ingest(db, feed_id, parsed, base):
     timestamp = now()
+    identifiers = []
     for entry in parsed.entries[:2000]:
         title = bleach.clean(entry.get('title', '無題'), tags=[], strip=True)[:1000]
         raw = entry.get('content', [{}])[0].get('value', '') or entry.get('summary', '')
@@ -60,14 +61,18 @@ def ingest(db, feed_id, parsed, base):
         link = safe_link(entry.get('link', ''), base)
         guid = entry.get('id') or link or hashlib.sha256((title + raw).encode()).hexdigest()
         date = entry.get('published_parsed') or entry.get('updated_parsed')
+        source_date_known=False
         try:
             published = datetime.fromtimestamp(calendar.timegm(date), timezone.utc).strftime('%Y-%m-%d %H:%M:%S') if date else timestamp
+            source_date_known=bool(date)
         except (OverflowError, ValueError, TypeError):
             published = timestamp
-        db.execute("""INSERT INTO articles (feed_id,guid,title,link,content,search_text,published_at)
-          VALUES (?,?,?,?,?,?,?) ON CONFLICT(feed_id,guid) DO UPDATE SET
-          title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text""",
-          (feed_id, str(guid), title, link, content, plain, published))
+        db.execute("""INSERT INTO articles (feed_id,guid,title,link,content,search_text,published_at,source_published_at)
+          VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(feed_id,guid) DO UPDATE SET
+          title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text,source_published_at=excluded.source_published_at""",
+          (feed_id, str(guid), title, link, content, plain, published, published if source_date_known else None))
+        identifiers.append(db.execute('SELECT id FROM articles WHERE feed_id=? AND guid=?',(feed_id,str(guid))).fetchone()[0])
+    return identifiers
 
 
 def add_feed(url, folder):
@@ -83,7 +88,9 @@ def add_feed(url, folder):
         with db:
             cursor = db.execute('INSERT INTO feeds (url,title,folder,etag,modified,checked_at,success_at,created_at) VALUES (?,?,?,?,?,?,?,?)',
                                 (url, title, folder, meta['etag'], meta['modified'], now(), now(), now()))
-            ingest(db, cursor.lastrowid, parsed, meta['url'])
+            identifiers=ingest(db, cursor.lastrowid, parsed, meta['url'])
+        from .evidence import capture_articles
+        capture_articles(identifiers,cursor.lastrowid)
         return cursor.lastrowid
 
 
@@ -117,10 +124,13 @@ def refresh_feeds(feed_id=None, due_only=False, interval_override=None):
                 parsed = parse_feed(body) if body is not None else None
                 with db:
                     if parsed is not None:
-                        ingest(db, feed['id'], parsed, meta['url'])
+                        identifiers=ingest(db, feed['id'], parsed, meta['url'])
                         db.execute('UPDATE feeds SET title=?,etag=?,modified=? WHERE id=?',
                                    (bleach.clean(parsed.feed.get('title', feed['title']), tags=[], strip=True)[:1000], meta['etag'], meta['modified'], feed['id']))
                     db.execute('UPDATE feeds SET checked_at=?,success_at=?,error=NULL,failures=0 WHERE id=?', (now(), now(), feed['id']))
+                if parsed is not None:
+                    from .evidence import capture_articles
+                    capture_articles(identifiers,feed['id'])
                 succeeded += 1
             except Exception as exc:
                 if feed['source_type'] != 'rss':

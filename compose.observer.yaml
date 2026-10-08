@@ -1,4 +1,8 @@
 services:
+  web:
+    volumes: [renderer-ipc:/run/observer]
+    environment:
+      FEEDASTROLABE_RENDER_SOCKET: /run/observer/renderer.sock
   observer:
     build: .
     image: feedastrolabe:local

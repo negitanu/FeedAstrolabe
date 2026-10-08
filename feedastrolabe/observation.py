@@ -76,6 +76,7 @@ def save_observation(feed,text):
         current=db.execute("SELECT * FROM feeds WHERE id=? AND source_type='page'",(feed['id'],)).fetchone()
         if current is None or current['revision']!=feed['revision']:
             return False
+        article_id=None
         sequence=current['observation_seq']
         if current['snapshot'] is not None and text!=current['snapshot']:
             sequence+=1
@@ -85,12 +86,15 @@ def save_observation(feed,text):
             if len(diff)>120000:
                 diff=diff[:120000]+'\n…差分表示を省略しました'
             content='<p>指定要素のテキストが変わりました。</p><pre>'+html.escape(diff)+'</pre><h3>現在の内容</h3><pre>'+html.escape(text)+'</pre>'
-            db.execute('''INSERT INTO articles(feed_id,guid,title,link,content,search_text,published_at)
+            inserted=db.execute('''INSERT INTO articles(feed_id,guid,title,link,content,search_text,published_at)
               VALUES(?,?,?,?,?,?,?)''',(feed['id'],f'page:{sequence}',f"{current['title']} · 変更 {sequence}",current['target'],content,diff+'\n'+text,now()))
+            article_id=inserted.lastrowid
         db.execute('UPDATE feeds SET snapshot=?,observation_seq=?,checked_at=?,success_at=?,error=NULL,failures=0 WHERE id=?',
                    (text,sequence,now(),now(),feed['id']))
         cutoff=(datetime.now(timezone.utc)-timedelta(days=current['retention_days'])).strftime('%Y-%m-%d %H:%M:%S')
         db.execute('DELETE FROM articles WHERE feed_id=? AND published_at<? AND is_starred=0',(feed['id'],cutoff))
+    from .evidence import capture_page as preserve_page
+    preserve_page(dict(current),text,article_id)
     return True
 
 

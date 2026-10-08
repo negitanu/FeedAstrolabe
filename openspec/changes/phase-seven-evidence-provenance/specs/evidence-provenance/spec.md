@@ -20,3 +20,16 @@ The system SHALL validate bounded attachments, isolate parsing, require authenti
 #### Scenario: Safe attachment lifecycle acceptance
 - **WHEN** an attachment exceeds quota or a restore is missing a referenced blob
 - **THEN** the operation fails explicitly without publishing unsafe content or accepting an incomplete restore
+
+
+#### Scenario: Bounded isolated parsing
+- **WHEN** a hostile, encrypted, malformed or oversized PDF is uploaded
+- **THEN** parsing runs without DB/credentials/network in the container, is time/memory/output bounded and fails without publishing evidence
+
+#### Scenario: Capture and retention
+- **WHEN** a feed/page changes or unpinned evidence expires
+- **THEN** changed captured text creates a new immutable version, identical retries do not duplicate it, pinned versions remain and quota failures are visible without losing ordinary articles
+
+#### Scenario: Atomic bundle restore
+- **WHEN** a bundle has a wrong hash, traversal path, symlink or absent blob
+- **THEN** restore rejects it before changing live DB/files and valid bundle restoration preserves source, workspace, note and quotation state

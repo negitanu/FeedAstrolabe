@@ -167,3 +167,16 @@ PATCH メモの例：
 ```
 
 `expected_revision` は正の JSON 整数で、変更項目が最低1つ必要です。保存は版番号を増やし、古い版による変更は409で原子的に拒否します。案件・メモの削除相当操作は `archived:true` です。アーカイブ済み案件は `{"archived":false}` だけで再開し、通常編集・関連変更・配下メモ編集は再開まで409です。メモ再開は `{"expected_revision":3,"archived":false}`。案件・メモの hard DELETE は提供しません。
+
+## 根拠・出典（第七段階）
+
+- `GET /api/v1/evidence`：本文を除く一覧。共通 limit／before_id／after_id に加えて workspace／note／article ID フィルター。案件への直接固定、案件内メモの固定、引用の和集合です。
+- `GET /api/v1/evidence/{id}`：固定本文、版、出典URL、取得方法、公開／観測／保存日時、bytes とテキストのハッシュ。
+- `GET /api/v1/evidence/{id}/download`：ハッシュ検証済み元ファイルを添付として取得。
+- `POST /api/v1/articles/{id}/evidence`：空本文で現在の記事を backfill-now 保存（201）。同一内容は同じ ID を返します。
+- `POST /api/v1/workspaces/{id}/attachments`：multipart の file 1件だけ。text／Markdown／PDF、10MiBまで。抽出・容量確認後に保存し案件へ固定（201）。
+- `POST`／`DELETE /api/v1/workspaces/{id}/evidence/{evidence_id}` および `/api/v1/notes/{id}/evidence/{evidence_id}`：空本文で固定／解除（204）。アーカイブされた親は409。
+- `GET`／`POST /api/v1/workspaces/{id}/quotations`：引用一覧／完全一致引用の保存（201）。POST JSON例：`{"evidence_id":1,"start":0,"end":8,"quote":"Original","note_id":null}`。位置は Unicode 文字数で、note_id は省略可能です。
+- `GET`／`PATCH /api/v1/evidence-settings`：容量 bytes、保存日数、登録済み使用量、保存エラー先頭100件。PATCH例：`{"quota_bytes":524288000,"retention_days":90}`。
+
+書き込みには write キーが必要です。根拠の本文や出典を上書きするAPIはありません。記事の `source_published_at` は情報源が明示した公開日時（不明時null）です。表示用 `published_at` の取得日時代用とは区別します。ファイル整合性不正や容量超過は保存せず400、固定本文ハッシュ不正の detail は409。上限超過のリクエストは413です。[保存・添付・復旧の手順](evidence.md)を参照してください。

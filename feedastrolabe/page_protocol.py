@@ -4,6 +4,7 @@ import json
 MAX_MESSAGE = 8 * 1024 * 1024
 MAX_TEXT = 50000
 ERRORS = {
+    'attachment': '添付を安全に抽出できません。形式・暗号化・解析上限を確認してください。',
     'selector': '対象要素が見つからないか、空です。CSS セレクターと待機時間を確認してください。',
     'invalid_selector': 'CSS セレクターが不正です。標準の CSS セレクターを指定してください。',
     'timeout': 'ページ観測が時間上限を超えました。',
@@ -21,18 +22,18 @@ class ObservationError(ValueError):
         super().__init__(ERRORS[self.code])
 
 
-def send_message(stream, value):
+def send_message(stream, value, maximum=MAX_MESSAGE):
     data = json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode() + b'\n'
-    if len(data) > MAX_MESSAGE:
+    if len(data) > maximum:
         raise ObservationError('protocol')
     stream.write(data)
     stream.flush()
 
 
-def receive_message(stream):
+def receive_message(stream, maximum=MAX_MESSAGE):
     try:
-        data = stream.readline(MAX_MESSAGE + 1)
-        if not data or len(data) > MAX_MESSAGE or not data.endswith(b'\n'):
+        data = stream.readline(maximum + 1)
+        if not data or len(data) > maximum or not data.endswith(b'\n'):
             raise ValueError()
         value = json.loads(data)
         if not isinstance(value, dict):

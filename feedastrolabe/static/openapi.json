@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -587,6 +587,351 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "Evidence": {
+        "type": "object",
+        "properties": {
+          "source_key": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "publisher": {
+            "type": "string"
+          },
+          "source_guid": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "captured_at": {
+            "type": "string"
+          },
+          "blob_hash": {
+            "type": "string"
+          },
+          "text_hash": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "feed_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "article_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "published_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10485760
+          }
+        }
+      },
+      "EvidenceSummary": {
+        "type": "object",
+        "properties": {
+          "source_key": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "publisher": {
+            "type": "string"
+          },
+          "source_guid": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "captured_at": {
+            "type": "string"
+          },
+          "blob_hash": {
+            "type": "string"
+          },
+          "text_hash": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "feed_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "article_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "published_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10485760
+          }
+        }
+      },
+      "Quotation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "workspace_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "evidence_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "note_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quote": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "text_hash": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "QuotationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "start",
+          "end",
+          "quote"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "note_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quote": {
+            "type": "string",
+            "maxLength": 10000
+          }
+        }
+      },
+      "EvidenceSettingsPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "quota_bytes": {
+            "type": "integer",
+            "minimum": 10485760,
+            "maximum": 10737418240
+          },
+          "retention_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3650
+          }
+        }
+      },
+      "EvidenceSettings": {
+        "type": "object",
+        "properties": {
+          "quota_bytes": {
+            "type": "integer",
+            "minimum": 10485760,
+            "maximum": 10737418240
+          },
+          "retention_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3650
+          },
+          "used_bytes": {
+            "type": "integer"
+          },
+          "capture_errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "EvidenceResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Evidence"
+          }
+        }
+      },
+      "QuotationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Quotation"
+          }
+        }
+      },
+      "EvidenceSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EvidenceSettings"
+          }
+        }
+      },
+      "EvidencePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSummary"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
+        ]
+      },
+      "QuotationPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Quotation"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_before_id",
+          "next_after_id"
         ]
       }
     },
@@ -2706,6 +3051,780 @@
           },
           "429": {
             "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/evidence": {
+      "get": {
+        "summary": "List immutable evidence versions",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "article",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidencePage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evidence/{identifier}": {
+      "get": {
+        "summary": "Read immutable evidence text and provenance",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evidence/{identifier}/download": {
+      "get": {
+        "summary": "Download hash-verified bytes as an attachment",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/{identifier}/evidence": {
+      "post": {
+        "summary": "Capture current text as backfill-now; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{identifier}/attachments": {
+      "post": {
+        "summary": "Upload and pin one text/Markdown/PDF attachment (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Maximum 10 MiB; MIME, extension and bytes must match"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{identifier}/evidence/{evidence_id}": {
+      "post": {
+        "summary": "Pin/unpin evidence; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "204": {
+            "description": "Success"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Pin/unpin evidence; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/notes/{identifier}/evidence/{evidence_id}": {
+      "post": {
+        "summary": "Pin/unpin evidence; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "204": {
+            "description": "Success"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Pin/unpin evidence; empty body (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/workspaces/{identifier}/quotations": {
+      "get": {
+        "summary": "List exact quotation anchors",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/before_id"
+          },
+          {
+            "$ref": "#/components/parameters/after_id"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationPage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Save verified Unicode range and exact quote (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuotationInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evidence-settings": {
+      "get": {
+        "summary": "Read library evidence quota, retention and capture errors",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update quota or retention (write scope)",
+        "security": [
+          {
+            "BearerKey": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "400": {
+            "description": "Invalid input, quota, missing or corrupt blob"
+          },
+          "401": {
+            "description": "Bearer key required"
+          },
+          "403": {
+            "description": "Write scope required for mutations"
+          },
+          "404": {
+            "description": "Record missing"
+          },
+          "409": {
+            "description": "Archived parent or corrupt fixed text"
+          },
+          "413": {
+            "description": "Request too large"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceSettingsResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceSettingsPatch"
+              }
+            }
           }
         }
       }

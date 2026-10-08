@@ -17,6 +17,8 @@ from .api import api
 from .settings import settings
 from .research_api import research_api
 from .research_ui import research_ui
+from .evidence_api import api as evidence_api
+from .evidence_ui import ui as evidence_ui
 from werkzeug.exceptions import HTTPException, SecurityError
 
 
@@ -38,7 +40,7 @@ def create_app(test_config=None):
                 handle.write(secrets.token_hex(32))
         key = key_path.read_text().strip()
         init_database(str(data_dir / 'feeds.sqlite3'))
-    app.config.update(SECRET_KEY=key, DATABASE=str(data_dir / 'feeds.sqlite3'), MAX_CONTENT_LENGTH=1100000,
+    app.config.update(SECRET_KEY=key, DATABASE=str(data_dir / 'feeds.sqlite3'), MAX_CONTENT_LENGTH=12*1024*1024,
                       SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax', TRUSTED_HOSTS=['localhost', '127.0.0.1', '[::1]'])
     if test_config:
         app.config.update(test_config)
@@ -48,6 +50,8 @@ def create_app(test_config=None):
     app.register_blueprint(settings)
     app.register_blueprint(research_api)
     app.register_blueprint(research_ui)
+    app.register_blueprint(evidence_api)
+    app.register_blueprint(evidence_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -224,6 +228,11 @@ def create_app(test_config=None):
                 response.headers['Retry-After'] = str(60 - int(time.time()) % 60)
             return response
         return render_template('error.html', error=error), error.code
+
+    @app.cli.command('prune-evidence')
+    def prune_evidence():
+        from .evidence import prune
+        click.echo('pruned={}'.format(prune()))
 
     @app.cli.command('refresh')
     def refresh_command():
