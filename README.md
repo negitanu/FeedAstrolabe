@@ -90,3 +90,7 @@ docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up
 ## 購読管理
 
 設定画面で RSS/ページ観測の取得 URL を修正できます。既存記事・既読・スターを保持し、次回収集で取得情報や観測基準を取り直します。API は `PATCH /api/v1/feeds/{id}`、`DELETE /api/v1/feeds/{id}`、`POST /api/v1/feeds/{id}/refresh` に対応します。すべて書き込みキーが必要です。[API 手順](docs/api.md) と [第五段階の検証記録](docs/verification-phase-five.md) を参照してください。
+
+## 調査ワークスペースへの拡張計画
+
+セキュリティ・OSINT・ネットワーク・生成AIを扱う [第六〜第十四段階の実装計画](docs/research-workspace-plan.md) をOpenSpecで定義しました。調査案件・根拠保存・ウォッチリストを最初のMVPとします。計画段階であり、これらの機能は未実装です。
