@@ -37,3 +37,4 @@ textarea { width:100%; border:1px solid var(--border,#dce2df); border-radius:7px
 .entity-edge { stroke: #89a7a1; stroke-width: 2; }
 .entity-node { fill: #22685d; }
 .entity-node-label { fill: white; font: 12px sans-serif; }
+.research-page p { overflow-wrap: anywhere; }

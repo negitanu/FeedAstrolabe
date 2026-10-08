@@ -167,9 +167,9 @@ def test_v7_migration_entity_bundle_integrity_and_recovery(tmp_path):
         assert n.extract(eid,reprocess=True)['mentions_created']==0
         assert n.relation(rid)['predicate']=='reported-association'
         assert get_db().execute('SELECT count(*) FROM entity_mentions').fetchone()[0]==2
-        assert get_db().execute('PRAGMA user_version').fetchone()[0]==11
+        assert get_db().execute('PRAGMA user_version').fetchone()[0]==12
         assert not get_db().execute('PRAGMA foreign_key_check').fetchall()
-    oldrestore=tmp_path/'old-restored'/'feeds.sqlite3';restore_bundle(bundle,oldrestore);db=connect(oldrestore);assert db.execute('PRAGMA user_version').fetchone()[0]==11;db.close()
+    oldrestore=tmp_path/'old-restored'/'feeds.sqlite3';restore_bundle(bundle,oldrestore);db=connect(oldrestore);assert db.execute('PRAGMA user_version').fetchone()[0]==12;db.close()
     # A semantic anchor corruption is rejected even when DB bytes are internally consistent.
     with app.app_context():
         with get_db() as db:db.execute("UPDATE entity_mentions SET original='not the source'")

@@ -2,7 +2,7 @@
 
 Summaries and research answers should be traceable to captured evidence and respect nonpublic research boundaries.
 
-Implementation prerequisite: `phase-seven-evidence-provenance`, `phase-nine-entities-relations`, `phase-twelve-ai-research-tracking`. This is a planned change; artifact readiness does not mean its prerequisites are implemented.
+Implementation prerequisite: `phase-seven-evidence-provenance`, `phase-nine-entities-relations`, `phase-twelve-ai-research-tracking`. Prerequisites are accepted and archived. Deployed schema11 migrates to schema12.
 
 ## Goals / Non-Goals
 
@@ -43,3 +43,15 @@ Before implementing, confirm prerequisite changes and deployed schema, assign th
 ## Open Questions
 
 Connector/model endpoint quotas, licenses, model runtime choice and required credential files are resolved in the listed research/configuration tasks before enabling that integration. Missing external configuration is reported as unverified, never converted to a successful acceptance check. Initial bounds are design defaults and can be revised with explicit specification updates.
+
+## Refreshed adapter and consent design
+
+Use official Ollama Chat API, local127.0.0.1:11434 or fixed cloud https://ollama.com/api/chat. Both start disabled. No local runtime/model is installed on this host; real-model quality acceptance is explicitly unverified. Do not install models, create accounts or spend credits as part of acceptance. Local profile requires expected model SHA256 and preflight cloud.disabled=true plus matching local /api/tags digest and no remote_host/model; no cloud proxy model is treated as local. Trusted Docker deployment may explicitly configure local service hostname ollama via environment, never browser/API arbitrary endpoints.
+
+Remote cloud token is read from an ignored owner-only regular credential file (or exact Docker secret mount) and never stored in DB, Git or request lineage. Remote profile records dated user-reviewed micro-USD-per-million input/output rates from official pricing, bounded monetary reserve, tokens and daily calls. Conservative UTF8 byte bound plus framing/output limit reserves the maximum planned charge; unknown rate blocks cloud. Response usage/cost is retained, estimated rather than billed. One global generation at a time, 90second total deadline, 1MiB response, no streaming/tools/thinking/search, no automatic retry of POST. Interrupted running job is failed, requiring new approval, because remote billing may already have occurred.
+
+Preview snapshots exact wire JSON payload, hash, profile revision and up to8 evidence excerpts capped1200characters each, within8192input bytes plus conservative framing. Selection is bounded local literal retrieval in the requested workspace; explicit quoted offsets are validated against fixed hashes. Remote requires public workspace, all selected evidence untainted by internal/restricted workspace references, secret checks and explicit approved=true + input hash at queue time. Secret detection is defense in depth, not a guarantee; human exact input review is mandatory. Recheck classification/hash/profile immediately before generation; immutable preview expires30minutes. Model names/prompt are also untrusted strings.
+
+Modes summary/translation/compare/QA use one fixed Japanese prompt template requiring structured answer status, supported statements with selected citation IDs, uncertainties and suggestions. Grounding validates IDs and exact quotation anchors, not semantic truth. No evidence produces deterministic insufficient result without model calls. Any unsupported/malformed citation rejects the generated result; human review appends separate immutable revisions. All generated claims remain unverified, never automatic facts. Output stays escaped plaintext/structured JSON.
+
+Dispatch holds the existing evidence/SQLite writer transaction through the bounded generation to prevent concurrent classification/profile changes racing the approved POST. Other writes may wait or return busy while a model runs; foreground reads remain available. Budgets reserve at approval and again on a different execution UTC day, with no automatic refunds/retries after uncertain failures. Token rates are dated estimates, not provider invoice guarantees.

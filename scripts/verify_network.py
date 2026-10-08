@@ -23,12 +23,12 @@ def main():
   if args.check_state:
    state=json.loads(marker.read_text())
    with app.app_context():
-    db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==11
+    db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==12
     card=s.card(state['dns']);assert card['observation']['normalized']['rrset'][0]['data']=='8.8.8.8' and card['state']=='stale'
     assert db.execute('SELECT count(*) FROM network_events').fetchone()[0]==1
     assert db.execute('SELECT count(*) FROM network_observations').fetchone()[0]==6
     assert not db.execute('PRAGMA foreign_key_check').fetchall()
-   print('PASS schema11 network originals/change links/last-good stale/consent after recreation');return
+   print('PASS schema12 network originals/change links/last-good stale/consent after recreation');return
   with app.app_context():_,token=issue_key('ephemeral network acceptance','write',1);_,read=issue_key('network read acceptance','read',1)
   server=make_server('127.0.0.1',args.serve_port,app);thread=Thread(target=server.serve_forever,daemon=True);thread.start();base='http://127.0.0.1:'+str(server.server_port)
   def request(method,path,body=None,key=None):

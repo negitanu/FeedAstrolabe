@@ -131,7 +131,7 @@ def test_retention_keeps_latest_quotes_notes_and_fixed_evidence(app):
 def test_v9_migration_v10_bundle_and_prior_contracts(app,tmp_path):
  prior=tmp_path/'v9';prior.mkdir();db=connect(prior/'feeds.sqlite3');db.executescript(Path('tests/fixtures/v9_schema.sql').read_text());db.close()
  bundle=tmp_path/'v9-bundle';backup_bundle(prior/'feeds.sqlite3',bundle);restore_bundle(bundle,tmp_path/'restore'/'feeds.sqlite3')
- db=connect(tmp_path/'restore'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==11;assert db.execute('SELECT count(*) FROM connector_settings').fetchone()[0]==11;assert db.execute('SELECT sum(enabled) FROM connector_settings').fetchone()[0]==0;db.close()
+ db=connect(tmp_path/'restore'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==12;assert db.execute('SELECT count(*) FROM connector_settings').fetchone()[0]==11;assert db.execute('SELECT sum(enabled) FROM connector_settings').fetchone()[0]==0;db.close()
  wid,eid,watch=setup(app)
  with app.app_context():
   cache('dns','example.com|A',fixtures()['dns']);n.sync(watch)

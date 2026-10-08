@@ -21,4 +21,4 @@ None. Additive capabilities preserve existing RSS/SNS/page and API contracts.
 
 ## Impact
 
-Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Planned only: no runtime behavior changes in this planning delivery. Dependencies: `phase-seven-evidence-provenance`, `phase-nine-entities-relations`, `phase-twelve-ai-research-tracking`.
+Flask/SQLite persistence, Japanese responsive UI, scoped APIs, background jobs and operations documentation. Prerequisite stages seven, nine and twelve are accepted; migrate deployed schema11 to schema12. Dependencies: `phase-seven-evidence-provenance`, `phase-nine-entities-relations`, `phase-twelve-ai-research-tracking`.

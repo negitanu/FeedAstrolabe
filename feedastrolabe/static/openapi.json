@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.12.0",
+    "version": "0.13.0",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
   },
   "servers": [
@@ -4375,6 +4375,479 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AiIdentifier"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantProfileCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "local",
+              "cloud"
+            ]
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "model_digest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2048
+          },
+          "daily_calls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "input_rate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "output_rate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "price_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "max_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000000
+          },
+          "daily_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000000
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "model"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantProfilePatch": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2048
+          },
+          "daily_calls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "input_rate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "output_rate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "price_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "max_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000000
+          },
+          "daily_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000000
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantPreviewCreate": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "translation",
+              "compare",
+              "qa"
+            ]
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "evidence_ids": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "quotation_ids": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "required": [
+          "profile_id",
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantApproval": {
+        "type": "object",
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "const": true
+          },
+          "input_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "approved",
+          "input_hash"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantReviewCreate": {
+        "type": "object",
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "reviewed",
+              "rejected"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16000
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "expected_revision",
+          "status",
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantProfile": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Exact input snapshot, immutable generated output or human revision; docs/grounded-assistant.md defines budgets and trust limits."
+      },
+      "AssistantProfileResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssistantProfile"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantProfilePage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantProfile"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantPreview": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Exact input snapshot, immutable generated output or human revision; docs/grounded-assistant.md defines budgets and trust limits."
+      },
+      "AssistantPreviewResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssistantPreview"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantPreviewPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantPreview"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantJob": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Exact input snapshot, immutable generated output or human revision; docs/grounded-assistant.md defines budgets and trust limits."
+      },
+      "AssistantJobResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssistantJob"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantJobPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantJob"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantDetail": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Exact input snapshot, immutable generated output or human revision; docs/grounded-assistant.md defines budgets and trust limits."
+      },
+      "AssistantDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssistantDetail"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantDetailPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantDetail"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_after_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantReview": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Exact input snapshot, immutable generated output or human revision; docs/grounded-assistant.md defines budgets and trust limits."
+      },
+      "AssistantReviewResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssistantReview"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AssistantReviewPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantReview"
             }
           },
           "has_more": {
@@ -11416,6 +11889,535 @@
           },
           "409": {
             "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/assistant-profiles": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantProfilePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProfileCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assistant-profiles/{profile_id}": {
+      "patch": {
+        "summary": "Passive network patch",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProfilePatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/assistant-previews": {
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantPreviewCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assistant-previews/{preview_id}": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "preview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/assistant-previews/{preview_id}/jobs": {
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "preview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantApproval"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/assistant-jobs": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantJobPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/assistant-jobs/{job_id}": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      }
+    },
+    "/assistant-jobs/{job_id}/reviews": {
+      "get": {
+        "summary": "Passive network get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantReviewPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        }
+      },
+      "post": {
+        "summary": "Passive network post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public input"
+          },
+          "401": {
+            "description": "Key required"
+          },
+          "403": {
+            "description": "Write key required"
+          },
+          "404": {
+            "description": "Missing"
+          },
+          "409": {
+            "description": "Consent, provider, archived or revision conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantReviewCreate"
+              }
+            }
           }
         }
       }

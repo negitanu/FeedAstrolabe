@@ -63,7 +63,7 @@ def main():
                     restored=Path(directory)/'restored'/'feeds.sqlite3';restore_bundle(bundle,restored)
                     with connect(restored) as db:
                         assert db.execute('SELECT count(*) FROM quotations').fetchone()[0]==1
-                        assert db.execute('PRAGMA user_version').fetchone()[0]==11
+                        assert db.execute('PRAGMA user_version').fetchone()[0]==12
                     blob=bundle/'evidence-blobs'/saved['blob_hash'];blob.unlink()
                     try:restore_bundle(bundle,Path(directory)/'invalid-restore'/'feeds.sqlite3');raise AssertionError('Missing blob accepted')
                     except ValueError:pass

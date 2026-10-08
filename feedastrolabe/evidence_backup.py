@@ -52,6 +52,15 @@ def references(db):
             'SELECT 1 FROM ai_benchmarks b JOIN ai_cards c ON c.id=b.card_id JOIN quotations q ON q.id=b.quotation_id WHERE c.workspace_id!=q.workspace_id LIMIT 1',
             'SELECT 1 FROM ai_links l JOIN ai_cards c ON c.id=l.card_id JOIN ai_versions v ON v.id=l.version_id JOIN ai_watches w ON w.id=v.watch_id WHERE c.workspace_id!=w.workspace_id LIMIT 1']
         if any(db.execute(sql).fetchone() for sql in queries):raise ValueError('研究記録と引用・版の案件が一致しません。')
+    if db.execute('PRAGMA user_version').fetchone()[0]>=12:
+        for row in db.execute('SELECT * FROM assistant_previews'):
+            if e.digest(row['input'].encode())!=row['input_hash']:raise ValueError('生成入力hashが不正です。')
+            anchors=json.loads(row['anchors'])
+            if not isinstance(anchors,list) or len(anchors)>8:raise ValueError('生成引用が不正です。')
+            for anchor in anchors:
+                item=db.execute('SELECT * FROM evidence WHERE id=?',(anchor['evidence_id'],)).fetchone()
+                if not item or item['text_hash']!=anchor['text_hash'] or item['text'][anchor['start']:anchor['end']]!=anchor['quote']:raise ValueError('生成引用の固定位置が不正です。')
+                if not db.execute('SELECT 1 FROM assistant_sources WHERE preview_id=? AND evidence_id=?',(row['id'],item['id'])).fetchone():raise ValueError('生成引用の参照が不正です。')
     return [{'hash':row['hash'],'size':row['size']} for row in db.execute('SELECT * FROM evidence_blobs ORDER BY hash')]
 
 
@@ -113,7 +122,7 @@ def restore_bundle(source,destination):
     destination.parent.mkdir(parents=True,exist_ok=True)
     destination.parent.chmod(0o700)
     with e.storage_lock(destination.parent),ExitStack() as locks:
-        for name in ['init.lock','refresh.lock','observer.lock','connector.lock']:
+        for name in ['init.lock','refresh.lock','observer.lock','connector.lock','assistant.lock']:
             handle=locks.enter_context((destination.parent/name).open('a'))
             fcntl.flock(handle,fcntl.LOCK_EX|fcntl.LOCK_NB)
         # Copy validated bundle into private staging, then validate the copy against source races.

@@ -21,6 +21,8 @@ from .evidence_api import api as evidence_api
 from .evidence_ui import ui as evidence_ui
 from .triage_api import api as triage_api
 from .triage_ui import ui as triage_ui
+from .assistant_api import api as assistant_api
+from .assistant_ui import ui as assistant_ui
 from .ai_research_api import api as ai_api
 from .ai_research_ui import ui as ai_ui
 from .network_api import api as network_api
@@ -72,6 +74,8 @@ def create_app(test_config=None):
     app.register_blueprint(network_ui)
     app.register_blueprint(ai_api)
     app.register_blueprint(ai_ui)
+    app.register_blueprint(assistant_api)
+    app.register_blueprint(assistant_ui)
     app.teardown_appcontext(close_db)
 
     @app.before_request
@@ -270,6 +274,11 @@ def create_app(test_config=None):
         from .ai_research import schedule as ai_schedule
         schedule();network_schedule();ai_schedule();click.echo(process());schedule();network_schedule();ai_schedule()
 
+    @app.cli.command('assistant-jobs')
+    def assistant_jobs_once():
+        from .assistant import process
+        click.echo(process())
+
     @app.cli.command('extract-entities')
     def extract_entities_once():
         """Extract one bounded fixed-evidence batch; no network access."""
@@ -295,6 +304,8 @@ def create_app(test_config=None):
                 from .network_intelligence import schedule as network_schedule
                 from .ai_research import schedule as ai_schedule
                 schedule();network_schedule();ai_schedule();connector_process();schedule();network_schedule();ai_schedule()
+                from .assistant import process as assistant_process
+                assistant_process()
                 from .triage import process
                 process()
                 from .entities import extract

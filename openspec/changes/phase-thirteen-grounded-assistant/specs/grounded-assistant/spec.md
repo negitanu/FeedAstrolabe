@@ -20,3 +20,15 @@ The system SHALL record model/prompt/evidence lineage and enforce budgets withou
 #### Scenario: Safe reproducible jobs acceptance
 - **WHEN** a retrieved article contains instructions to read secrets or change settings
 - **THEN** those instructions are treated as data and no external action or configuration mutation occurs
+
+#### Scenario: Exact-preview and stale policy
+- **WHEN** approval hash or profile/classification changes after preview
+- **THEN** the job is rejected or failed before transmitting selected text
+
+#### Scenario: Citation validation and human revisions
+- **WHEN** output refers to an unselected source or a reviewer edits the answer
+- **THEN** invalid model output is rejected and human edits remain independent revisions without modifying source evidence
+
+#### Scenario: Interrupted paid request
+- **WHEN** generation is interrupted or usage is uncertain
+- **THEN** no automatic retry occurs and the reserved budget remains charged conservatively until a new explicit operation

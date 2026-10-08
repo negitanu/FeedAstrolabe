@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from flask import current_app, g
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feeds (
@@ -219,6 +219,11 @@ def init_database(path):
             for statement in ai_schema.split(';'):
                 if statement.strip():db.execute(statement)
             db.execute('PRAGMA user_version=11')
+        if version < 12:
+            from .assistant_schema import SCHEMA as assistant_schema
+            for statement in assistant_schema.split(';'):
+                if statement.strip():db.execute(statement)
+            db.execute('PRAGMA user_version=12')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()
