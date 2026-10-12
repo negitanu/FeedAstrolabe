@@ -41,3 +41,26 @@ textarea { width:100%; border:1px solid var(--border,#dce2df); border-radius:7px
 
 .research-page form > label { display:block; margin:12px 0 6px; }
 .research-page form > label > select { display:block; width:100%; min-width:0; margin-top:4px; padding:9px 11px; border:1px solid #dbe2e4; border-radius:7px; background:#fff; color:var(--ink); font:inherit; }
+
+/* Feedly-like reading affordances: density, keyboard focus, open-as-button titles */
+.reading-prefs{margin:0 42px 18px;padding:12px 18px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.reading-prefs summary{font-size:11px;color:var(--muted);cursor:pointer}
+.reading-prefs-form{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-top:12px;max-width:none}
+.reading-prefs-form select{width:auto;min-width:120px}
+.reading-prefs-form .check{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.reading-prefs-form .check input{width:auto}
+.keyboard-hint{margin:10px 0 0}
+.article-card.keyboard-focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:#f4faf8}
+button.article-title{display:block;width:100%;text-align:left;background:transparent;border:0;padding:0;font-size:16px;font-weight:650;line-height:1.6;color:inherit;overflow-wrap:anywhere;border-radius:0}
+button.article-title:hover{background:transparent;color:var(--accent)}
+.open-form{margin:0}
+.density-compact .article-card{padding:10px 14px;margin-bottom:4px;border-radius:6px}
+.density-compact .article-title, .density-compact button.article-title{font-size:14px;line-height:1.45;font-weight:600}
+.density-compact .excerpt{display:none}
+.density-compact .article-meta{margin-bottom:4px}
+.density-compact .article-actions{gap:8px}
+.density-compact .view-heading{padding-top:18px;padding-bottom:8px}
+.density-compact .view-heading h1{font-size:22px;margin:4px 0}
+.density-compact .toolbar{padding-bottom:12px}
+@media(max-width:700px){.reading-prefs{margin-left:20px;margin-right:20px}.reading-prefs-form{flex-direction:column;align-items:stretch}}
+@media(max-width:1100px){.reading-prefs{margin-left:26px;margin-right:26px}}

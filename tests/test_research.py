@@ -195,7 +195,7 @@ def test_scope_csrf_and_safe_markdown_ui(app,client,writer):
     for path in ['/workspaces',f'/workspaces/{wid}',f'/workspaces/notes/{nid}']:
         response=client.get(path)
         assert response.status_code==200
-        assert "script-src 'none'" in response.headers['Content-Security-Policy']
+        assert "script-src 'self'" in response.headers['Content-Security-Policy']
     html=client.get(f'/workspaces/notes/{nid}').get_data(as_text=True)
     assert '<strong>bold</strong>' in html and '<h1>Findings</h1>' in html
     assert '<script>' not in html and '<svg' not in html and '<img' not in html and 'href="javascript:' not in html

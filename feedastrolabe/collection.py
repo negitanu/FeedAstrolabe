@@ -59,7 +59,8 @@ def ingest(db, feed_id, parsed, base):
         content = sanitize(raw)
         plain = bleach.clean(content, tags=[], strip=True)
         link = safe_link(entry.get('link', ''), base)
-        guid = entry.get('id') or link or hashlib.sha256((title + raw).encode()).hexdigest()
+        # Stable identity only: never hash mutable body text (content edits would mint duplicates).
+        guid = entry.get('id') or link or hashlib.sha256(title.encode()).hexdigest()
         date = entry.get('published_parsed') or entry.get('updated_parsed')
         source_date_known=False
         try:
@@ -69,7 +70,9 @@ def ingest(db, feed_id, parsed, base):
             published = timestamp
         db.execute("""INSERT INTO articles (feed_id,guid,title,link,content,search_text,published_at,source_published_at)
           VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(feed_id,guid) DO UPDATE SET
-          title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text,source_published_at=excluded.source_published_at""",
+          title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text,
+          source_published_at=excluded.source_published_at,
+          published_at=CASE WHEN excluded.source_published_at IS NOT NULL THEN excluded.published_at ELSE articles.published_at END""",
           (feed_id, str(guid), title, link, content, plain, published, published if source_date_known else None))
         identifiers.append(db.execute('SELECT id FROM articles WHERE feed_id=? AND guid=?',(feed_id,str(guid))).fetchone()[0])
     return identifiers

@@ -98,21 +98,36 @@ def create_app(test_config=None):
 
     @app.after_request
     def security_headers(response):
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        # script-src 'self' allows the local reader keyboard/scan helper only.
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['Cache-Control'] = 'no-store'
         return response
 
-    def filters():
-        source = request.values
-        view = source.get('view', preferences()['default_view'])
+    def reading_prefs():
+        density = session.get('list_density', 'comfortable')
+        if density not in ('comfortable', 'compact'):
+            density = 'comfortable'
+        return {'list_density': density, 'mark_read_on_open': bool(session.get('mark_read_on_open')),
+                'scan_after_read': bool(session.get('scan_after_read', True))}
+
+    def filters(*, source=None, strict=False):
+        # Mutating POSTs must read the form body; GET uses the query string.
+        # request.values prefers args over form and can override toolbar scopes.
+        source = request.form if source is None and request.method == 'POST' else (source if source is not None else request.args)
+        default_view = preferences()['default_view'] if request.method == 'GET' else 'all'
+        view = source.get('view', default_view)
         if view not in ('all', 'unread', 'starred'):
+            if strict or request.method == 'POST':
+                abort(400, description='表示条件が不正です。')
             view = 'all'
         feed_id = source.get('feed', type=int)
         if feed_id is not None and feed_id < 1:
             feed_id = None
-        query = source.get('q', '').strip()[:200]
+        query = source.get('q', '').strip()
+        if len(query) > 200:
+            abort(400, description='検索語は 200 文字以内で指定してください。')
         clauses, params = [], []
         if view == 'unread':
             clauses.append('a.is_read=0')
@@ -148,6 +163,9 @@ def create_app(test_config=None):
             params.append(scopes['tag'])
         return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, q=query, **scopes)
 
+    def article_order_sql():
+        return ' ORDER BY coalesce(a.source_published_at,a.published_at) DESC,a.id DESC'
+
     def return_to():
         target = request.form.get('next', '/')
         # Only application-owned paths; never accept a scheme, authority or backslash.
@@ -155,30 +173,55 @@ def create_app(test_config=None):
             target = '/'
         return redirect(target)
 
+    def index_path(selected, *, article=None, page=None):
+        args = {'view': selected['view']}
+        if selected.get('feed'):
+            args['feed'] = selected['feed']
+        if selected.get('q'):
+            args['q'] = selected['q']
+        if selected.get('workspace'):
+            args['workspace'] = selected['workspace']
+        if selected.get('tag'):
+            args['tag'] = selected['tag']
+        if page and page > 1:
+            args['page'] = page
+        if article:
+            args['article'] = article
+        return url_for('index', **args)
+
     @app.get('/')
     def index():
         from .research import tag_rows, options
         db = get_db()
         where, params, selected = filters()
+        if selected['feed'] is not None and db.execute('SELECT id FROM feeds WHERE id=?', (selected['feed'],)).fetchone() is None:
+            abort(404)
         total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
         page_size = preferences()['page_size']
         pages = max(1, (total + page_size - 1) // page_size)
         page = min(pages, max(1, request.args.get('page', 1, type=int)))
-        articles = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id' + where + ' ORDER BY a.published_at DESC,a.id DESC LIMIT ? OFFSET ?', params + [page_size, (page - 1) * page_size]).fetchall()
+        articles = db.execute('SELECT a.*,f.title AS feed_title,coalesce(a.source_published_at,a.published_at) AS display_published_at FROM articles a JOIN feeds f ON f.id=a.feed_id' + where + article_order_sql() + ' LIMIT ? OFFSET ?', params + [page_size, (page - 1) * page_size]).fetchall()
         feeds = db.execute('SELECT f.*,sum(CASE WHEN a.is_read=0 THEN 1 ELSE 0 END) AS unread FROM feeds f LEFT JOIN articles a ON a.feed_id=f.id GROUP BY f.id ORDER BY f.folder,f.title').fetchall()
         counts = db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles').fetchone()
         article_id = request.args.get('article', type=int)
-        article = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone() if article_id else None
+        article = db.execute('SELECT a.*,f.title AS feed_title,coalesce(a.source_published_at,a.published_at) AS display_published_at FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone() if article_id else None
         if article_id and article is None:
             abort(404)
+        if article is not None:
+            clause = (where + ' AND a.id=?') if where else ' WHERE a.id=?'
+            if db.execute('SELECT a.id FROM articles a' + clause, params + [article_id]).fetchone() is None:
+                abort(404)
         selected_feed = next((f for f in feeds if f['id'] == selected['feed']), None)
         title = selected_feed['title'] if selected_feed else {'all': 'すべての記事', 'unread': '未読の記事', 'starred': 'スター付き'}[selected['view']]
+        prefs = reading_prefs()
+        article_ids = [row['id'] for row in articles]
         return render_template('index.html', articles=articles, feeds=feeds, counts=counts, article=article,
                                selected=selected, selected_feed=selected_feed, title=title, total=total, page=page, pages=pages,
                                safe_content=sanitize(article['content']) if article else '', next_path=request.full_path.rstrip('?'),
                                research_workspaces=options('workspace',selected['workspace']),
                                research_tags=options('tag',selected['tag']),
-                               article_tags=tag_rows('article',article_id) if article else [])
+                               article_tags=tag_rows('article',article_id) if article else [],
+                               reading=prefs, article_ids=article_ids)
 
     @app.post('/feeds')
     def subscribe():
@@ -232,11 +275,48 @@ def create_app(test_config=None):
             result = db.execute(f'UPDATE articles SET {columns[action]}=? WHERE id=?', (int(request.form['value']), article_id))
             if not result.rowcount:
                 abort(404)
+        # Scan reading: after marking read, jump to the next unread in the current filter.
+        if action == 'read' and request.form.get('value') == '1' and reading_prefs()['scan_after_read']:
+            where, params, selected = filters(source=request.form)
+            unread_where = where + (' AND ' if where else ' WHERE ') + 'a.is_read=0'
+            nxt = db.execute(
+                'SELECT a.id FROM articles a' + unread_where + article_order_sql() + ' LIMIT 1', params
+            ).fetchone()
+            if nxt:
+                return redirect(index_path(selected, article=nxt['id'], page=request.form.get('page', type=int)))
+            return redirect(index_path(selected, page=request.form.get('page', type=int)))
+        return return_to()
+
+    @app.post('/articles/<int:article_id>/open')
+    def open_article(article_id):
+        """Explicit POST open path; optional mark-read keeps GET detail mutation-free."""
+        db = get_db()
+        row = db.execute('SELECT id FROM articles WHERE id=?', (article_id,)).fetchone()
+        if row is None:
+            abort(404)
+        where, params, selected = filters(source=request.form)
+        clause = (where + ' AND a.id=?') if where else ' WHERE a.id=?'
+        if db.execute('SELECT a.id FROM articles a' + clause, params + [article_id]).fetchone() is None:
+            abort(404)
+        if reading_prefs()['mark_read_on_open']:
+            with db:
+                db.execute('UPDATE articles SET is_read=1 WHERE id=?', (article_id,))
+        return redirect(index_path(selected, article=article_id, page=request.form.get('page', type=int)))
+
+    @app.post('/reading-prefs')
+    def save_reading_prefs():
+        density = request.form.get('list_density', 'comfortable')
+        if density not in ('comfortable', 'compact'):
+            abort(400, description='表示密度が不正です。')
+        session['list_density'] = density
+        session['mark_read_on_open'] = request.form.get('mark_read_on_open') == '1'
+        session['scan_after_read'] = request.form.get('scan_after_read') == '1'
+        flash('読み方の設定を保存しました。', 'success')
         return return_to()
 
     @app.post('/articles/read-all')
     def read_all():
-        where, params, _ = filters()
+        where, params, _ = filters(strict=True)
         db = get_db()
         with db:
             db.execute('UPDATE articles SET is_read=1 WHERE id IN (SELECT a.id FROM articles a' + where + ')', params)

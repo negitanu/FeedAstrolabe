@@ -34,7 +34,8 @@ def test_empty_health_headers(client):
     response = client.get('/')
     assert response.status_code == 200
     assert 'まだフィードがありません' in response.get_data(as_text=True)
-    assert "script-src 'none'" in response.headers['Content-Security-Policy']
+    assert "script-src 'self'" in response.headers['Content-Security-Policy']
+    assert 'reader.js' in response.get_data(as_text=True)
     assert client.get('/healthz').json == {'status': 'ok'}
 
 
@@ -122,9 +123,11 @@ def test_detail_safe_and_get_read_only(app, client):
     subscribe(client)
     result = client.get('/?article=1')
     text = result.get_data(as_text=True)
-    assert '<script' not in text and 'javascript:' not in text and '<img' not in text
-    assert '<p>Hello 100% world</p>' in text
+    prose = text.split('class="prose"', 1)[1].split('</section>', 1)[0]
+    assert '<script' not in prose and 'javascript:' not in prose and '<img' not in prose
+    assert '<p>Hello 100% world</p>' in prose
     assert 'rel="noopener noreferrer"' in text
+    assert 'src="/static/reader.js"' in text
     with app.app_context():
         assert get_db().execute('SELECT is_read FROM articles WHERE id=1').fetchone()[0] == 0
     assert client.get('/?article=999').status_code == 404
@@ -180,6 +183,81 @@ def test_fallback_guid(app, client, monkeypatch):
     post(client, '/refresh')
     with app.app_context():
         assert get_db().execute('SELECT count(*) FROM articles').fetchone()[0] == 1
+
+
+def test_fallback_guid_ignores_body_edits(app, client, monkeypatch):
+    first = b'<rss version="2.0"><channel><title>Fallback</title><item><title>Stable title</title><description>Body A</description></item></channel></rss>'
+    second = b'<rss version="2.0"><channel><title>Fallback</title><item><title>Stable title</title><description>Body B changed</description></item></channel></rss>'
+    monkeypatch.setattr(collection, 'fetch', lambda *a: (first, META))
+    subscribe(client)
+    monkeypatch.setattr(collection, 'fetch', lambda *a: (second, META))
+    post(client, '/refresh')
+    with app.app_context():
+        rows = get_db().execute('SELECT title,search_text FROM articles').fetchall()
+        assert len(rows) == 1
+        assert rows[0]['title'] == 'Stable title'
+        assert 'Body B' in rows[0]['search_text']
+
+
+def test_read_all_prefers_form_over_query(app, client):
+    subscribe(client)
+    subscribe(client, 'https://example.com/other')
+    response = post(client, '/articles/read-all?feed=2', {'view': 'all', 'feed': '1', 'q': ''})
+    assert response.status_code == 302
+    with app.app_context():
+        rows = get_db().execute('SELECT feed_id,is_read FROM articles ORDER BY id').fetchall()
+        assert [(r['feed_id'], r['is_read']) for r in rows] == [(1, 1), (1, 1), (2, 0), (2, 0)]
+
+
+def test_published_at_updates_when_source_date_changes(app, client, monkeypatch):
+    first = b'''<?xml version="1.0"?><rss version="2.0"><channel><title>Dates</title>
+<item><guid>dated</guid><title>Dated</title><description>Hello</description><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate></item></channel></rss>'''
+    second = first.replace(b'01 Jan 2024', b'01 Jan 2025')
+    monkeypatch.setattr(collection, 'fetch', lambda *a: (first, META))
+    subscribe(client)
+    monkeypatch.setattr(collection, 'fetch', lambda *a: (second, META))
+    post(client, '/refresh')
+    text = client.get('/').get_data(as_text=True)
+    assert '2025-01-01' in text
+    with app.app_context():
+        row = get_db().execute('SELECT published_at,source_published_at FROM articles').fetchone()
+        assert row['published_at'] == '2025-01-01 00:00:00'
+        assert row['source_published_at'] == '2025-01-01 00:00:00'
+
+
+def test_detail_respects_filters_and_missing_feed(app, client):
+    subscribe(client)
+    post(client, '/articles/1/star', {'value': '1'})
+    assert client.get('/?view=starred&article=2').status_code == 404
+    assert client.get('/?feed=999').status_code == 404
+    assert client.get('/?view=starred&article=1').status_code == 200
+
+
+def test_read_all_rejects_invalid_view(client):
+    assert post(client, '/articles/read-all', {'view': 'bogus'}).status_code == 400
+
+
+def test_query_too_long_rejected(client):
+    assert client.get('/?q=' + ('a' * 201)).status_code == 400
+
+
+def test_reading_prefs_and_open_marks_read(app, client):
+    subscribe(client)
+    post(client, '/reading-prefs', {'list_density': 'compact', 'mark_read_on_open': '1', 'scan_after_read': '1'})
+    text = client.get('/').get_data(as_text=True)
+    assert 'density-compact' in text
+    assert 'open_article' in text or '/articles/1/open' in text
+    post(client, '/articles/1/open', {'view': 'all'})
+    with app.app_context():
+        assert get_db().execute('SELECT is_read FROM articles WHERE id=1').fetchone()[0] == 1
+    assert client.get('/?article=1').status_code == 200
+
+
+def test_sidebar_preserves_search(app, client):
+    subscribe(client)
+    text = client.get('/?q=First&view=unread').get_data(as_text=True)
+    assert 'q=First' in text
+    assert 'view=unread' in text
 
 
 def test_unicode_csrf_rejected(client):
