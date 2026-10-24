@@ -1,7 +1,7 @@
 """Real Chromium and isolation acceptance in a separate *-verify project."""
 import argparse
 import json
-from pathlib import Path
+from compose_verification import VerificationCompose
 import subprocess
 import textwrap
 import uuid
@@ -13,9 +13,14 @@ def main():
     args=parser.parse_args()
     if not args.project.endswith('-verify'):
         parser.error('Use a separate project ending in -verify')
-    root=Path(__file__).resolve().parent.parent
-    command=['docker','compose','-p',args.project,'-f','compose.yaml','-f','compose.observer.yaml']
-    def run(*parts):subprocess.run(command+list(parts),cwd=root,check=True)
+    with VerificationCompose(args.project) as target:
+        verify(target)
+
+
+def verify(target):
+    root=target.root
+    command=target.command
+    def run(*parts):subprocess.run(command+list(parts),cwd=root,env=target.env,check=True)
     def code(value):run('run','--rm','--no-deps','-T','observer','python','-c',textwrap.dedent(value))
     triage_dir='/data/'+uuid.uuid4().hex+'-triage-verify'
     triage_script=(root/'scripts/verify_triage.py').read_text()
@@ -32,18 +37,18 @@ def main():
     operations_dir='/data/'+uuid.uuid4().hex+'-operations-verify'
     operations_script=(root/'scripts/verify_operations.py').read_text()
     try:
-        run('up','--build','-d','--wait','--wait-timeout','120')
+        run('up','--build','-d','--wait','--wait-timeout','120',*target.services)
         run('stop','observer')
-        subprocess.run(command+['exec','-T','web','python','-'],cwd=root,input=(root/'scripts/verify_evidence.py').read_text(),text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',triage_dir],cwd=root,input=triage_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir],cwd=root,input=entity_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',security_dir],cwd=root,input=security_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',network_dir],cwd=root,input=network_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',ai_dir],cwd=root,input=ai_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',assistant_dir],cwd=root,input=assistant_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',operations_dir],cwd=root,input=operations_script,text=True,check=True)
-        renderer=subprocess.check_output(command+['ps','-q','renderer'],cwd=root,text=True).strip()
-        details=json.loads(subprocess.check_output(['docker','inspect',renderer],text=True))[0]
+        subprocess.run(command+['exec','-T','web','python','-'],cwd=root,env=target.env,input=(root/'scripts/verify_evidence.py').read_text(),text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',triage_dir],cwd=root,env=target.env,input=triage_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir],cwd=root,env=target.env,input=entity_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',security_dir],cwd=root,env=target.env,input=security_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',network_dir],cwd=root,env=target.env,input=network_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',ai_dir],cwd=root,env=target.env,input=ai_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',assistant_dir],cwd=root,env=target.env,input=assistant_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',operations_dir],cwd=root,env=target.env,input=operations_script,text=True,check=True)
+        renderer=subprocess.check_output(command+['ps','-q','renderer'],cwd=root,env=target.env,text=True).strip()
+        details=json.loads(subprocess.check_output(['docker','inspect',renderer],env=target.env,text=True))[0]
         assert details['HostConfig']['NetworkMode']=='none'
         assert details['HostConfig']['ReadonlyRootfs']
         assert details['HostConfig']['Memory']==512*1024*1024
@@ -100,14 +105,14 @@ def main():
                 backup('/data/feeds.sqlite3','/data/observer-verified-'+uuid.uuid4().hex+'.sqlite3')
                 print('PASS: real JS renderer, queued baseline, change/no-change/revert events, live API')
         ''')
-        run('up','-d','--force-recreate','--wait','--wait-timeout','120')
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',triage_dir,'--check-state'],cwd=root,input=triage_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir,'--check-state'],cwd=root,input=entity_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',security_dir,'--check-state'],cwd=root,input=security_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',network_dir,'--check-state'],cwd=root,input=network_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',ai_dir,'--check-state'],cwd=root,input=ai_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',assistant_dir,'--check-state'],cwd=root,input=assistant_script,text=True,check=True)
-        subprocess.run(command+['exec','-T','web','python','-','--data-dir',operations_dir,'--check-state'],cwd=root,input=operations_script,text=True,check=True)
+        run('up','-d','--force-recreate','--wait','--wait-timeout','120',*target.services)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',triage_dir,'--check-state'],cwd=root,env=target.env,input=triage_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',entity_dir,'--check-state'],cwd=root,env=target.env,input=entity_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',security_dir,'--check-state'],cwd=root,env=target.env,input=security_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',network_dir,'--check-state'],cwd=root,env=target.env,input=network_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',ai_dir,'--check-state'],cwd=root,env=target.env,input=ai_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',assistant_dir,'--check-state'],cwd=root,env=target.env,input=assistant_script,text=True,check=True)
+        subprocess.run(command+['exec','-T','web','python','-','--data-dir',operations_dir,'--check-state'],cwd=root,env=target.env,input=operations_script,text=True,check=True)
         code('''
             from feedastrolabe import create_app
             from feedastrolabe.db import get_db
@@ -116,7 +121,7 @@ def main():
                 db=get_db()
                 row=db.execute("SELECT a.is_read,a.is_starred FROM articles a JOIN feeds f ON a.feed_id=f.id WHERE f.target='https://example.com/observer-fixture' AND a.guid='page:1'").fetchone()
                 assert tuple(row)==(1,1)
-                assert db.execute('PRAGMA user_version').fetchone()[0]==13
+                assert db.execute('PRAGMA user_version').fetchone()[0]==18
                 print('PASS: renderer/worker recreation preserves baseline and event state')
         ''')
     finally:

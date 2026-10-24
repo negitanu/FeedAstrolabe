@@ -1,8 +1,0 @@
-# Optional only after the operator creates an owner-only config in the private volume.
-services:
-  web:
-    environment:
-      FEEDASTROLABE_DELIVERY_CONFIG_FILE: /data/delivery-config.json
-  worker:
-    environment:
-      FEEDASTROLABE_DELIVERY_CONFIG_FILE: /data/delivery-config.json

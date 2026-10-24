@@ -1,0 +1,109 @@
+name: feedastrolabe
+
+x-app-environment: &app-environment
+  FEEDASTROLABE_ACCESS_MODE: local
+  # Optional paths refer to app-owned 0600 files in the private /data volume.
+  FEEDASTROLABE_OLLAMA_TOKEN_FILE: ${FEEDASTROLABE_OLLAMA_TOKEN_FILE:-}
+  FEEDASTROLABE_OLLAMA_LOCAL_HOST: ${FEEDASTROLABE_OLLAMA_LOCAL_HOST:-127.0.0.1}
+  FEEDASTROLABE_DELIVERY_CONFIG_FILE: ${FEEDASTROLABE_DELIVERY_CONFIG_FILE:-}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+  ORCAROUTER_API_KEY: ${ORCAROUTER_API_KEY:-}
+
+x-app: &app
+  build: {context: ., target: app}
+  image: feedastrolabe:latest
+  restart: unless-stopped
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=32m"]
+  volumes: [reader-data:/data]
+  networks: [reader]
+  environment: *app-environment
+  stop_grace_period: 45s
+
+services:
+  web:
+    <<: *app
+    environment:
+      <<: *app-environment
+      FEEDASTROLABE_ACCESS_MODE: ${FEEDASTROLABE_ACCESS_MODE:-tunnel}
+      # Optional: only required by explicit app-side JWT verification mode.
+      CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN:-}
+      CF_ACCESS_AUD: ${CF_ACCESS_AUD:-}
+      FEEDASTROLABE_PUBLIC_HOSTS: ${FEEDASTROLABE_PUBLIC_HOSTS:-}
+      FEEDASTROLABE_RENDER_SOCKET: /run/observer/renderer.sock
+    volumes: [reader-data:/data, renderer-ipc:/run/observer]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/healthz', timeout=5)"]
+      interval: 20s
+      timeout: 6s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    <<: *app
+    command: [python, -m, flask, --app, feedastrolabe, worker]
+    depends_on:
+      web: {condition: service_healthy}
+
+  observer:
+    <<: *app
+    command: [python, -m, flask, --app, feedastrolabe, observer-worker]
+    environment:
+      FEEDASTROLABE_ACCESS_MODE: local
+      FEEDASTROLABE_RENDER_SOCKET: /run/observer/renderer.sock
+    volumes: [reader-data:/data, renderer-ipc:/run/observer]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    depends_on:
+      web: {condition: service_healthy}
+      renderer: {condition: service_healthy}
+    stop_grace_period: 55s
+
+  renderer:
+    build: {context: ., target: renderer}
+    image: feedastrolabe-renderer:latest
+    restart: unless-stopped
+    init: true
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=256m"]
+    shm_size: 128m
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+    volumes: [renderer-ipc:/run/observer]
+    healthcheck:
+      test: [CMD, python, -c, "import stat,os; assert stat.S_ISSOCK(os.stat('/run/observer/renderer.sock').st_mode)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    stop_grace_period: 50s
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: [tunnel, --no-autoupdate, run]
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set Tunnel token in .env}
+    networks: [reader]
+    depends_on:
+      web: {condition: service_healthy}
+
+volumes:
+  reader-data:
+  renderer-ipc:
+
+networks:
+  reader:
+    driver: bridge
+

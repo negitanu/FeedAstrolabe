@@ -1,9 +1,16 @@
 [project]
 name = "feed-astrolabe"
-version = "0.14.0"
+version = "0.15.0"
 description = "Personal RSS and Atom reader"
-requires-python = ">=3.11"
+requires-python = ">=3.15,<3.16"
 dynamic = ["dependencies"]
+
+# Versions live only in requirements.txt; pip 25.1+ selects a role with --group.
+[dependency-groups]
+app = ["Flask", "feedparser", "bleach", "waitress", "PyJWT[crypto]",
+       "cryptography", "defusedxml", "Markdown", "pypdf", "idna"]
+renderer = [{include-group = "app"}, "playwright"]
+test = [{include-group = "renderer"}, "pytest"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

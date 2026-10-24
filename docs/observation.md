@@ -9,10 +9,10 @@
 ## コンテナ起動
 
 ```sh
-docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up --build -d --wait
+docker compose up --build -d --wait
 ```
 
-localhost:5010 の UI と、RSS/SNS worker、observer、renderer が起動します。observer は10秒ごとに期限到来と手動予約を調べ、直列に観測します。Web/API の登録時はアクセスせず、手動更新も予約だけを行います。同じ購読の予約は重複せず、手動予約は pause 中にも実行されます。失敗時は安全なエラーと再試行待ち時間を表示します。
+標準の `compose.yml` でCloudflared Tunnel、Web、RSS/SNS worker、observer、rendererが起動します。UIは設定した公開URLへCloudflare Access経由でアクセスします。observer は10秒ごとに期限到来と手動予約を調べ、直列に観測します。Web/API の登録時はアクセスせず、手動更新も予約だけを行います。同じ購読の予約は重複せず、手動予約は pause 中にも実行されます。失敗時は安全なエラーと再試行待ち時間を表示します。
 
 renderer は非 root、read-only、capabilities 無効、ネットワークなし、DB/秘密情報のマウントなしで起動します。メモリー512 MiB、CPU 1、PID 128、ジョブ45秒の上限を持ちます。通常の Chromium 自身の sandbox が有効であるとは主張せず、OS コンテナ境界で隔離します。renderer に共有するのは Unix ソケットのボリュームだけです。
 
@@ -33,12 +33,14 @@ renderer は非 root、read-only、capabilities 無効、ネットワークな�
 開発用 native 起動は OS ネットワーク隔離を提供しないため、通常利用は上記 Compose を推奨します。
 
 ```sh
-.venv/bin/python -m pip install -r requirements-observer.txt
-.venv/bin/python -m playwright install chromium
+.venv/bin/python -m pip install -c requirements.txt --group renderer
+.venv/bin/python -m playwright install --with-deps --only-shell chromium
 FEEDASTROLABE_RENDER_SOCKET=/tmp/feedastrolabe-render/renderer.sock .venv/bin/python -m feedastrolabe.renderer
 # 別ターミナル、Web と同じ FEEDASTROLABE_DATA_DIR を使用
 FEEDASTROLABE_RENDER_SOCKET=/tmp/feedastrolabe-render/renderer.sock .venv/bin/python -m flask --app feedastrolabe observer-worker
 ```
+
+依存の選択にはpip 25.1以上を使用します。開発環境として `-r requirements.txt` を導入済みなら、ブラウザー本体のインストールから実行できます。コンテナでは単一の `Dockerfile` の `renderer` targetに必要な依存とheadless shellを含めています。
 
 schema v4 は既存の RSS/SNS、記事 ID、既読・スター・キーを保ったまま移行します。移行前に [backup/restore 手順](deployment.md) で SQLite backup を保存してください。復元時は Web、worker、observer を停止してください。旧版へ戻すときは旧イメージと移行前バックアップを組み合わせます。v4 DB を旧イメージに渡さないでください。
 

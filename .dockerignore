@@ -1,6 +1,7 @@
 *
-!requirements-production-lock.txt
+!requirements.txt
+!pyproject.toml
 !feedastrolabe/
 !feedastrolabe/**
 feedastrolabe/**/__pycache__/
-!requirements-observer.txt
+feedastrolabe/**/.DS_Store
