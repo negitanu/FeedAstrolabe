@@ -53,3 +53,11 @@ The system SHALL persist individual read/unread and starred/unstarred state and 
 #### Scenario: Scoped bulk read
 - **WHEN** a filtered view is marked read
 - **THEN** only articles matching that view become read
+
+#### Scenario: Preserve incoming reader fixes
+- **WHEN** source content changes without a stable article ID, a bulk-read POST includes conflicting query parameters, or a detail is outside the selected filters
+- **THEN** mutable body text does not mint another fallback ID, the POST form supplies the scope, and an out-of-filter detail returns 404
+
+#### Scenario: Keyboard reading with progressive loading
+- **WHEN** a user invokes reader shortcuts outside an input or interactive control
+- **THEN** navigation and read/star actions operate on the current loaded cards, including appended cards, without adding duplicate navigation controls

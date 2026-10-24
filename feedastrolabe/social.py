@@ -157,7 +157,9 @@ def refresh_social(feed):
         with db:
             db.executemany('''INSERT INTO articles(feed_id,guid,title,link,content,search_text,published_at,source_published_at)
               VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(feed_id,guid) DO UPDATE SET
-              title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text,source_published_at=excluded.source_published_at''', items)
+              title=excluded.title,link=excluded.link,content=excluded.content,search_text=excluded.search_text,
+              source_published_at=excluded.source_published_at,
+              published_at=CASE WHEN excluded.source_published_at IS NOT NULL THEN excluded.published_at ELSE articles.published_at END''', items)
             db.execute('''UPDATE feeds SET since_id=?,page_cursor=?,pending_newest=?,checked_at=?,success_at=?,error=NULL,failures=0,retry_at=NULL WHERE id=?''',
                        (feed['since_id'] if next_cursor else newest, next_cursor, newest if next_cursor else None, now(), now(), feed['id']))
         from .evidence import capture_articles

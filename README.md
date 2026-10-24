@@ -76,7 +76,7 @@ native の既定は認証なしの localhost UI です。API は常に Bearer �
 
 継続する開発・UI/UX・検証・Git管理の指針は [AGENT.md](AGENT.md) にまとめています。
 
-仕様は `openspec/specs/`、変更ごとのproposal・design・差分仕様・tasksは `openspec/changes/` にあります。直近の `reader-platform-provider-refresh` は全29タスクを完了し、Python 3.15.1で全623テストと稼働環境の確認を完了しました。[検証記録](docs/verification-reader-platform-provider-refresh.md)に結果と未実施範囲を記録しています。実装前に仕様を作成して厳格検証し、仕様に対応するテストで実装を検証します。初期化済みの Codex スキルは `.codex/skills/` にあります。
+仕様は `openspec/specs/`、変更ごとのproposal・design・差分仕様・tasksは `openspec/changes/` にあります。直近の `reader-platform-provider-refresh` は全29タスクを完了し、Python 3.15.1で全635テストと稼働環境の確認を完了しました。[検証記録](docs/verification-reader-platform-provider-refresh.md)に結果と未実施範囲を記録しています。実装前に仕様を作成して厳格検証し、仕様に対応するテストで実装を検証します。初期化済みの Codex スキルは `.codex/skills/` にあります。
 
 ```sh
 openspec validate --all --strict --no-interactive

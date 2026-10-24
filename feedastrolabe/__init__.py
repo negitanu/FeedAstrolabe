@@ -119,9 +119,18 @@ def create_app(test_config=None):
         response.headers['Cache-Control'] = 'no-store'
         return response
 
+    def reading_prefs():
+        density = session.get('list_density', 'comfortable')
+        if density not in ('comfortable', 'compact'):
+            density = 'comfortable'
+        return {'list_density': density, 'mark_read_on_open': bool(session.get('mark_read_on_open')),
+                'scan_after_read': bool(session.get('scan_after_read', False))}
+
+    app.context_processor(lambda: {'reading': reading_prefs()})
+
     def filters():
-        source = request.values
-        view = single_value(source, 'view', preferences()['default_view'])
+        source = request.form if request.method == 'POST' else request.args
+        view = single_value(source, 'view', preferences()['default_view'] if request.method == 'GET' else 'all')
         if view not in ('all', 'unread', 'starred'):
             abort(400, description='表示条件が不正です。')
         feed_id = optional_id(source, 'feed')
@@ -187,11 +196,21 @@ def create_app(test_config=None):
         db = get_db()
         where, params, selected = filters()
         article_id = optional_id(request.args, 'article')
+        if selected['feed'] is not None and db.execute('SELECT 1 FROM feeds WHERE id=?',(selected['feed'],)).fetchone() is None:
+            abort(404)
         total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
         article = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone() if article_id else None
         if article_id and (article is None or (selected['folder'] is not None and
                 db.execute('SELECT folder FROM feeds WHERE id=?', (article['feed_id'],)).fetchone()[0] != selected['folder'])):
             abort(404)
+        if article is not None:
+            clause = (where + ' AND a.id=?') if where else ' WHERE a.id=?'
+            if db.execute('SELECT 1 FROM articles a'+clause,[*params,article_id]).fetchone() is None:
+                if request.headers.get('X-Reader-Detail') == '1' and request.headers.get('X-Reader-Reconcile') == str(article_id):
+                    article = None
+                    article_id = None
+                else:
+                    abort(404)
         navigation = article_navigation(where, params, article_id) if article else None
         from .reader_stream import batch
         cursor = single_value(request.args, 'cursor') if 'cursor' in request.args else None
@@ -211,7 +230,7 @@ def create_app(test_config=None):
         next_path = reader_url(article=article_id) if article_id else reader_url()
         if request.endpoint == 'article_more':
             return {'html':render_template('article_cards.html', articles=articles, article=None,
-                    reader_url=reader_url, next_path=next_path), 'next':more_url}
+                    reader_url=reader_url, next_path=next_path, selected=selected), 'next':more_url}
         feeds = feed_rows()
         folder_groups = feed_groups(feeds)
         selected_folder = next((group for group in folder_groups if group['name'] == selected['folder']), None)
@@ -303,6 +322,35 @@ def create_app(test_config=None):
             result = db.execute(f'UPDATE articles SET {columns[action]}=? WHERE id=?', (int(request.form['value']), article_id))
             if not result.rowcount:
                 abort(404)
+        if action == 'read' and request.form['value'] == '1' and reading_prefs()['scan_after_read']:
+            where, params, selected = filters()
+            unread_where = where + (' AND ' if where else ' WHERE ') + 'a.is_read=0'
+            nxt = db.execute('SELECT a.id FROM articles a'+unread_where+' ORDER BY a.published_at DESC,a.id DESC LIMIT 1',params).fetchone()
+            return redirect(url_for('folder_detail' if selected['folder'] is not None else 'index',**selected,article=nxt['id'] if nxt else None))
+        return return_to()
+
+    @app.post('/articles/<int:article_id>/open')
+    def open_article(article_id):
+        where, params, selected = filters()
+        db = get_db()
+        clause = (where + ' AND a.id=?') if where else ' WHERE a.id=?'
+        if db.execute('SELECT 1 FROM articles a'+clause,[*params,article_id]).fetchone() is None:
+            abort(404)
+        if reading_prefs()['mark_read_on_open']:
+            with db:
+                db.execute('UPDATE articles SET is_read=1 WHERE id=?',(article_id,))
+            if selected['view'] == 'unread':
+                return redirect(url_for('folder_detail' if selected['folder'] is not None else 'index',**selected))
+        return redirect(url_for('folder_detail' if selected['folder'] is not None else 'index',**selected,article=article_id))
+
+    @app.post('/reading-prefs')
+    def save_reading_prefs():
+        density = request.form.get('list_density', 'comfortable')
+        if density not in ('comfortable','compact'):
+            abort(400,description='表示密度が不正です。')
+        session['list_density'] = density
+        session['mark_read_on_open'] = request.form.get('mark_read_on_open') == '1'
+        session['scan_after_read'] = request.form.get('scan_after_read') == '1'
         return return_to()
 
     @app.post('/articles/read-all')

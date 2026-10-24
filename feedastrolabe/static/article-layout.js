@@ -14,7 +14,7 @@
     }
   }
 
-  let layout = 'standard';
+  let layout = layouts.includes(list.dataset.articleLayout) ? list.dataset.articleLayout : 'standard';
   try {
     const raw = localStorage.getItem(key);
     if (raw && raw.length <= 128) {

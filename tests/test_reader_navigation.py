@@ -121,11 +121,7 @@ def test_sequence_boundaries_and_outside_filter(client, reading_library):
     assert detail(client, reading_library, 24).find(".//a[@rel='prev']") is None
     assert detail(client, reading_library, 1).find(".//a[@rel='next']") is None
     for article in (25, 26, 27, 28):
-        soup = detail(client, reading_library, article)
-        assert content(soup.find(".//section[@id='article-detail']/h2")) == f'Story {article}'
-        assert 'この記事は現在の表示条件に含まれていません' in content(soup)
-        assert soup.find(".//nav[@class='article-sequence']") is None
-        assert soup.find(".//form[@class='read-next']") is None
+        assert client.get('/',query_string={**reading_library,'article':article}).status_code == 404
 
 
 def test_date_order_precedes_id_order(app, client, reading_library):

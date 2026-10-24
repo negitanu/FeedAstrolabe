@@ -20,7 +20,7 @@ context: |
   Source and specs are tracked in Git; runtime data, secrets, exports and local environments are not.
   Propose and strictly validate requirements, design and tasks before implementation.
   Latest completed change: reader-platform-provider-refresh (29/29 tasks); see its verification record
-  at docs/verification-reader-platform-provider-refresh.md (623 tests passed on 2026-10-24).
+  at docs/verification-reader-platform-provider-refresh.md (635 tests passed on 2026-10-24).
 rules:
   specs:
     - Every requirement must include testable WHEN/THEN scenarios.

@@ -96,7 +96,7 @@
     } catch { if(version===detailVersion)announce('本文を読み込めませんでした。もう一度選択してください。',true); }
   }
   document.addEventListener('click',event=>{
-    const link=event.target.closest('.article-title,.article-sequence a,.detail-top a');
+    const link=event.target.closest('a.article-title,.article-sequence a,.detail-top a');
     if(!link || event.button!==0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
     const url=new URL(link.href);if(url.origin!==location.origin)return;
     event.preventDefault();if(link.matches('.article-title'))listScroll={x:scrollX,y:scrollY};
@@ -120,14 +120,14 @@
   document.addEventListener('submit',async event=>{
     const form=event.target;
     const action=new URL(form.action,location.href);
-    if(!/^\/articles\/(?:\d+\/(?:read|star|read-next)|read-all)$/.test(action.pathname))return;
+    if(!/^\/articles\/(?:\d+\/(?:read|star|read-next|open)|read-all)$/.test(action.pathname))return;
     event.preventDefault();if(writing)return;
     writing=true;generation++;detailVersion++;
     for(const button of document.querySelectorAll('.article-card button,.article-detail button,.bulk-read-button')){
       if(!button.disabled){button.disabled=true;button.dataset.readerSaving='';}
     }
     const values=new URLSearchParams(new FormData(form));
-    if(!action.pathname.endsWith('/read-next'))values.set('next',location.pathname+location.search);
+    if(!(action.pathname.endsWith('/read-next') || action.pathname.endsWith('/open')))values.set('next',location.pathname+location.search);
     const match=action.pathname.match(/^\/articles\/(\d+)\//);
     const headers={'X-Reader-Detail':'1'};if(match)headers['X-Reader-Reconcile']=match[1];
     try {
@@ -135,7 +135,7 @@
       const doc=parse(await response.text());
       if(!response.ok || doc.querySelector('[data-flash=error]'))throw new Error();
       remember();history.pushState({reader:true,x:scrollX,y:scrollY},'',response.url);
-      const fragment=apply(doc,response.url,action.pathname.endsWith('/read-next'));
+      const fragment=apply(doc,response.url,(action.pathname.endsWith('/read-next') || action.pathname.endsWith('/open')));
       if(match) {
         const old=list.querySelector(`[data-article-id="${match[1]}"]`);
         const fresh=fragment.querySelector(`[data-reconcile] [data-article-id="${match[1]}"]`);
@@ -157,5 +157,31 @@
       selected(response.url);announce('保存しました。');
     } catch { announce('保存を確認できませんでした。接続を確認して一覧を再読み込みしてください。',true); }
     finally {writing=false;document.querySelectorAll('[data-reader-saving]').forEach(button=>{button.disabled=false;delete button.dataset.readerSaving;});if(loader)observe();}
+  });
+
+  // Query current cards for each key action so appended and reconciled articles participate.
+  document.addEventListener('keydown',event=>{
+    const target=event.target;
+    if(event.altKey || event.ctrlKey || event.metaKey || target.closest('input,textarea,select,button,a,summary,[contenteditable],dialog,[role="menu"]'))return;
+    const cards=[...list.querySelectorAll('.article-card')];if(!cards.length)return;
+    let index=cards.findIndex(card=>card.classList.contains('keyboard-focus'));
+    if(index<0)index=Math.max(0,cards.findIndex(card=>card.classList.contains('selected')));
+    let key=event.key.toLowerCase();
+    if(key==='j' || key==='k' || key==='n'){
+      event.preventDefault();
+      if(key==='n'){
+        const next=cards.findIndex((card,i)=>i>index && !card.classList.contains('read'));
+        if(next<0)return;index=next;
+      }else index=Math.max(0,Math.min(cards.length-1,index+(key==='j'?1:-1)));
+      cards.forEach((card,i)=>card.classList.toggle('keyboard-focus',i===index));
+      cards[index].scrollIntoView({block:'nearest'});
+      if(key==='n')cards[index].querySelector('.article-title')?.click();
+    }else if(key==='o' || key==='enter'){
+      event.preventDefault();cards[index].querySelector('.article-title')?.click();
+    }else if(key==='m' || key==='s'){
+      event.preventDefault();cards[index].querySelector(key==='m'?'form[action$="/read"] button':'form[action$="/star"] button')?.click();
+    }else if(key==='/'){
+      event.preventDefault();document.querySelector('#search')?.focus();
+    }
   });
 })();

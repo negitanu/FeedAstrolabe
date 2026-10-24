@@ -220,3 +220,28 @@ def test_new_feeds_append_and_folder_updates_keep_order(app,folder_data):
         assert [f['id'] for g in feed_groups(feed_rows()) if g['name']=='Tech' for f in g['feeds']]==[3,2,9,10]
         update_subscription(1,{'folder':'Tech'})
         assert [f['id'] for g in feed_groups(feed_rows()) if g['name']=='Tech' for f in g['feeds']]==[3,2,9,10,1]
+
+
+@pytest.mark.browser
+@browser_only
+def test_remote_keyboard_and_optional_post_open(browser,live_empty,streaming_data,app):
+    from playwright.sync_api import expect
+    with browser.new_context(viewport={'width':1280,'height':900}) as context:
+        page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+        page.goto(live_empty+'/folders?folder=Tech')
+        cards=page.locator('.article-card');expect(cards).to_have_count(30)
+        target=cards.nth(1).get_attribute('data-article-id')
+        page.keyboard.press('j');expect(cards.nth(1)).to_have_class(__import__('re').compile('keyboard-focus'))
+        page.keyboard.press('o');expect(page.locator('#article-detail')).to_be_visible()
+        assert 'article='+target in page.url
+        page.keyboard.press('s')
+        expect(page.locator(f'[data-article-id="{target}"] form[action$="/star"] [name=value]')).to_have_value('0')
+        csrf=page.locator('input[name=csrf]').first.input_value()
+        response=page.request.post(live_empty+'/reading-prefs',form={'csrf':csrf,'list_density':'compact','mark_read_on_open':'1'})
+        assert response.ok
+        page.reload()
+        with app.app_context():assert get_db().execute('SELECT is_read FROM articles WHERE id=?',(target,)).fetchone()[0]==0
+        page.locator(f'[data-article-id="{target}"] .open-form button').click()
+        expect(page.locator(f'[data-article-id="{target}"]')).to_have_class(__import__('re').compile(r'\bread\b'))
+        with app.app_context():assert get_db().execute('SELECT is_read FROM articles WHERE id=?',(target,)).fetchone()[0]==1
+        assert errors==[]

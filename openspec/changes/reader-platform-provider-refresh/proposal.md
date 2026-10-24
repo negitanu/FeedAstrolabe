@@ -2,7 +2,7 @@
 
 左ペインでの整理・購読管理、記事一覧の継続読み、AI接続設定が分散し、操作に不要な設定やページ切り替えが残っている。日常操作を左ペインと画面内編集へ集約すると同時に、Python・依存パッケージ・コンテナを更新し、設定を持ち出せるようにする。
 
-この変更は2026-10-24の追加依頼に基づき、仕様承認後の**実装・検証完了**。従来の `continuous-reader-subscription-controls` の未実装仕様を本変更に統合した。承認済み全29タスクを完了し、全623テスト、依存更新、全5サービスの再起動と実データ確認を実施した。結果と未実施範囲は `docs/verification-reader-platform-provider-refresh.md` に記録する。
+この変更は2026-10-24の追加依頼に基づき、仕様承認後の**実装・検証完了**。従来の `continuous-reader-subscription-controls` の未実装仕様を本変更に統合した。承認済み全29タスクを完了し、全635テスト、依存更新、全5サービスの再起動と実データ確認を実施した。結果と未実施範囲は `docs/verification-reader-platform-provider-refresh.md` に記録する。
 
 ## What Changes
 
