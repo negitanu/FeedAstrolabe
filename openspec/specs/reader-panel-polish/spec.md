@@ -25,3 +25,10 @@ The reader SHALL animate detail opening and closing with a short opacity and tra
 #### Scenario: Open and close with motion preferences
 - **WHEN** a user opens and closes a detail with normal or reduced motion
 - **THEN** normal motion uses a short transition and reduced motion switches immediately without leaving a blocking panel
+
+### Requirement: Consistent selected action controls
+The selected-article action select SHALL share the border radius, theme colors and visible keyboard focus of reader selects without overflowing mobile or desktop layouts.
+
+#### Scenario: Selected action in each theme
+- **WHEN** the reader is shown on mobile or desktop in light, dark or system appearance
+- **THEN** the selected action uses the same rounded corners, theme colors and keyboard focus as reader selects

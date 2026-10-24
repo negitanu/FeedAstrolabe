@@ -21,6 +21,11 @@ def test_outside_click_motion_and_selected_style(browser,live_sequence,width,the
         cards=page.locator('.article-card');count=cards.count();first=cards.first
         first.locator('[data-select-article]').check()
         chosen=first.get_attribute('data-article-id')
+        styles=page.locator('#selection-action').evaluate('el=>{const a=getComputedStyle(el),b=getComputedStyle(document.querySelector("#reader-sort"));return [a.borderRadius,b.borderRadius,a.backgroundColor,b.backgroundColor,a.color,b.color]}')
+        assert styles[0]==styles[1]=='6px' and styles[2]==styles[3] and styles[4]==styles[5]
+        page.locator('#selection-action').focus()
+        assert page.locator('#selection-action').evaluate('el=>getComputedStyle(el).outlineStyle')=='solid'
+        page.screenshot(path=f'/private/tmp/panel-selection-{width}-{theme}.png')
         first.locator('.article-title').click()
         panel=page.locator('#article-detail');expect(panel).to_be_visible()
         page.wait_for_function('()=>document.querySelector("#article-detail").getAnimations().length===0')
