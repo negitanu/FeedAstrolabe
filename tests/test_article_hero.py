@@ -113,8 +113,41 @@ def test_hero_order_browser(browser, live_sequence, app, monkeypatch, width, sch
             assert img.bounding_box()['y']<detail.locator('h2').bounding_box()['y']
         else:
             expect(img).to_be_hidden()
+        assert detail.evaluate('(el)=>{const r=el.getBoundingClientRect();return r.top>=document.querySelector(".view-heading").getBoundingClientRect().top-1 && r.bottom<=innerHeight;}')
         assert detail.locator('form.read-next').count()==1
         assert detail.locator('.reading-next form').count()==0
         assert detail.evaluate('(el)=>el.scrollWidth<=el.clientWidth')
         page.screenshot(path=f'/tmp/feedastrolabe-content-order-{width}-{has_image}.png')
         detail.locator('.detail-top a').click();expect(detail).to_have_count(0)
+
+
+@pytest.mark.browser
+@browser_only
+@pytest.mark.parametrize('width', [1280,390])
+def test_detail_stays_inside_reader_bounds(browser, live_sequence, width):
+    from playwright.sync_api import expect
+    base,_=live_sequence
+    with browser.new_context(viewport={'width':width,'height':844}) as context:
+        page=context.new_page()
+        page.goto(base+'/?article=15')
+        detail=page.locator('#article-detail')
+        expect(detail).to_be_visible()
+        def check_bounds():
+            page.wait_for_function('''() => {
+              const detail=document.querySelector('#article-detail').getBoundingClientRect();
+              const heading=document.querySelector('.view-heading').getBoundingClientRect();
+              const nav=document.querySelector('.app-navigation').getBoundingClientRect();
+              const bar=document.querySelector('.workspace .topbar').getBoundingClientRect();
+              return detail.top>=Math.max(heading.top,nav.bottom,bar.bottom)-1 && detail.bottom<=innerHeight;
+            }''')
+        check_bounds()
+        before=page.locator('.article-card').first.bounding_box()['width']
+        page.evaluate('scrollTo(0,400)');check_bounds()
+        page.set_viewport_size({'width':width,'height':640});check_bounds()
+        assert abs(before-page.locator('.article-card').first.bounding_box()['width'])<1
+        assert detail.evaluate('(el)=>getComputedStyle(el).overflowY')=='auto'
+        page.screenshot(path=f'/tmp/feedastrolabe-detail-bounds-{width}.png')
+        # The top navigation must receive pointer events even while detail is open.
+        nav=page.get_by_role('link',name='設定',exact=True)
+        nav.click()
+        expect(page).to_have_url(__import__('re').compile('/settings'))

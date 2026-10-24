@@ -4,6 +4,28 @@
   const list = document.querySelector('.article-list');
   const layout = document.querySelector('.reading-layout');
   if (!list || !layout) return;
+  const heading = document.querySelector('.view-heading');
+  const navigation = document.querySelector('.app-navigation');
+  const breadcrumb = document.querySelector('.workspace .topbar');
+  function fitDetail() {
+    const top=Math.max(0,heading?.getBoundingClientRect().top||0,
+      navigation?.getBoundingClientRect().bottom||0,breadcrumb?.getBoundingClientRect().bottom||0);
+    layout.style.setProperty('--article-detail-top',`${Math.ceil(top)}px`);
+  }
+  let fitFrame=0;
+  function scheduleFit() {
+    if(fitFrame)return;
+    fitFrame=requestAnimationFrame(()=>{fitFrame=0;fitDetail();});
+  }
+  window.addEventListener('scroll',scheduleFit,{passive:true});
+  window.addEventListener('resize',scheduleFit);
+  window.visualViewport?.addEventListener('resize',scheduleFit);
+  window.visualViewport?.addEventListener('scroll',scheduleFit);
+  if('ResizeObserver' in window) {
+    const boundsObserver=new ResizeObserver(scheduleFit);
+    [heading,navigation,breadcrumb,document.querySelector('.sidebar')].filter(Boolean).forEach(node=>boundsObserver.observe(node));
+  }
+  fitDetail();
   function showHero(img) {
     if(img.matches('[data-article-hero]'))img.hidden=!(img.complete && img.naturalWidth>0);
   }
@@ -95,6 +117,7 @@
     const detail=fragment.querySelector('.article-detail');
     layout.querySelector('.article-detail')?.remove();
     if(detail)layout.append(detail);
+    fitDetail();
     layout.classList.toggle('has-detail',!!detail);selected(url);
     const counts=JSON.parse(fragment.dataset.counts);
     const badges=document.querySelectorAll('.sidebar nav[aria-label="記事の表示条件"] .count');
