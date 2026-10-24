@@ -148,6 +148,9 @@ def create_app(test_config=None):
                 abort(400, description=str(exc))
             if get_db().execute('SELECT 1 FROM feeds WHERE folder=?', (folder_name,)).fetchone() is None:
                 abort(404, description='フォルダーが見つかりません。')
+        sort = single_value(source, 'sort', None)
+        from .reader_order import ordering
+        ordering({'sort': sort, 'view': view})
         query = single_value(source, 'q', '').strip()
         if len(query) > 200:
             abort(400, description='検索語は 200 文字以下で指定してください。')
@@ -185,7 +188,7 @@ def create_app(test_config=None):
         if scopes['tag']:
             clauses.append('EXISTS(SELECT 1 FROM article_tags t WHERE t.article_id=a.id AND t.tag_id=?)')
             params.append(scopes['tag'])
-        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, folder=folder_name, q=query, **scopes)
+        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, folder=folder_name, q=query, sort=sort, **scopes)
 
     def return_to():
         target = request.form.get('next', '/')

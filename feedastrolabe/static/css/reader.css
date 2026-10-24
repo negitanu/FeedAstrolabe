@@ -157,3 +157,13 @@
 .workspace .article-detail .prose {border-top:0;padding-top:0;margin-top:0;}
 .workspace .article-detail .detail-features .research-article-links {margin:0 0 20px;}
 .workspace .article-detail .reading-next {border-top:0;padding-top:0;}
+
+.reader-controls .reader-search {grid-template-columns:minmax(90px,.8fr) minmax(90px,.7fr) minmax(130px,1.5fr) minmax(90px,.7fr) auto;}
+@media(max-width:1200px){.reader-controls{grid-template-columns:minmax(0,1fr);}.reader-control-actions{justify-content:flex-start;flex-wrap:wrap;}}
+@media(max-width:700px) {
+  .reader-controls .reader-search {grid-template-columns:repeat(12,minmax(0,1fr));}
+  .reader-search > select {grid-column:span 6;}
+  .reader-search #search {grid-column:span 6;}
+  .reader-search #reader-sort {grid-column:span 4;}
+  .reader-search > button {grid-column:span 2;}
+}

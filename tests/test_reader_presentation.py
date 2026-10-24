@@ -161,7 +161,7 @@ def test_themed_controls_keep_query_and_bulk_read_scope(browser, presentation_re
         page.goto(presentation_reader+'/?feed=1&view=unread')
         fields = page.locator('.reader-search select,.reader-search input:not([type="hidden"]),.reader-search button')
         metrics = fields.evaluate_all('(fields) => fields.map(field => ({top:field.getBoundingClientRect().top,height:field.getBoundingClientRect().height,border:getComputedStyle(field).borderColor,radius:getComputedStyle(field).borderRadius}))')
-        assert len(metrics) == 4
+        assert len(metrics) == 5
         assert len({item['top'] for item in metrics}) == 1
         assert len({item['height'] for item in metrics}) == 1
         assert metrics[0]['border'] == metrics[2]['border'] and metrics[0]['radius'] == metrics[2]['radius']
@@ -169,7 +169,7 @@ def test_themed_controls_keep_query_and_bulk_read_scope(browser, presentation_re
         page.get_by_label('記事タグ',exact=True).select_option(str(tid))
         page.get_by_label('記事を検索',exact=True).fill('情報')
         page.get_by_role('button',name='検索',exact=True).click()
-        assert parse_qs(urlsplit(page.url).query) == {'view':['unread'],'feed':['1'],'workspace':[str(wid)],'tag':[str(tid)],'q':['情報']}
+        assert parse_qs(urlsplit(page.url).query) == {'view':['unread'],'feed':['1'],'workspace':[str(wid)],'tag':[str(tid)],'q':['情報'],'sort':['newest']}
         expect(page.locator('.article-card')).to_have_count(30)
         page.get_by_role('button',name='全て既読',exact=True).click()
         expect(page.locator('.article-card')).to_have_count(0)
