@@ -52,6 +52,9 @@ def main():
     if args.staged or args.worktree:
         paths = git('ls-files', '-z').decode().split('\0')
         for path in filter(None, paths):
+            if args.worktree and not Path(path).exists():
+                # A tracked deletion has no worktree content to inspect.
+                continue
             # Exactly this example is non-secret configuration.
             if path != '.env.example' and SENSITIVE.search(path):
                 print(f'{path}: sensitive-file-path', file=sys.stderr)

@@ -1,4 +1,5 @@
-.venv/
+.venv*/
+.python-runtime/
 __pycache__/
 .pytest_cache/
 instance/
@@ -41,8 +42,6 @@ credentials*.json
 .netrc
 .npmrc
 .envrc
-.env.*
-!.env.example
 
 # Browser runtimes, observation IPC and local capture artifacts
 .playwright/
@@ -51,3 +50,32 @@ ms-playwright/
 observer-runtime/
 playwright-report/
 test-results/
+
+# Local tool environments and generated reports
+.python-version.local
+.mypy_cache/
+.pyright/
+.tox/
+.nox/
+.coverage.*
+coverage.xml
+junit*.xml
+*.prof
+*.profraw
+
+# Editor/OS temporary files
+.idea/
+.vscode/
+.AppleDouble/
+._*
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Local exports and captures (keep source assets and test fixtures trackable)
+/exports/
+/artifacts/
+/screenshots/
+/feedastrolabe-settings*.json
