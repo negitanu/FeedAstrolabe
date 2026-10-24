@@ -93,7 +93,7 @@ def settings_get():return {'data':preferences()}
 @api.patch('/settings')
 def settings_patch():
  with errors():
-  fields={'poll_interval','polling_enabled','page_size','default_view','api_rate_limit'};v=r.fields(request.get_json(),fields);old=preferences()
+  fields={'poll_interval','polling_enabled','page_size','default_view','api_rate_limit','display_timezone'};v=r.fields(request.get_json(),fields);old=preferences()
   for key in ('poll_interval','page_size','api_rate_limit'):
    if key in v and type(v[key]) is not int:raise ValueError(key+' は整数です。')
   if 'polling_enabled' in v and type(v['polling_enabled']) is not bool:raise ValueError('polling_enabled は真偽値です。')

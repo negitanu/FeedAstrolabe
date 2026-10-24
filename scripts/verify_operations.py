@@ -17,14 +17,14 @@ def main():
   if args.check_state:
    state=json.loads(marker.read_text())
    with app.app_context():
-    assert get_db().execute('PRAGMA user_version').fetchone()[0]==13
+    assert get_db().execute('PRAGMA user_version').fetchone()[0]==17
     report=p.find(state['report']);assert e.digest(report['payload'].encode())==report['payload_hash']
     job=d.find('delivery_jobs',state['job']);assert job['status']=='success' and job['attempts']==1
     assert get_db().execute('SELECT count(*) FROM delivery_attempts WHERE job_id=?',(job['id'],)).fetchone()[0]==1
     row=get_db().execute('SELECT * FROM backup_jobs WHERE id=?',(state['backup'],)).fetchone();assert row['status']=='success';validate_bundle(o.path_for(row['generation']))
     assert get_db().execute('SELECT processed FROM worker_runs ORDER BY id DESC LIMIT 1').fetchone()[0]==3
     assert not get_db().execute('PRAGMA foreign_key_check').fetchall()
-   print('PASS schema13 report/citation payload hashes, delivery success/audit/idempotency, verified backup generation and safe worker metrics after recreation');return
+   print('PASS schema17 report/citation payload hashes, delivery success/audit/idempotency, verified backup generation and safe worker metrics after recreation');return
   server=make_server('127.0.0.1',args.serve_port or 0,app);thread=Thread(target=server.serve_forever,daemon=True);thread.start();base='http://127.0.0.1:'+str(server.server_port)
   with app.app_context():_,write=issue_key('Operations HTTP fixture','write',1);_,read=issue_key('Operations read fixture','read',1)
   def request(method,path,body=None,key=write):

@@ -39,7 +39,7 @@ def test_v1_migration_backup_restore(tmp_path):
     init_database(source)
     init_database(source)
     with connect(source) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0] == 13
+        assert db.execute('PRAGMA user_version').fetchone()[0] == 18
         assert tuple(db.execute('SELECT is_read,is_starred FROM articles').fetchone()) == (1, 1)
         assert db.execute('SELECT enabled FROM feeds').fetchone()[0] == 1
         assert db.execute('SELECT poll_interval FROM settings').fetchone()[0] == 900
@@ -47,7 +47,7 @@ def test_v1_migration_backup_restore(tmp_path):
     restore(snapshot, destination)
     with connect(destination) as db:
         assert db.execute('SELECT title FROM articles').fetchone()[0] == 'Saved'
-        assert db.execute('PRAGMA user_version').fetchone()[0] == 13
+        assert db.execute('PRAGMA user_version').fetchone()[0] == 18
     assert snapshot.stat().st_mode & 0o777 == 0o600
 
 
@@ -98,6 +98,8 @@ def test_due_pause_manual_and_backoff(app, client, monkeypatch):
         with db:
             db.execute('UPDATE settings SET polling_enabled=0 WHERE id=1')
         assert collection.refresh_feeds(due_only=True) == (0, 0)
+        assert collection.refresh_feeds(feed_id=2) == (0, 0)
+        with db:db.execute('UPDATE feeds SET enabled=1 WHERE id=2')
         assert collection.refresh_feeds(feed_id=2) == (1, 0)
         with db:
             db.execute("UPDATE feeds SET checked_at='2026-01-01 00:00:00',failures=3 WHERE id=1")
@@ -239,7 +241,11 @@ def test_unsafe_opml_atomic(app, xml):
 
 def test_opml_upload_csrf(client):
     response = post(client, '/settings/opml', {'opml': (io.BytesIO(b'<opml><body><outline xmlUrl="https://example.com/rss"/></body></opml>'), 'feeds.opml')}, follow_redirects=True)
-    assert '1 件追加' in response.get_data(as_text=True)
+    assert '追加予定 1 件' in response.get_data(as_text=True)
+    from test_reader_navigation import markup
+    plan = markup(response.data).find(".//input[@name='plan']").get('value')
+    confirmed = post(client, '/settings/opml/confirm', {'plan': plan}, follow_redirects=True)
+    assert '1 件追加' in confirmed.get_data(as_text=True)
     assert client.post('/settings/opml', data={}).status_code == 400
 
 @pytest.fixture
@@ -315,7 +321,7 @@ def test_openapi_served_and_settings_link(client):
     assert spec.status_code == 200
     assert '/articles/{article_id}' in spec.json['paths']
     assert spec.json['components']['securitySchemes']['BearerKey']['scheme'] == 'bearer'
-    assert 'OpenAPI 定義を見る' in client.get('/settings').get_data(as_text=True)
+    assert 'OpenAPI 定義を見る' in client.get('/settings/api').get_data(as_text=True)
 
 
 

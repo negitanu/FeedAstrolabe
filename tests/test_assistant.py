@@ -125,7 +125,7 @@ def test_quote_anchors_api_scopes_csrf_and_expiry(app,client):
 
 
 def test_v11_bundle_migration_and_source_retention(app,tmp_path,monkeypatch):
- prior=tmp_path/'prior';prior.mkdir();db=connect(prior/'feeds.sqlite3');db.executescript(Path('tests/fixtures/v11_schema.sql').read_text());db.close();bundle=tmp_path/'v11bundle';backup_bundle(prior/'feeds.sqlite3',bundle);restore_bundle(bundle,tmp_path/'restore'/'feeds.sqlite3');db=connect(tmp_path/'restore'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==13;assert db.execute('SELECT count(*) FROM assistant_profiles').fetchone()[0]==0;db.close()
+ prior=tmp_path/'prior';prior.mkdir();db=connect(prior/'feeds.sqlite3');db.executescript(Path('tests/fixtures/v11_schema.sql').read_text());db.close();bundle=tmp_path/'v11bundle';backup_bundle(prior/'feeds.sqlite3',bundle);restore_bundle(bundle,tmp_path/'restore'/'feeds.sqlite3');db=connect(tmp_path/'restore'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==18;assert db.execute('SELECT count(*) FROM assistant_profiles').fetchone()[0]==0;db.close()
  wid,eid,profile=setup(app)
  with app.app_context():
   preview=a.preview(wid,{'profile_id':profile,'mode':'summary'});pr=a.find('assistant_previews',preview);job=a.enqueue(preview,{'approved':True,'input_hash':pr['input_hash']});monkeypatch.setattr(a,'generate',lambda *x:model_response());a.process();a.review(job,{'expected_revision':0,'status':'draft','text':'Human draft'})

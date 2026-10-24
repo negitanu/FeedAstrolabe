@@ -12,7 +12,7 @@ def index():
   if workspace:workspace=identifier(workspace);r.find('workspace',workspace)
  profiles=[dict(x) for x in get_db().execute('SELECT * FROM assistant_profiles ORDER BY id DESC')]
  jobs=ui_page('SELECT j.*,p.workspace_id,p.mode FROM assistant_jobs j JOIN assistant_previews p ON p.id=j.preview_id'+(' WHERE p.workspace_id=?' if workspace else ''),[workspace] if workspace else [],order='j.id DESC')
- return render_template('assistant.html',profiles=profiles,listing=jobs,workspace=workspace)
+ return render_template('assistant.html',profiles=profiles,listing=jobs,workspace=workspace,workspaces=get_db().execute('SELECT id,title,archived FROM workspaces ORDER BY title,id').fetchall())
 
 @ui.post('/profiles')
 def profile():
@@ -20,12 +20,16 @@ def profile():
   body={'name':request.form.get('name'),'kind':request.form.get('kind'),'model':request.form.get('model'),'model_digest':request.form.get('model_digest') or None,'enabled':request.form.get('enabled')=='on','max_output_tokens':identifier(request.form.get('max_output_tokens')),'daily_calls':identifier(request.form.get('daily_calls'))}
   if body['kind']=='cloud':body.update(input_rate=identifier(request.form.get('input_rate')),output_rate=identifier(request.form.get('output_rate')),price_date=request.form.get('price_date'))
   a.profile(body)
- return redirect(url_for('assistant.index'))
+ from flask import flash
+ flash('モデル設定を保存しました。','success')
+ return redirect(url_for('settings_pages.page',section='models'))
 
 @ui.post('/profiles/<int:profile_id>/update')
 def update_profile(profile_id):
  with errors():a.profile({'expected_revision':identifier(request.form.get('expected_revision')),'enabled':request.form.get('enabled')=='on'},profile_id)
- return redirect(url_for('assistant.index'))
+ from flask import flash
+ flash('モデル設定を保存しました。','success')
+ return redirect(url_for('settings_pages.page',section='models'))
 
 @ui.post('/previews')
 def preview():

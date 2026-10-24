@@ -34,7 +34,7 @@ def query_ast(value):
                 try:
                     if datetime.strptime(text,'%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')!=text:raise ValueError()
                 except ValueError:raise ValueError('日時は実在する UTC YYYY-MM-DD HH:MM:SS を指定してください。') from None
-            if field=='source_type' and text not in ('rss','x','mastodon','page','attachment','unknown'):raise ValueError('情報源種別が不正です。')
+            if field=='source_type' and text not in ('rss','x','mastodon','bluesky','page','attachment','unknown'):raise ValueError('情報源種別が不正です。')
     if len(json.dumps(normalized,ensure_ascii=False))>2000:raise ValueError('検索条件は2000文字以内です。')
     if sum(len(x) for x in normalized.values())>40:raise ValueError('条件は合計40件以内です。')
     return normalized

@@ -19,7 +19,7 @@ def index():
 @ui.post('/connectors/<provider>')
 def configure(provider):
     with errors():c.configure(provider,{'expected_revision':identifier(request.form.get('expected_revision')),'enabled':request.form.get('enabled')=='on','daily_budget':identifier(request.form.get('daily_budget')),'ttl_seconds':identifier(request.form.get('ttl_seconds'))})
-    flash('公開識別子の連携設定を保存しました。','success');return redirect(url_for('security.index'))
+    flash('公開識別子の連携設定を保存しました。','success');return redirect(url_for('settings_pages.page',section='connectors'))
 
 @ui.post('/watches')
 def create():
@@ -35,9 +35,11 @@ def detail(watch_id):
 
 @ui.post('/watches/<int:watch_id>/update')
 def update(watch_id):
+    from .settings_pages import object_redirect
     with errors():
         old=s.watch(watch_id);s.save_watch(old['workspace_id'],{'expected_revision':identifier(request.form.get('expected_revision')),'product':request.form.get('product',''),'version':request.form.get('version',''),'outbound_public':request.form.get('outbound_public')=='on','enabled':request.form.get('enabled')=='on'},watch_id)
-    return redirect(url_for('security.detail',watch_id=watch_id))
+    flash('ウォッチ設定を保存しました。','success')
+    return redirect(object_redirect('security', watch_id, 'security.detail', watch_id=watch_id))
 
 @ui.post('/watches/<int:watch_id>/review')
 def review(watch_id):

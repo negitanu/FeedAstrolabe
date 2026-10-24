@@ -39,14 +39,14 @@ def test_v4_migration_and_research_backup(tmp_path):
     old_backup=tmp_path/'old.sqlite3';backup(path,old_backup)
     init_database(path);init_database(path)
     with connect(path) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==13
+        assert db.execute('PRAGMA user_version').fetchone()[0]==18
         assert tuple(db.execute('SELECT id,feed_id,is_read,is_starred FROM articles').fetchone())==(17,7,1,1)
         assert tuple(db.execute('SELECT snapshot,observation_seq,revision FROM feeds').fetchone())==('baseline',2,3)
         assert db.execute('SELECT count(*) FROM page_jobs').fetchone()[0]==1
-        assert db.execute('SELECT count(*) FROM provider_cooldowns').fetchone()[0]==1
+        assert db.execute('SELECT count(*) FROM provider_cooldowns').fetchone()[0]==0  # Retired X cooldown removed.
         assert not db.execute('PRAGMA foreign_key_check').fetchall()
     restored=tmp_path/'restored'/'feeds.sqlite3';restore(old_backup,restored)
-    assert connect(restored).execute('PRAGMA user_version').fetchone()[0]==13
+    assert connect(restored).execute('PRAGMA user_version').fetchone()[0]==18
     application=create_app({'TESTING':True,'DATA_DIR':str(tmp_path/'live')})
     with application.app_context():
         wid=r.create_workspace({'title':'Case','classification':'restricted'})
@@ -195,7 +195,7 @@ def test_scope_csrf_and_safe_markdown_ui(app,client,writer):
     for path in ['/workspaces',f'/workspaces/{wid}',f'/workspaces/notes/{nid}']:
         response=client.get(path)
         assert response.status_code==200
-        assert "script-src 'none'" in response.headers['Content-Security-Policy']
+        assert "script-src 'nonce-" in response.headers['Content-Security-Policy']
     html=client.get(f'/workspaces/notes/{nid}').get_data(as_text=True)
     assert '<strong>bold</strong>' in html and '<h1>Findings</h1>' in html
     assert '<script>' not in html and '<svg' not in html and '<img' not in html and 'href="javascript:' not in html

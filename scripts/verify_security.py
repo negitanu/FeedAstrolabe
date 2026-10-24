@@ -23,14 +23,14 @@ def main():
   if args.check_state:
    state=json.loads(marker.read_text())
    with app.app_context():
-    card=s.card(state['watch_id']);db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==13
+    card=s.card(state['watch_id']);db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==17
     assert card['applicability']['status']=='confirmed' and card['watch']['revision']==2
     assert card['signals']['epss']['data']['score']==0.95 and card['signals']['epss']['state']=='stale'
     assert db.execute('SELECT count(*) FROM security_observations').fetchone()[0]==3
     assert db.execute('SELECT count(*) FROM security_references').fetchone()[0]==1
     assert db.execute('SELECT count(*) FROM connector_jobs WHERE error IS NOT NULL').fetchone()[0]==1
     assert not db.execute('PRAGMA foreign_key_check').fetchall()
-   print('PASS schema13: dated security originals/review/PoC metadata/last-good stale score retained after recreation');return
+   print('PASS schema17: dated security originals/review/PoC metadata/last-good stale score retained after recreation');return
   with app.app_context():_,token=issue_key('ephemeral security acceptance','write',1);_,read=issue_key('read acceptance','read',1)
   server=make_server('127.0.0.1',args.serve_port,app);thread=Thread(target=server.serve_forever,daemon=True);thread.start();base='http://127.0.0.1:'+str(server.server_port)
   def request(method,path,body=None,key=None):

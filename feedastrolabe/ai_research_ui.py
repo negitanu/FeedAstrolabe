@@ -37,8 +37,10 @@ def lookup(watch_id):
 
 @ui.post('/watches/<int:watch_id>/update')
 def update(watch_id):
+ from .settings_pages import object_redirect
  with errors():w=a.find('ai_watches',watch_id);a.save_watch(w['workspace_id'],{'expected_revision':identifier(request.form.get('expected_revision')),'enabled':request.form.get('enabled')=='on','outbound_public':request.form.get('outbound_public')=='on','interval_seconds':identifier(request.form.get('interval_seconds'))},watch_id)
- return redirect(url_for('ai.watch',watch_id=watch_id))
+ flash('収集設定を保存しました。','success')
+ return redirect(object_redirect('ai', watch_id, 'ai.watch', watch_id=watch_id))
 
 @ui.post('/cards')
 def create_card():

@@ -37,5 +37,7 @@ def lookup(watch_id):
 
 @ui.post('/watches/<int:watch_id>/update')
 def update(watch_id):
+    from .settings_pages import object_redirect
     with errors():item=n.watch(watch_id);n.save_watch(item['workspace_id'],{'expected_revision':identifier(request.form.get('expected_revision')),'outbound_public':request.form.get('outbound_public')=='on','enabled':request.form.get('enabled')=='on','interval_seconds':identifier(request.form.get('interval_seconds')),'retention_days':identifier(request.form.get('retention_days'))},watch_id)
-    return redirect(url_for('network.detail',watch_id=watch_id))
+    flash('観測設定を保存しました。','success')
+    return redirect(object_redirect('network', watch_id, 'network.detail', watch_id=watch_id))

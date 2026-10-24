@@ -38,12 +38,14 @@ def detail(identifier):
 
 @ui.post('/watchlists/<int:identifier>/update')
 def update(identifier):
+    from .settings_pages import object_redirect
     with errors():
         item=t.find(identifier);values=fields()
         try:values['expected_revision']=int(request.form.get('expected_revision',''))
         except ValueError:raise ValueError('版番号が不正です。') from None
         t.save(item['workspace_id'],values,identifier)
-    return redirect(url_for('triage.detail',identifier=identifier))
+    flash('条件を保存しました。','success')
+    return redirect(object_redirect('watchlists', identifier, 'triage.detail', identifier=identifier))
 
 @ui.post('/watchlists/<int:identifier>/process')
 def process(identifier):

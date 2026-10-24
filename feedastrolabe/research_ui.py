@@ -104,19 +104,22 @@ def detail(workspace_id):
 
 @research_ui.post('/<int:workspace_id>/edit')
 def edit(workspace_id):
+    from .settings_pages import object_redirect
     with errors():
         r.update_workspace(workspace_id,{name:request.form.get(name,'') for name in ('title','purpose','questions','status','classification')})
     flash('調査案件を保存しました。','success')
-    return redirect(url_for('research.detail',workspace_id=workspace_id))
+    return redirect(object_redirect('workspaces', workspace_id, 'research.detail', workspace_id=workspace_id))
 
 
 @research_ui.post('/<int:workspace_id>/archive')
 def archive(workspace_id):
+    from .settings_pages import object_redirect
     if request.form.get('archived') not in ('true','false'):
         abort(400)
     with errors():
         r.update_workspace(workspace_id,{'archived':request.form['archived']=='true'})
-    return redirect(url_for('research.detail',workspace_id=workspace_id))
+    flash('案件をアーカイブしました。' if request.form['archived']=='true' else '案件を再開しました。','success')
+    return redirect(object_redirect('workspaces', workspace_id, 'research.detail', workspace_id=workspace_id))
 
 
 @research_ui.post('/<int:workspace_id>/links/<kind>')
@@ -141,14 +144,14 @@ def create_tag():
     with errors():
         r.save_tag({'name':request.form.get('name','')})
     flash('共有タグを作成しました。','success')
-    return redirect(url_for('research.index'))
+    return redirect(url_for('settings_pages.page',section='tags') if request.form.get('return_to') == 'settings-tags' else url_for('research.index'))
 
 
 @research_ui.post('/tags/<int:tag_id>')
 def edit_tag(tag_id):
     with errors():
         r.save_tag({'name':request.form.get('name','')},tag_id)
-    return redirect(url_for('research.index'))
+    return redirect(url_for('settings_pages.page',section='tags') if request.form.get('return_to') == 'settings-tags' else url_for('research.index'))
 
 
 @research_ui.post('/tags/<kind>/<int:target_id>')
