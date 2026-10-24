@@ -1,7 +1,7 @@
 schema: spec-driven
 context: |
   FeedAstrolabe is a single-user shared-library RSS/SNS/page reader and research workspace.
-  Current app version: 0.15.0; SQLite schema: 19; Python: >=3.15,<3.16 (verified 3.15.1).
+  Current app version: 0.16.0; SQLite schema: 19; Python: >=3.15,<3.16 (verified 3.15.1).
   Flask server-rendered Japanese responsive UI with progressive article loading, explicit read/star
   mutations, light/dark/system appearance, contextual source editing, subscription pause/resume,
   persistent folder/feed ordering and a resizable sidebar. No reader page navigation or size setting;
@@ -11,6 +11,8 @@ context: |
   credentials and article/research bodies; complete recovery uses DB/evidence backup bundles.
   Phases 1-14 are implemented; use docs/research-workspace-plan.md for their historical dependencies.
   X collection is retired, existing subscriptions disabled and saved articles retained.
+  Reader productivity adds safe RSS discovery/preview, POST-only shared reading history, deterministic
+  publication/history ordering, detailed literal/date/source filters and atomic selected state updates.
   Current deployment uses one compose.yml for web, worker, observer, isolated renderer and cloudflared.
   Images follow latest stable tags with a Python 3.15 build guard; unavailable DHI roles use official images.
   Native UI defaults to localhost. API always requires scoped Bearer keys. Tunnel mode delegates

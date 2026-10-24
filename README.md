@@ -65,6 +65,7 @@ Web だけでは定期収集しません。Web と worker は Ctrl-C で停止�
 - 記事一覧は **標準・1行・タイル** を切り替え、スクロールで追加読み込みします。本文の開閉や履歴操作でも、読み込み済み記事と一覧位置を保持します。
 - 最近読んだ記事の履歴を既読・スターと独立して保持します。公開日は新しい順／古い順、履歴は最近読んだ順でも表示できます。
 - 「詳細検索」でタイトル／本文、追加語句（いずれか）、除外語句、公開日の範囲、複数の情報源を指定できます。
+- 記事のチェックで最大100件を選び、既読／未読／スターを一括変更できます。選択は追加読み込みや本文の開閉でも維持されます。
 - 未読・スター・フィード・フォルダー・案件・タグ・タイトル／本文検索を組み合わせられます。「全て既読」は未描画の記事を含む現在の表示条件全体が対象です。
 - ライト・ダーク・システム連動、UTC／JST の表示に対応します。タイムゾーンはライブラリ共通で、保存日時・API・レポート・日時の入力条件は UTC です。
 
@@ -131,4 +132,4 @@ openspec validate --all --strict --no-interactive
 
 過去の計画や検証記録には、後続変更で置き換えられた仕様も含みます。[調査ワークスペース計画](docs/research-workspace-plan.md)、[基盤・連続読み込みの検証](docs/verification-reader-platform-provider-refresh.md)、[詳細表示順の検証](docs/verification-article-detail-content-order.md)、[詳細パネル範囲の検証](docs/verification-constrain-detail-to-reader.md)を参照してください。
 
-操作手順と制限は[読む・集めるの拡張](docs/reader-productivity.md)を参照してください。
+5機能の操作・検索条件・制限は[読む・集めるの拡張](docs/reader-productivity.md)、検証結果は[検証記録](docs/verification-reader-discovery-history-controls.md)を参照してください。

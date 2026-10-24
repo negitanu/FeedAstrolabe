@@ -102,16 +102,9 @@ def settings_patch():
 
 @api.post('/articles/bulk-state')
 def bulk():
- with errors():
-  v=r.fields(request.get_json(),{'ids','is_read','is_starred'});ids=v.get('ids')
-  if not isinstance(ids,list) or not 1<=len(ids)<=100 or any(type(x) is not int or not 1<=x<=2**63-1 for x in ids) or len(set(ids))!=len(ids):raise ValueError('記事 ID は重複なし1〜100件です。')
-  columns={k:int(v[k]) for k in ('is_read','is_starred') if k in v and type(v[k]) is bool}
-  if not columns or len(columns)!=len(v)-1:raise ValueError('既読・スターは真偽値です。')
-  marks=','.join('?' for _ in ids)
-  with r.transaction() as db:
-   if db.execute('SELECT count(*) FROM articles WHERE id IN('+marks+')',ids).fetchone()[0]!=len(ids):raise r.ResearchMissing('記事が見つかりません。変更しませんでした。')
-   db.execute('UPDATE articles SET '+','.join(k+'=?' for k in columns)+' WHERE id IN('+marks+')',list(columns.values())+ids)
- return {'data':{'ids':ids,**{k:bool(x) for k,x in columns.items()}}}
+ from .reader_state import bulk_state
+ with errors():result=bulk_state(request.get_json())
+ return {'data':result}
 
 @api.get('/opml')
 def opml_export():return Response(export_opml(),content_type='application/xml; charset=utf-8',headers={'Content-Disposition':'attachment; filename=subscriptions.opml'})

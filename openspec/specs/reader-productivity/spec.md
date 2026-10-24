@@ -36,3 +36,14 @@ The normal reader SHALL expose title/body/both, additional any-of phrases, exclu
 #### Scenario: Invalid conditions
 - **WHEN** a date is invalid or reversed, source is missing, scope is unknown or parameters conflict
 - **THEN** no mutation occurs and an explanatory error is shown
+
+### Requirement: Explicit selected-article bulk state
+The reader SHALL allow selecting at most 100 distinct rendered articles and atomically marking them read/unread/starred/unstarred. Selection SHALL survive appended batches, detail navigation and card reconciliation within the same filter. An action SHALL state the selected count, remain distinct from 全て既読 and preserve unselected data. The server SHALL validate every ID, active scope and CSRF before changing any row. Existing API bulk-state SHALL reuse the same atomic state-update implementation and retain its contract. Standard HTML form submission SHALL work without JavaScript.
+
+#### Scenario: Selected subset update
+- **WHEN** two selected articles among loaded and appended cards are marked starred
+- **THEN** both are starred atomically, unselected states and history remain unchanged, and selected count remains accurate
+
+#### Scenario: Invalid selection
+- **WHEN** a selection includes an unknown or out-of-scope ID, duplicates, more than 100 IDs, or missing CSRF
+- **THEN** the complete action is rejected with no state changes

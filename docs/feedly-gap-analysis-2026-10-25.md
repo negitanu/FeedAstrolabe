@@ -2,6 +2,7 @@
 
 調査日：2026-10-25（JST、実画面の主な確認時間 07:14〜07:22）。比較基準：FeedAstrolabe `6160d25`、製品版 `0.15.0`、DB schema 18。
 
+> 実装追記：この比較は `6160d25` 時点の記録です。F01〜F05の基礎機能は、後続のOpenSpec変更 `reader-discovery-history-controls` で実装しました。F03の人気順等、当該変更に含まれない範囲は残っています。[操作手順](reader-productivity.md)と[検証記録](verification-reader-discovery-history-controls.md)を参照してください。
 
 ## 結論
 

@@ -206,6 +206,16 @@ def create_app(test_config=None):
         db = get_db()
         where, params, selected = filters()
         article_id = optional_id(request.args, 'article')
+        reconcile_ids = []
+        raw_reconcile = request.headers.get('X-Reader-Reconcile-Ids')
+        if raw_reconcile is not None:
+            parts = raw_reconcile.split(',')
+            if not 1 <= len(parts) <= 100 or any(not p.isascii() or not p.isdecimal() or len(p)>19 or not 1<=int(p)<=2**63-1 for p in parts):
+                abort(400)
+            reconcile_ids = [int(p) for p in parts]
+            if len(set(reconcile_ids)) != len(reconcile_ids):
+                abort(400)
+
         if selected['feed'] is not None and db.execute('SELECT 1 FROM feeds WHERE id=?',(selected['feed'],)).fetchone() is None:
             abort(404)
         total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
@@ -216,7 +226,7 @@ def create_app(test_config=None):
         if article is not None:
             clause = (where + ' AND a.id=?') if where else ' WHERE a.id=?'
             if db.execute('SELECT 1 FROM articles a'+clause,[*params,article_id]).fetchone() is None:
-                if request.headers.get('X-Reader-Detail') == '1' and request.headers.get('X-Reader-Reconcile') == str(article_id):
+                if request.headers.get('X-Reader-Detail') == '1' and (request.headers.get('X-Reader-Reconcile') == str(article_id) or article_id in reconcile_ids):
                     article = None
                     article_id = None
                 else:
@@ -264,6 +274,10 @@ def create_app(test_config=None):
                 abort(400)
             articles = db.execute(f'SELECT a.*,f.title AS feed_title,{VISITED} AS visited_at FROM articles a JOIN feeds f ON f.id=a.feed_id' + where +
                        (' AND ' if where else ' WHERE ') + 'a.id=?', [*params,reconcile]).fetchall()
+        if request.headers.get('X-Reader-Detail') == '1' and reconcile_ids:
+            marks = ','.join('?' for _ in reconcile_ids)
+            articles = db.execute(f'SELECT a.*,f.title AS feed_title,{VISITED} AS visited_at FROM articles a JOIN feeds f ON f.id=a.feed_id' + where +
+                       (' AND ' if where else ' WHERE ') + 'a.id IN ('+marks+')', [*params,*reconcile_ids]).fetchall()
         template = 'reader_detail_fragment.html' if request.headers.get('X-Reader-Detail') == '1' else 'index.html'
         return render_template(template, articles=articles, feeds=feeds, counts=counts, article=article,
                                folder_groups=folder_groups, selected_folder=selected_folder, reader_url=reader_url,
@@ -376,6 +390,26 @@ def create_app(test_config=None):
         session['list_density'] = density
         session['mark_read_on_open'] = request.form.get('mark_read_on_open') == '1'
         session['scan_after_read'] = request.form.get('scan_after_read') == '1'
+        return return_to()
+
+    @app.post('/articles/bulk-state')
+    def selected_state():
+        from .reader_state import bulk_state
+        from .research_ui import errors
+        single_value(request.form, 'csrf')
+        action = single_value(request.form, 'action')
+        operations = {'read': ('is_read', True), 'unread': ('is_read', False),
+                      'star': ('is_starred', True), 'unstar': ('is_starred', False)}
+        if action not in operations:
+            abort(400, description='一括操作を選択してください。')
+        values = request.form.getlist('ids')
+        if len(values)>100 or any(not p.isascii() or not p.isdecimal() or len(p)>19 or not 1<=int(p)<=2**63-1 for p in values):
+            abort(400, description='記事 ID は1〜100件の正の整数で指定してください。')
+        where, params, _ = filters()
+        column, value = operations[action]
+        with errors():
+            bulk_state({'ids': [int(p) for p in values], column: value}, where, params)
+        flash(f'{len(values)} 件の記事を更新しました。', 'success')
         return return_to()
 
     @app.post('/articles/read-all')

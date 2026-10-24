@@ -96,10 +96,10 @@
   });
   observe();
   list.addEventListener('mousedown',event=>{
-    if(event.button===1 && event.target.closest('.article-card') && !event.target.closest('.article-actions'))event.preventDefault();
+    if(event.button===1 && event.target.closest('.article-card') && !event.target.closest('.article-actions,.article-select'))event.preventDefault();
   });
   list.addEventListener('auxclick',event=>{
-    if(event.button!==1 || event.target.closest('.article-actions'))return;
+    if(event.button!==1 || event.target.closest('.article-actions,.article-select'))return;
     const card=event.target.closest('.article-card');
     if(!card)return;
     event.preventDefault();
@@ -164,27 +164,32 @@
   window.addEventListener('popstate',event=>{void detail(location.href,false,event.state||{x:0,y:0});});
   document.addEventListener('submit',async event=>{
     const form=event.target;
-    const action=new URL(form.action,location.href);
-    if(!/^\/articles\/(?:\d+\/(?:read|star|read-next|open)|read-all)$/.test(action.pathname))return;
+    const action=new URL(form.getAttribute('action'),location.href);
+    if(!/^\/articles\/(?:\d+\/(?:read|star|read-next|open)|read-all|bulk-state)$/.test(action.pathname))return;
     event.preventDefault();if(writing)return;
     writing=true;generation++;detailVersion++;
-    for(const button of document.querySelectorAll('.article-card button,.article-detail button,.bulk-read-button')){
+    for(const button of document.querySelectorAll('.article-card button,.article-detail button,.bulk-read-button,.reader-selection button')){
       if(!button.disabled){button.disabled=true;button.dataset.readerSaving='';}
     }
     const values=new URLSearchParams(new FormData(form));
     if(!(action.pathname.endsWith('/read-next') || action.pathname.endsWith('/open')))values.set('next',location.pathname+location.search);
+    const bulk=action.pathname==='/articles/bulk-state';
+    const changed=bulk?values.getAll('ids'):[];
     const match=action.pathname.match(/^\/articles\/(\d+)\//);
     const headers={'X-Reader-Detail':'1'};if(match)headers['X-Reader-Reconcile']=match[1];
+    if(bulk)headers['X-Reader-Reconcile-Ids']=changed.join(',');
     try {
       const response=await fetch(action.href,{method:'POST',body:values,headers,signal:AbortSignal.timeout(20000)});
       const doc=parse(await response.text());
       if(!response.ok || doc.querySelector('[data-flash=error]'))throw new Error();
       remember();history.pushState({reader:true,x:scrollX,y:scrollY},'',response.url);
       const fragment=apply(doc,response.url,(action.pathname.endsWith('/read-next') || action.pathname.endsWith('/open')));
-      if(match) {
-        const old=list.querySelector(`[data-article-id="${match[1]}"]`);
-        const fresh=fragment.querySelector(`[data-reconcile] [data-article-id="${match[1]}"]`);
-        if(fresh && old)old.replaceWith(fresh);else old?.remove();
+      if(match || bulk) {
+        for(const id of (bulk?changed:[match[1]])) {
+          const old=list.querySelector(`[data-article-id="${id}"]`);
+          const fresh=fragment.querySelector(`[data-reconcile] [data-article-id="${id}"]`);
+          if(fresh && old)old.replaceWith(fresh);else old?.remove();
+        }
       } else {
         for(const card of list.querySelectorAll('.article-card')) {
           if(fragment.dataset.view==='unread'){card.remove();continue;}
@@ -201,7 +206,7 @@
       }
       selected(response.url);announce('保存しました。');
     } catch { announce('保存を確認できませんでした。接続を確認して一覧を再読み込みしてください。',true); }
-    finally {writing=false;document.querySelectorAll('[data-reader-saving]').forEach(button=>{button.disabled=false;delete button.dataset.readerSaving;});if(loader)observe();}
+    finally {writing=false;document.querySelectorAll('[data-reader-saving]').forEach(button=>{button.disabled=false;delete button.dataset.readerSaving;});if(loader)observe();document.dispatchEvent(new Event('reader-reconciled'));}
   });
 
   // Query current cards for each key action so appended and reconciled articles participate.
