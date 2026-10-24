@@ -1,6 +1,6 @@
 # 第一段階の検証記録
 
-検証日：2026-10-08。macOS / Python 3.14.8。依存バージョンは requirements-lock.txt に固定。
+検証日：2026-10-08。macOS / Python 3.14.8。当時の依存バージョンは requirements-lock.txt に固定（現在は [requirements.txt](../requirements.txt) に統合済み）。
 
 ## 自動検証
 

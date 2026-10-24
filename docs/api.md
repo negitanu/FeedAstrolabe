@@ -15,7 +15,7 @@
 
 - `limit`：1〜100、既定30。
 - `feed`：フィード ID。
-- `source_type`：`rss`、`x`、`mastodon`、`page` で記事を絞り込み。
+- `source_type`：`rss`、`mastodon`、`bluesky`、`page`（`x` は保存済み記事のみ） で記事を絞り込み。
 - `is_read`、`is_starred`：`true` または `false`。
 - `q`：タイトル/本文の部分一致、最大200文字。`%` と `_` も文字として検索。
 - `before_id`：この ID より小さい記事を ID 降順で取得。
@@ -64,18 +64,27 @@
 SNS の登録も同じエンドポイントを使います。ネットワーク取得を行わず201で登録し、worker または UI の手動更新で取得します。認証トークンなど未定義のフィールドは拒否します。
 
 ```json
-{"source_type":"x","source_kind":"account","target":"username","folder":"SNS"}
+{"source_type":"bluesky","source_kind":"topic","name":"AI研究","target":"人工知能 lang:ja","folder":"SNS調査","poll_interval":1800,"window_hours":24}
 ```
 
 ```json
-{"source_type":"x","source_kind":"list","target":"123456789","folder":"SNS"}
+{"source_type":"mastodon","source_kind":"topic","name":"セキュリティ","target":"security,infosec","instance_url":"https://mastodon.social","poll_interval":1800,"window_hours":24}
 ```
 
 ```json
 {"source_type":"mastodon","source_kind":"account","target":"alice","instance_url":"https://mastodon.social","folder":"SNS"}
 ```
 
+SNS 調査は `source_kind=topic`、分野名 `name`（1〜120文字）、`target`（1〜200文字）を指定します。Mastodon はタグをカンマ区切りで最大3個、公開HTTPSサーバー必須。Blueskyは固定公式APIに検索語を送り、サーバー欄は省略します。間隔は900〜86400秒（既定1800）、対象期間は1〜168時間（既定24）。新規X登録は400、保存済みXフィードの手動更新は410、有効化は400です。
+
+- `GET /api/v1/social-research?limit=20&before_id=...`：分野一覧（最大100件、`next_before_id`）。
+- `GET /api/v1/social-research/{feed_id}`：`topic`（設定・次回予定）、`latest`（対象期間・収集時刻・件数・関連タグ）、`results`（上位40件のarticle_id・順位・反応数・スコア）、`history`（成功30回）。未収集時はlatest=null。失敗時は前回成功結果を保持します。
+- `PATCH /api/v1/feeds/{feed_id}`：SNS調査の `name`、`folder`、`enabled`、`poll_interval`、`window_hours` を編集。検索条件・サーバー変更は新規登録します。
+- `POST /api/v1/feeds/{feed_id}/refresh`：手動収集。429とRetry-Afterを尊重してください。
+
 購読応答に `source_type`、`source_kind`、`target`、`instance_url`、`provider_id`、`retry_at` が追加されます。記事応答にも `source_type` を追加。内部ページ cursor と認証トークンは返しません。詳細は [SNS 連携手順](social.md) を参照してください。
+
+OpenRouterの重要トピック抽出は `GET/PATCH /api/v1/social-research/ai/config` で全体設定、`PATCH /api/v1/social-research/{feed_id}/ai/settings` で分野別自動化・評価観点を設定します。設定更新には `expected_revision` が必要です。キーそのものをAPIで入力・取得しません。`POST /api/v1/social-research/{feed_id}/ai/jobs` に空JSON `{}` を送ると解析を予約し202、同じ収集回・設定なら既存予約を再利用します。`GET /api/v1/social-research/ai/jobs/{job_id}` と調査結果の `analysis` で状態・重要トピック・正確な入力・出典・利用量を確認できます。書き込みはwriteスコープが必要で、GETは解析を実行しません。[設定項目と単位](openrouter-topics.md#保存復元api)を参照してください。
 
 `PATCH /api/v1/articles/{id}`
 
@@ -110,7 +119,7 @@ with urllib.request.urlopen(request, timeout=45) as response:
 {"error":{"code":401,"message":"Invalid or expired API key"}}
 ```
 
-400 入力不正、401 キー無効/期限切れ/失効、403 write 権限不足または Access 認証失敗、404 対象なし、409 重複、413 サイズ超過、415 JSON形式不正、429 回数上限、502 取得先通信失敗。401 には `WWW-Authenticate: Bearer`、429 には `Retry-After`（次の1分 window までの秒数）が付きます。未許可 Host は Flask の400となります。
+400 入力不正、401 キー無効/期限切れ/失効、403 write 権限不足または Access 認証失敗、404 対象なし、409 重複、413 サイズ超過、415 JSON形式不正、429 回数上限、502 取得先通信失敗。401 には `WWW-Authenticate: Bearer`、429 には `Retry-After`（次の1分 window までの秒数）が付きます。local／アプリ内JWT検証modeの未許可HostはFlaskの400となります。標準tunnel modeのhostname制限とAccess認証はCloudflare側で行います。
 
 OpenAPI 定義は [openapi.json](../feedastrolabe/static/openapi.json) にあります。
 
@@ -249,6 +258,6 @@ OpenAPI0.14は151 method/routes、schema13。すべて既存のBearer scopeとra
 - `GET/PATCH /operations/config`：expected_revision付き定期バックアップと世代／容量設定。`GET/POST /operations/backups`：世代一覧／本文なしの1件予約202。DB復元APIはありません。
 - `GET/PATCH /settings`：全体設定、指定項目を既存設定と合成し全検証後に保存。API入力は数値／boolean、UIの文字列形式とは区別。
 - `POST /articles/bulk-state`：ids1〜100 unique、is_read／is_starred boolean。全ID存在確認後の原子的更新。read403／超過400／未知404は変更なし。
-- `GET/POST /opml`：RSS購読だけのXML出力／XML1MiB・100件の原子的登録（no inline fetch）、added／skipped。DTD/entity/private URL拒否。POSTはapplication/xml／text/xml／text/x-opml。
+- `GET/POST /opml`：RSS購読だけのXML出力／XML1MiB・100件・10,000要素・深さ64までの原子的登録（no inline fetch）、added／skipped。DTD/entity/private URL拒否。POSTはapplication/xml／text/xml／text/x-opml。UIの確認画面はAPIの明示的なPOSTには適用しません。
 
 通知profile／preview／reportは各上限と30分承認期限があり、変更された区分・設定版は409または送信前のfailedです。HTTP429/503のみ最大3回の待機再試行、成功／曖昧な送達結果は自動再送しません。外部Webhookの冪等制御も受信側で必要です。レポート一覧は本文を含まないメタデータ、一覧cursorは既存の最大100件契約。

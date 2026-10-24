@@ -15,3 +15,5 @@
 - [x] 3.2 Verify UI and container deployment and strictly validate OpenSpec.
 - [x] 3.3 Harden ignores, scan candidate files and history, configure GitHub remote, commit and push.
 - [ ] 3.4 Verify real X collection after operator supplies API access and target (no secrets in chat).
+
+Status note (2026-10-24): task 3.4 was superseded by `social-topic-research` retiring new X collection. It remains unchecked as historical evidence; no live X verification is claimed. Saved X articles are retained.

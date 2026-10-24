@@ -6,7 +6,7 @@
 
 ローカルは固定`127.0.0.1:11434`。運用者がOllamaを別途用意し、[クラウドを無効化](https://docs.ollama.com/faq)してください（OLLAMA_NO_CLOUD=1等）。`/api/status`のcloud.disabled=true、`/api/tags`の登録モデルSHA256とremote_host/modelなしを毎回照合してから生成。runtime版とdigestを系譜へ保存します。未対応statusやdigest不一致なら入力を送信しません。cloudを含むモデル名もローカル登録不可。アプリはモデルをインストール／pullしません。コンテナ内のloopbackはホストのOllamaではありません。運用者が自分の隔離したOllamaサービスを`ollama`というサービス名で用意した場合だけ、信頼するCompose設定でFEEDASTROLABE_OLLAMA_LOCAL_HOST=ollamaを指定できます。このphaseは実ランタイムの配置を行っていません。
 
-クラウドは固定`https://ollama.com/api/chat`。匿名のローカルproxyをcloudと扱いません。[公式認証](https://docs.ollama.com/api/authentication)のBearerを、FEEDASTROLABE_OLLAMA_TOKEN_FILEで指定する所有者のみ読める非公開regularファイル（0600、symlink拒否、4096byte以下）から読みます。tokenはDB・Git・ブラウザ・入力系譜へ保存しません。Dockerは必要なときだけ`compose.assistant-cloud.yaml`で既存web／workerへ正確なfile secret mountを追加。既定`secrets/ollama-token`はGitとbuildから除外されます。secretを作成・登録する作業は利用者の運用設定です。
+クラウドは固定`https://ollama.com/api/chat`。匿名のローカルproxyをcloudと扱いません。[公式認証](https://docs.ollama.com/api/authentication)のBearerを、FEEDASTROLABE_OLLAMA_TOKEN_FILEで指定する所有者のみ読める非公開regularファイル（0600、symlink拒否、4096byte以下）から読みます。tokenはDB・Git・ブラウザ・入力系譜へ保存しません。Dockerは標準`compose.yml`で対応します。[任意の認証ファイルの配置手順](deployment.md#任意の連携設定)でprivate volumeの`/data/ollama-token`へアプリUID/GID10001・0600で保存し、`.env`に`FEEDASTROLABE_OLLAMA_TOKEN_FILE=/data/ollama-token`を設定して`docker compose up -d`で反映します。ホスト側`secrets/ollama-token`はGitとbuildから除外されます。未使用ならパスは空欄のままにし、ファイルも不要です。secretの作成・配置は利用者の運用設定です。
 
 外部処理はpublic案件だけ。選択資料が別のinternal／restricted案件の固定・メモ・引用にも参照される場合は拒否。質問と選択範囲に対する認証値らしい文字列の検出も実施しますが、完全な検出を保証しません。必ず表示した入力を確認してください。承認hash、プロフィール版、分類、引用hashを生成直前に再照合。分類変更と送信が競合しないよう、最大90秒の生成中は既存evidence／SQLite書き込みlockを保持します。他の書き込みは待機／busyになる場合があります。ライブラリのreadキーも入力や結果を閲覧でき、分類は利用者別のアクセス分離ではありません。
 

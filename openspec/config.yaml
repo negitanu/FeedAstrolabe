@@ -1,18 +1,26 @@
 schema: spec-driven
 context: |
-  FeedAstrolabe is a single-user shared-library RSS/SNS/page reader and research workspace (schema v5).
-  Python 3.11+, Flask, SQLite,
-  server-rendered Japanese responsive UI. Source and specs are tracked in Git.
-  Ordered phases: 1 RSS/UI; 2 containers and Cloudflare Zero Trust;
-  3 SNS feeds including X; 4 Playwright fixed-page monitoring; 5 subscription management; 6 research workspaces, versioned notes and shared tags.
-  Planned phases 7-14: immutable evidence, watchlists, entities,
-  security/network/AI research connectors, grounded AI assistance and reports/operations.
-  See docs/research-workspace-plan.md for dependencies; start implementation with
-  phase-seven-evidence-provenance. Cloudflare and live X setup remain explicitly deferred.
-  Planned changes are not implemented features. Workspace classification is not per-user isolation.
-  Propose and validate requirements, design and tasks before implementation.
-  Native UI defaults to localhost. API always requires scoped Bearer keys.
-  External deployment uses Cloudflare mode, Access JWT verification and no origin ports.
+  FeedAstrolabe is a single-user shared-library RSS/SNS/page reader and research workspace.
+  Current app version: 0.15.0; SQLite schema: 18; Python: >=3.15,<3.16 (verified 3.15.1).
+  Flask server-rendered Japanese responsive UI with progressive article loading, explicit read/star
+  mutations, light/dark/system appearance, contextual source editing, subscription pause/resume,
+  persistent folder/feed ordering and a resizable sidebar. No reader page navigation or size setting;
+  public API pagination remains compatible.
+  AI topic extraction selects OpenRouter or OrcaRouter; queued jobs retain provider identity and
+  share daily budgets. Ollama research assistance remains independent. Settings JSON export excludes
+  credentials and article/research bodies; complete recovery uses DB/evidence backup bundles.
+  Phases 1-14 are implemented; use docs/research-workspace-plan.md for their historical dependencies.
+  X collection is retired, existing subscriptions disabled and saved articles retained.
+  Current deployment uses one compose.yml for web, worker, observer, isolated renderer and cloudflared.
+  Images follow latest stable tags with a Python 3.15 build guard; unavailable DHI roles use official images.
+  Native UI defaults to localhost. API always requires scoped Bearer keys. Tunnel mode delegates
+  external authentication to Cloudflare Access/Protect with Access; explicit JWT mode is also available.
+  Origin ports are not published. Real external Access acceptance remains unverified.
+  Workspace classification is not per-user isolation. Live paid AI generation is not verified.
+  Source and specs are tracked in Git; runtime data, secrets, exports and local environments are not.
+  Propose and strictly validate requirements, design and tasks before implementation.
+  Latest completed change: reader-platform-provider-refresh (29/29 tasks); see its verification record
+  at docs/verification-reader-platform-provider-refresh.md (623 tests passed on 2026-10-24).
 rules:
   specs:
     - Every requirement must include testable WHEN/THEN scenarios.

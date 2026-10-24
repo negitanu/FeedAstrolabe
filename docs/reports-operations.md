@@ -20,7 +20,7 @@ Webhookは公開DNSを毎回検証してTLS接続先を固定し、proxy／redir
 
 運用者の `FEEDASTROLABE_DELIVERY_CONFIG_FILE` はowner-only0600の通常JSONファイル（16KiB以内）、symlink不可。内容は `destinations` の正確な宛先配列、Webhook用 `webhook_secret`（32文字以上）、メール用 `smtp` object（host／port465／sender／username／password）。資格情報はDB/UI/Gitに入力しません。既存Git除外のsecrets/、instance/やprivate volumeを使い、実値をシェル引数・履歴に貼り付けないでください。
 
-コンテナは任意の `compose.delivery.yaml` を追加し、private volume `/data/delivery-config.json` をアプリUID10001所有・0600で事前作成します。ファイルベースCompose secretsのUID制限回避は行わず、アプリ所有のファイルとして配置してください。この追加composeは既定環境には適用していません。実際のSMTP／Webhookアカウントと宛先の接続は未設定・未確認。検証は合成本文と模擬transportだけで、利用者の資料を外部へ送りません。
+コンテナは標準 `compose.yml` で対応します。private volume `/data/delivery-config.json` をアプリUID/GID10001所有・0600で事前作成し、`.env` に `FEEDASTROLABE_DELIVERY_CONFIG_FILE=/data/delivery-config.json` を設定して `docker compose up -d` で反映します。[認証ファイルの配置手順](deployment.md#任意の連携設定)を利用できます。未使用なら空欄にし、通知先・承認・送達の既存の設定条件も引き続き必要です。実際のSMTP／Webhookアカウントと宛先の接続は未設定・未確認。検証は合成本文と模擬transportだけで、利用者の資料を外部へ送りません。
 
 ## 世代バックアップと復元
 
@@ -31,10 +31,10 @@ Webhookは公開DNSを毎回検証してTLS接続先を固定し、proxy／redir
 復元はUI/APIに用意していません。Webとworkerのプロセス生存中は共有runtime.lockを保持し、CLI復元は排他ロックを要求するので、sleep中のworkerやWebだけ稼働中でも拒否します。全blob、引用の固定位置、生成入力、レポートと通知hash、FK・DB整合性を検証後に置き換えます。旧DB schemaにも対応する画像とバックアップを併せて保管してください。
 
 ```sh
-docker compose -p feedastrolabe -f compose.yaml -f compose.local.yaml -f compose.observer.yaml stop web worker observer renderer
+docker compose -p feedastrolabe stop web worker observer renderer
 # 対象世代のパスを確認してから、停止状態のライブラリへ復元。
-docker compose -p feedastrolabe -f compose.yaml -f compose.local.yaml -f compose.observer.yaml run --rm --no-deps -T web python -m feedastrolabe.maintenance restore-bundle /data/backups/backup-REPLACE_WITH_GENERATION
-docker compose -p feedastrolabe -f compose.yaml -f compose.local.yaml -f compose.observer.yaml up -d --wait
+docker compose -p feedastrolabe run --rm --no-deps -T web python -m feedastrolabe.maintenance restore-bundle /data/backups/backup-REPLACE_WITH_GENERATION
+docker compose -p feedastrolabe up -d --wait
 ```
 
 CLIは残存WALも拒否します。サービスを停止してSQLite checkpointを完了したうえで再実行。worker/APIを起動したままロックファイルを削除する回避はしないでください。復元元の世代自体は置き換え対象DBとは別ディレクトリです。
@@ -45,4 +45,4 @@ CLIは残存WALも拒否します。サービスを停止してSQLite checkpoint
 
 settings PATCHは指定フィールドを既存値と合わせ全体検証して保存。poll_interval60〜86400、page_size10〜100、api_rate_limit1〜1000、polling_enabled boolean、default_view all/unread/starred。一括記事状態は1〜100 unique positive IDs、is_read/is_starred booleanで全ID存在確認後に原子的更新。readキーや101件、1件でも未知IDなら変更なし。
 
-OPMLはXML1MiB、最大100購読、DTD/entity禁止、public URL形式、local/private拒否。全入力を検証後に原子的に登録し、重複URLはskipped。即時取得はせず通常RSSワーカーが後でDNS／public IPを検証。エクスポートはRSSのみでSNS/pageを含みません。APIキー発行は従来どおり設定UI限定で、既存キーのscopeは自動拡張しません。全APIはBearerのread/writeと既存のrate制限を使います。
+OPMLはXML1MiB、最大100購読、10,000要素・深さ64まで、DTD/entity禁止、public URL形式、local/private拒否。全入力を検証後に原子的に登録し、重複URLはskipped。UIでは登録前に内容と重複を確認し、取り消せます。署名付き確認データは同じセッションで15分以内に使用し、確定時にも重複を確認します。APIの明示的なPOSTは従来どおり1回で登録します。即時取得はせず通常RSSワーカーが後でDNS／public IPを検証。エクスポートはRSSのみでSNS/pageを含みません。APIキー発行は従来どおり設定UI限定で、既存キーのscopeは自動拡張しません。全APIはBearerのread/writeと既存のrate制限を使います。

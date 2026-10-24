@@ -10,7 +10,7 @@
 
 案件詳細から UTF-8 text、Markdown、PDF を添付できます。1件10MiB、抽出テキスト10万文字、PDF200ページまで。暗号化・不正形式・MIME／拡張子不一致は拒否します。画像PDFのOCRはありません。表示はエスケープしたテキストだけです。元ファイルは添付扱いの application/octet-stream でダウンロードします。
 
-添付解析には `compose.observer.yaml` の renderer が必要です。解析子プロセスはネットワーク・DB・秘密鍵にアクセスできず、CPU15秒、Linuxアドレス空間384MiB、全ジョブ45秒、コンテナ512MiBの制限を持ちます。macOS native の IPC 検証ではアドレス空間制限を設定しません。renderer 未接続時は保存せずエラーになります。Python pypdf 6.19.0 を固定し、PDF内のプログラムや添付を実行しません。
+添付解析には 標準 `compose.yml` の renderer が必要です。解析子プロセスはネットワーク・DB・秘密鍵にアクセスできず、CPU15秒、Linuxアドレス空間384MiB、全ジョブ45秒、コンテナ512MiBの制限を持ちます。macOS native の IPC 検証ではアドレス空間制限を設定しません。renderer 未接続時は保存せずエラーになります。Python pypdf 6.19.0 を固定し、PDF内のプログラムや添付を実行しません。
 
 初期容量500MiB、設定範囲10MiB〜10GiB、固定していない根拠の保存期間は初期90日（1〜3650日）。容量判定は管理対象ファイルの実サイズを含み、同じ bytes は再利用します。通常の `/evidence` の使用量 API は DB に登録した bytes です。中断で残った孤立ファイルも容量判定に含まれます。上限超過でも通常の記事収集は継続し、根拠保存エラーを `/evidence` に表示します。上限を下げても既存の根拠は消しません。
 
@@ -35,9 +35,9 @@ bundle は `feeds.sqlite3`、`manifest.json`、`evidence-blobs/` の3要素で�
 コンテナでは共通の Compose オプションを使います。
 
 ```sh
-docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml exec web python -m feedastrolabe.maintenance backup-bundle /data/library-20261008
+docker compose exec web python -m feedastrolabe.maintenance backup-bundle /data/library-20261008
 mkdir -p backups
-docker compose -f compose.yaml -f compose.local.yaml -f compose.observer.yaml cp web:/data/library-20261008 backups/library-20261008
+docker compose cp web:/data/library-20261008 backups/library-20261008
 ```
 
 復元用 bundle は同じ volume にある状態で全 writer を停止し、`run --rm --no-deps -T web python -m feedastrolabe.maintenance restore-bundle /data/library-20261008` を実行してから再起動します。ホストの bundle を持ち込む場合は停止前に private な `/data/` へコピーし、UID10001で読める所有者・権限にしてください。秘密鍵 `secret.key` は bundle に含まず別途安全に保管します。DBにはキーのハッシュ・案件・メモが含まれるため、bundle を Git や公開ストレージに入れないでください。
