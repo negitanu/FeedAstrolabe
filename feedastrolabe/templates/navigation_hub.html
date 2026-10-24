@@ -2,6 +2,7 @@
 {% block body %}
 <main class="navigation-page" data-hub-area="{{ area }}" aria-label="{{ title }}">
 
+{% if area=='settings' %}<form method="post" action="{{ url_for('settings_pages.export_configuration') }}" data-settings-export><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="presentation" value="{}"><button class="secondary">設定をエクスポート</button></form>{% endif %}
 
 <div class="navigation-groups">{% for heading, items in groups %}<section class="navigation-group" id="group-{{ loop.index }}"><h2>{{ heading }}</h2><ul>{% for item in items %}<li><a class="destination-card" href="{{ item.href }}"><strong>{{ item.title }} <span aria-hidden="true">→</span></strong>{% if area != 'settings' %}<span>{{ item.description }}</span>{% endif %}</a></li>{% endfor %}</ul></section>{% endfor %}</div>
 {% if area == 'settings' %}

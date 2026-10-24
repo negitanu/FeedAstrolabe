@@ -251,3 +251,20 @@ def feed_order(feed_id):
         return {'error':str(exc)}, 400
 
 
+@ui.post('/settings/export')
+def export_configuration():
+    import json
+    from flask import Response
+    from .configuration_export import export_settings
+    from .identifiers import single_value
+    try:
+        raw = single_value(request.form,'presentation','{}')
+        if len(raw)>65536:
+            raise ValueError('表示設定が大きすぎます。')
+        from .openrouter_http import strict_json
+        data = export_settings(strict_json(raw))
+    except (ValueError,TypeError,RecursionError) as exc:
+        abort(400,description='設定を出力できません。表示設定を確認してください。')
+    return Response(json.dumps(data,ensure_ascii=False,sort_keys=True,indent=2,allow_nan=False)+'\n',
+        content_type='application/json; charset=utf-8',headers={
+            'Content-Disposition':'attachment; filename="feedastrolabe-settings.json"', 'Cache-Control':'no-store'})

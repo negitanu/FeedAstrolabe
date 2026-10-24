@@ -1,0 +1,527 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FeedAstrolabe settings export v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "format_version",
+    "app_version",
+    "db_schema_version",
+    "exported_at",
+    "settings",
+    "references",
+    "omissions"
+  ],
+  "properties": {
+    "format": {
+      "const": "feedastrolabe-settings"
+    },
+    "format_version": {
+      "const": 1
+    },
+    "app_version": {
+      "type": "string"
+    },
+    "db_schema_version": {
+      "type": "integer"
+    },
+    "exported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collection",
+        "subscriptions",
+        "connectors",
+        "models",
+        "notifications",
+        "backup",
+        "security_watches",
+        "network_watches",
+        "ai_watches",
+        "topic_settings",
+        "ai",
+        "library_order",
+        "watchlists",
+        "presentation"
+      ],
+      "properties": {
+        "collection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "poll_interval",
+            "polling_enabled",
+            "default_view",
+            "api_rate_limit",
+            "display_timezone"
+          ],
+          "properties": {
+            "poll_interval": {},
+            "polling_enabled": {},
+            "default_view": {},
+            "api_rate_limit": {},
+            "display_timezone": {}
+          }
+        },
+        "subscriptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "source_type",
+              "source_kind",
+              "url",
+              "title",
+              "folder",
+              "enabled",
+              "poll_interval",
+              "target",
+              "instance_url",
+              "selector",
+              "settle_ms",
+              "retention_days"
+            ],
+            "properties": {
+              "id": {},
+              "source_type": {},
+              "source_kind": {},
+              "url": {},
+              "title": {},
+              "folder": {},
+              "enabled": {},
+              "poll_interval": {},
+              "target": {},
+              "instance_url": {},
+              "selector": {},
+              "settle_ms": {},
+              "retention_days": {}
+            }
+          }
+        },
+        "connectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "provider",
+              "enabled",
+              "ttl_seconds",
+              "daily_budget"
+            ],
+            "properties": {
+              "provider": {},
+              "enabled": {},
+              "ttl_seconds": {},
+              "daily_budget": {}
+            }
+          }
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "model",
+              "model_digest",
+              "enabled",
+              "max_output_tokens",
+              "daily_calls",
+              "input_rate",
+              "output_rate",
+              "price_date",
+              "max_cost",
+              "daily_cost"
+            ],
+            "properties": {
+              "id": {},
+              "name": {},
+              "kind": {},
+              "model": {},
+              "model_digest": {},
+              "enabled": {},
+              "max_output_tokens": {},
+              "daily_calls": {},
+              "input_rate": {},
+              "output_rate": {},
+              "price_date": {},
+              "max_cost": {},
+              "daily_cost": {}
+            }
+          }
+        },
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "destination",
+              "enabled"
+            ],
+            "properties": {
+              "id": {},
+              "name": {},
+              "kind": {},
+              "destination": {},
+              "enabled": {}
+            }
+          }
+        },
+        "backup": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "backup_enabled",
+            "interval_seconds",
+            "generations",
+            "quota_bytes"
+          ],
+          "properties": {
+            "backup_enabled": {},
+            "interval_seconds": {},
+            "generations": {},
+            "quota_bytes": {}
+          }
+        },
+        "security_watches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "workspace_id",
+              "entity_id",
+              "product",
+              "version",
+              "outbound_public",
+              "enabled"
+            ],
+            "properties": {
+              "id": {},
+              "workspace_id": {},
+              "entity_id": {},
+              "product": {},
+              "version": {},
+              "outbound_public": {},
+              "enabled": {}
+            }
+          }
+        },
+        "network_watches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "workspace_id",
+              "entity_id",
+              "provider",
+              "input",
+              "outbound_public",
+              "enabled",
+              "interval_seconds",
+              "retention_days"
+            ],
+            "properties": {
+              "id": {},
+              "workspace_id": {},
+              "entity_id": {},
+              "provider": {},
+              "input": {},
+              "outbound_public": {},
+              "enabled": {},
+              "interval_seconds": {},
+              "retention_days": {}
+            }
+          }
+        },
+        "ai_watches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "workspace_id",
+              "provider",
+              "target",
+              "term",
+              "outbound_public",
+              "enabled",
+              "interval_seconds"
+            ],
+            "properties": {
+              "id": {},
+              "workspace_id": {},
+              "provider": {},
+              "target": {},
+              "term": {},
+              "outbound_public": {},
+              "enabled": {},
+              "interval_seconds": {}
+            }
+          }
+        },
+        "topic_settings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "feed_id",
+              "window_hours",
+              "ai_enabled",
+              "ai_criteria"
+            ],
+            "properties": {
+              "feed_id": {},
+              "window_hours": {},
+              "ai_enabled": {},
+              "ai_criteria": {}
+            }
+          }
+        },
+        "ai": {
+          "type": "object",
+          "required": [
+            "provider",
+            "daily_calls",
+            "daily_cost",
+            "providers"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "provider": {
+              "enum": [
+                "openrouter",
+                "orcarouter"
+              ]
+            },
+            "daily_calls": {
+              "type": "integer"
+            },
+            "daily_cost": {
+              "type": "integer"
+            },
+            "providers": {
+              "type": "object",
+              "required": [
+                "openrouter",
+                "orcarouter"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "openrouter": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "enabled",
+                    "model",
+                    "max_output_tokens",
+                    "input_rate",
+                    "output_rate",
+                    "max_cost",
+                    "credential_configured"
+                  ],
+                  "properties": {
+                    "enabled": {},
+                    "model": {},
+                    "max_output_tokens": {},
+                    "input_rate": {},
+                    "output_rate": {},
+                    "max_cost": {},
+                    "credential_configured": {}
+                  }
+                },
+                "orcarouter": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "enabled",
+                    "model",
+                    "max_output_tokens",
+                    "input_rate",
+                    "output_rate",
+                    "max_cost",
+                    "credential_configured"
+                  ],
+                  "properties": {
+                    "enabled": {},
+                    "model": {},
+                    "max_output_tokens": {},
+                    "input_rate": {},
+                    "output_rate": {},
+                    "max_cost": {},
+                    "credential_configured": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "library_order": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "folder",
+              "feeds"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "folder": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "feeds": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "watchlists": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "workspace_id",
+              "name",
+              "kind",
+              "enabled",
+              "query",
+              "exclusion",
+              "priority",
+              "reason"
+            ],
+            "properties": {
+              "id": {},
+              "workspace_id": {},
+              "name": {},
+              "kind": {},
+              "enabled": {},
+              "query": {},
+              "exclusion": {},
+              "priority": {},
+              "reason": {}
+            }
+          }
+        },
+        "presentation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "appearance"
+          ],
+          "properties": {
+            "appearance": {
+              "enum": [
+                "system",
+                "light",
+                "dark"
+              ]
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 200,
+              "maximum": 480
+            },
+            "layout": {
+              "enum": [
+                "standard",
+                "line",
+                "tiles"
+              ]
+            },
+            "disclosure": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "references": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspaces",
+        "entities"
+      ],
+      "properties": {
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title"
+            ],
+            "properties": {
+              "id": {},
+              "title": {}
+            }
+          }
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "canonical"
+            ],
+            "properties": {
+              "id": {},
+              "kind": {},
+              "canonical": {}
+            }
+          }
+        }
+      }
+    },
+    "omissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "reason"
+        ],
+        "properties": {
+          "field": {},
+          "reason": {}
+        }
+      }
+    }
+  }
+}
