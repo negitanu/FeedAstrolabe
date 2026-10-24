@@ -89,7 +89,7 @@ def export_settings(browser):
             'entities':[dict(row) for row in db.execute('SELECT id,kind,canonical FROM entities WHERE merged_into IS NULL')],
         }
         data['presentation']=presentation(browser)
-        result={'format':'feedastrolabe-settings','format_version':1,'app_version':'0.16.0',
+        result={'format':'feedastrolabe-settings','format_version':1,'app_version':'0.16.1',
                 'db_schema_version':SCHEMA_VERSION,'exported_at':datetime.now(timezone.utc).isoformat(),
                 'settings':scrub(data,'settings'),'references':scrub(references,'references'),'omissions':omissions}
         db.rollback()  # Read-only snapshot; do not retain a lock after download.

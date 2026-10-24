@@ -32,3 +32,10 @@ The selected-article action select SHALL share the border radius, theme colors a
 #### Scenario: Selected action in each theme
 - **WHEN** the reader is shown on mobile or desktop in light, dark or system appearance
 - **THEN** the selected action uses the same rounded corners, theme colors and keyboard focus as reader selects
+
+### Requirement: Shared brand favicon
+A single eight-ray brand SVG SHALL be used in the header and as the application favicon across pages.
+
+#### Scenario: Load a branded page
+- **WHEN** a user opens a reader, collection or settings page
+- **THEN** its favicon resolves to the same mark as the header

@@ -1,6 +1,6 @@
 <a class="skip-navigation" href="#page-content">本文へ移動</a>
 <header class="app-navigation">
-<a class="app-wordmark" href="{{ url_for('index') }}" aria-label="FeedAstrolabe ホーム">✳ <span>FeedAstrolabe</span></a>
+<a class="app-wordmark" href="{{ url_for('index') }}" aria-label="FeedAstrolabe ホーム"><span class="app-brand-mark" aria-hidden="true"></span> <span>FeedAstrolabe</span></a>
 <nav aria-label="アプリ全体">{% for item in app_navigation %}<a href="{{ item.href }}" {% if item.key == active_area %}aria-current="{{ 'page' if request.path == item.href else 'location' }}"{% endif %}>{{ item.title }}</a>{% endfor %}</nav>
 </header>
 <div id="page-content" tabindex="-1"></div>

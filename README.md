@@ -133,3 +133,5 @@ openspec validate --all --strict --no-interactive
 過去の計画や検証記録には、後続変更で置き換えられた仕様も含みます。[調査ワークスペース計画](docs/research-workspace-plan.md)、[基盤・連続読み込みの検証](docs/verification-reader-platform-provider-refresh.md)、[詳細表示順の検証](docs/verification-article-detail-content-order.md)、[詳細パネル範囲の検証](docs/verification-constrain-detail-to-reader.md)を参照してください。
 
 5機能の操作・検索条件・制限は[読む・集めるの拡張](docs/reader-productivity.md)、検証結果は[検証記録](docs/verification-reader-discovery-history-controls.md)を参照してください。
+
+詳細の外側クリック・開閉の動き・faviconの更新は[検証記録](docs/verification-reader-panel-polish.md)を参照してください。

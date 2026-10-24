@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.16.0",
+    "version": "0.16.1",
     "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order. Integer path IDs must be 1 through 9223372036854775807, with at most 19 ASCII digits; out-of-range numeric IDs return 400, paths with longer IDs return 404."
   },
   "servers": [
