@@ -167,10 +167,10 @@ def create_app(test_config=None):
         if folder_name is not None:
             clauses.append('EXISTS(SELECT 1 FROM feeds f WHERE f.id=a.feed_id AND f.folder=?)')
             params.append(folder_name)
-        if query:
-            clauses.append("(a.title LIKE ? ESCAPE '!' OR a.search_text LIKE ? ESCAPE '!')")
-            escaped = query.replace('!', '!!').replace('%', '!%').replace('_', '!_')
-            params.extend(['%' + escaped + '%'] * 2)
+        from .reader_search import conditions
+        extra_clauses, extra_params, search = conditions(source, query)
+        clauses.extend(extra_clauses)
+        params.extend(extra_params)
         from .research import find, ResearchMissing, WORKSPACE_ARTICLES
         scopes = {}
         for name, kind in [('workspace','workspace'),('tag','tag')]:
@@ -188,7 +188,7 @@ def create_app(test_config=None):
         if scopes['tag']:
             clauses.append('EXISTS(SELECT 1 FROM article_tags t WHERE t.article_id=a.id AND t.tag_id=?)')
             params.append(scopes['tag'])
-        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, folder=folder_name, q=query, sort=sort, **scopes)
+        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, folder=folder_name, q=query, sort=sort, **scopes, **search)
 
     def return_to():
         target = request.form.get('next', '/')

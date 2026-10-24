@@ -80,3 +80,66 @@ def test_sort_keysets_neighbours_history_and_scope(app,client):
     assert ids(client.get('/?view=history'))==[30,1,74]
     assert client.get('/?sort=arbitrary').status_code==400
     assert client.get('/?sort=recent').status_code==400
+
+
+def test_detailed_search_preserves_scope_and_bulk(app,client):
+    subscribe(client)
+    subscribe(client,'https://example.com/other')
+    with app.app_context(),get_db() as db:
+        db.execute("UPDATE articles SET source_published_at='2026-10-07 15:30:00',published_at='2026-10-07 15:30:00',title='Alpha',search_text='needle red' WHERE id=1")
+        db.execute("UPDATE articles SET source_published_at='2026-10-07 14:59:59',title='needle red',search_text='Alpha' WHERE id=2")
+        db.execute("UPDATE articles SET source_published_at='2026-10-07 16:00:00',search_text='needle red blocked' WHERE id=3")
+        db.execute("UPDATE articles SET source_published_at=NULL,search_text='needle red' WHERE id=4")
+        db.execute("UPDATE settings SET display_timezone='Asia/Tokyo'")
+    values={'q':'needle','search_in':'body','any_terms':'blue\nred','exclude':'blocked','date_from':'2026-10-08','date_to':'2026-10-08','sources':[1,2],'sort':'oldest'}
+    result=client.get('/?'+urlencode(values,doseq=True))
+    assert result.status_code==200 and ids(result)==[1]
+    detail=client.get('/?'+urlencode({**values,'article':1},doseq=True))
+    tree=markup(detail.data)
+    read_form=tree.find('.//form[@action="/articles/1/read"]')
+    assert [x.get('value') for x in read_form.findall('input[@name="sources"]')]==['1','2']
+    assert read_form.find('input[@name="search_in"]').get('value')=='body'
+    post(client,'/articles/read-all',values)
+    with app.app_context():assert [r[0] for r in get_db().execute('SELECT id FROM articles WHERE is_read=1')]==[1]
+    values['q']='red';values['search_in']='title';values.pop('date_from');values.pop('date_to');values['exclude']=''
+    assert ids(client.get('/?'+urlencode(values,doseq=True)))==[2]
+
+
+@pytest.mark.parametrize('query',[{'date_from':'2026-02-30'},{'date_from':'2026-10-09','date_to':'2026-10-08'},
+    {'search_in':'sql'},{'sources':['1','1']},{'sources':['0']},{'sources':['999999999999999999999']},
+    {'any_terms':'\n'.join(str(n) for n in range(11))},{'exclude':'x'*201}])
+def test_invalid_detailed_filters_do_not_mutate(app,client,query):
+    subscribe(client)
+    assert client.get('/?'+urlencode(query,doseq=True)).status_code==400
+    assert post(client,'/articles/read-all',query).status_code==400
+    with app.app_context():assert get_db().execute('SELECT sum(is_read) FROM articles').fetchone()[0]==0
+
+
+def test_search_unknown_source_and_literal_matching(app,client):
+    subscribe(client)
+    assert client.get('/?sources=999').status_code==404
+    assert ids(client.get('/?q=100%25'))==[1]
+    assert ids(client.get('/?any_terms=100_'))==[]
+    assert ids(client.get('/?exclude=100%25'))==[2]
+    assert client.get('/?search_in=title&search_in=body').status_code==400
+
+
+@pytest.fixture
+def productivity_data(app):
+    with app.app_context(),get_db() as db:
+        for n in (1,2):
+            db.execute('INSERT INTO feeds(id,url,title,folder,created_at) VALUES(?,?,?,?,?)',(n,f'https://example.com/{n}',f'情報源 {n}','ニュース','2026-10-25'))
+        for n in range(1,91):
+            stamp=f'2026-10-{1+n%20:02d} 12:00:00'
+            db.execute('INSERT INTO articles(id,feed_id,guid,title,content,search_text,published_at,source_published_at) VALUES(?,?,?,?,?,?,?,?)',
+                       (n,1+n%2,str(n),f'記事 {n}','<p>body match 内容</p>','body match 内容',stamp,stamp))
+
+
+def test_date_cursor_rejects_timezone_change(app,client,productivity_data):
+    with app.app_context(),get_db() as db:
+        db.execute("UPDATE articles SET source_published_at='2026-10-08 12:00:00'")
+    result=client.get('/?date_from=2026-10-08&date_to=2026-10-08')
+    more=markup(result.data).find('.//*[@data-article-loader]').get('data-more-url')
+    assert client.get(more).status_code==200
+    with app.app_context(),get_db() as db:db.execute("UPDATE settings SET display_timezone='Asia/Tokyo'")
+    assert client.get(more).status_code==400

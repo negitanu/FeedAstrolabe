@@ -158,7 +158,16 @@
 .workspace .article-detail .detail-features .research-article-links {margin:0 0 20px;}
 .workspace .article-detail .reading-next {border-top:0;padding-top:0;}
 
+.reader-search {flex-wrap:wrap;min-width:0;}
+.reader-advanced {flex-basis:100%;min-width:0;}
+.advanced-fields {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;padding:12px 0;}
+.advanced-fields label {display:flex;flex-direction:column;gap:6px;min-width:0;}
+.advanced-fields textarea,.advanced-fields select,.advanced-fields input {width:100%;min-width:0;box-sizing:border-box;}
+.advanced-fields .hint {grid-column:1 / -1;}
+
 .reader-controls .reader-search {grid-template-columns:minmax(90px,.8fr) minmax(90px,.7fr) minmax(130px,1.5fr) minmax(90px,.7fr) auto;}
+.reader-advanced {grid-column:1 / -1;}
+.reader-search .advanced-fields select[multiple] {height:auto;min-height:110px;}
 @media(max-width:1200px){.reader-controls{grid-template-columns:minmax(0,1fr);}.reader-control-actions{justify-content:flex-start;flex-wrap:wrap;}}
 @media(max-width:700px) {
   .reader-controls .reader-search {grid-template-columns:repeat(12,minmax(0,1fr));}

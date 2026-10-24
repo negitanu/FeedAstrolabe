@@ -159,7 +159,7 @@ def test_themed_controls_keep_query_and_bulk_read_scope(browser, presentation_re
     with browser.new_context(viewport={'width':1440,'height':900}) as context:
         page = context.new_page()
         page.goto(presentation_reader+'/?feed=1&view=unread')
-        fields = page.locator('.reader-search select,.reader-search input:not([type="hidden"]),.reader-search button')
+        fields = page.locator('.reader-search > select,.reader-search > input:not([type="hidden"]),.reader-search > button')
         metrics = fields.evaluate_all('(fields) => fields.map(field => ({top:field.getBoundingClientRect().top,height:field.getBoundingClientRect().height,border:getComputedStyle(field).borderColor,radius:getComputedStyle(field).borderRadius}))')
         assert len(metrics) == 5
         assert len({item['top'] for item in metrics}) == 1
@@ -169,7 +169,7 @@ def test_themed_controls_keep_query_and_bulk_read_scope(browser, presentation_re
         page.get_by_label('記事タグ',exact=True).select_option(str(tid))
         page.get_by_label('記事を検索',exact=True).fill('情報')
         page.get_by_role('button',name='検索',exact=True).click()
-        assert parse_qs(urlsplit(page.url).query) == {'view':['unread'],'feed':['1'],'workspace':[str(wid)],'tag':[str(tid)],'q':['情報'],'sort':['newest']}
+        assert parse_qs(urlsplit(page.url).query) == {'view':['unread'],'feed':['1'],'workspace':[str(wid)],'tag':[str(tid)],'q':['情報'],'sort':['newest'],'search_in':['both']}
         expect(page.locator('.article-card')).to_have_count(30)
         page.get_by_role('button',name='全て既読',exact=True).click()
         expect(page.locator('.article-card')).to_have_count(0)
@@ -214,7 +214,7 @@ def test_compact_controls_do_not_overflow(browser, presentation_reader, width):
             title=page.locator('.article-title').first.bounding_box()
             assert source['width']<=140 and title['width']>source['width']
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-        for field in page.locator('.reader-search select,.reader-search input:not([type="hidden"]),.reader-search button').all():
+        for field in page.locator('.reader-search > select,.reader-search > input:not([type="hidden"]),.reader-search > button').all():
             assert field.is_visible()
             bounds = field.bounding_box()
             assert bounds['x'] >= 0 and bounds['x']+bounds['width'] <= width

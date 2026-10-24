@@ -25,3 +25,14 @@ The reader SHALL offer 新しい順 and 古い順 for publication date, and 最�
 #### Scenario: Cursor scope mismatch
 - **WHEN** a continuation is reused with a different order or detailed condition
 - **THEN** the request is rejected without broadening results
+
+### Requirement: Detailed literal search form
+The normal reader SHALL expose title/body/both, additional any-of phrases, exclusion phrases, a publication calendar-date range and multiple information sources in a keyboard/touch-operable form. Existing q semantics SHALL remain a single literal phrase. Groups SHALL combine with AND, any-of phrases with OR and exclusions with NOT. Dates SHALL use the library display timezone and exclude unknown original publication times. All request values SHALL be bounded and duplicate/conflicting or invalid parameters rejected. Details, mutations and no-script access SHALL preserve the complete condition.
+
+#### Scenario: Combine conditions
+- **WHEN** a user searches body text with any-of phrases, excludes a phrase and selects a date range and two sources
+- **THEN** only articles satisfying the complete condition appear, including every continuation batch and bulk read
+
+#### Scenario: Invalid conditions
+- **WHEN** a date is invalid or reversed, source is missing, scope is unknown or parameters conflict
+- **THEN** no mutation occurs and an explanatory error is shown

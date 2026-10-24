@@ -1,0 +1,1 @@
+{% macro fields(exclude=[]) %}{% for name,value in selected.items() if name not in exclude and value is not none %}{% if value is sequence and value is not string %}{% for entry in value %}<input type="hidden" name="{{ name }}" value="{{ entry }}">{% endfor %}{% else %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endif %}{% endfor %}{% endmacro %}
