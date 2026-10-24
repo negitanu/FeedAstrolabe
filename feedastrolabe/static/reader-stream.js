@@ -111,19 +111,48 @@
     const id=new URL(url,location.href).searchParams.get('article');
     for(const card of list.querySelectorAll('.article-card'))card.classList.toggle('selected',card.dataset.articleId===id);
   }
-  function apply(doc,url,scroll=true) {
+  function animatePanel(panel,opening) {
+    panel.getAnimations().forEach(animation=>animation.cancel());
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches || !panel.animate)return Promise.resolve();
+    const hidden={opacity:0,transform:'translateX(8px)'};
+    const visible={opacity:1,transform:'translateX(0)'};
+    return panel.animate(opening?[hidden,visible]:[visible,hidden],
+      {duration:180,easing:'cubic-bezier(.2,.8,.2,1)'}).finished.catch(()=>{});
+  }
+  function removePanel(panel) {
+    panel.getAnimations().forEach(animation=>animation.cancel());panel.remove();
+  }
+  function closeDetail() {
+    const panel=layout.querySelector('.article-detail:not([inert])');
+    if(!panel)return;
+    detailVersion++;
+    const url=new URL(location.href);url.searchParams.delete('article');
+    if(url.hash==='#article-detail')url.hash='';
+    remember();history.pushState({reader:true,x:scrollX,y:scrollY},'',url.href);
+    if(panel.contains(document.activeElement))list.querySelector('.article-card.selected .article-title')?.focus({preventScroll:true});
+    panel.inert=true;layout.classList.remove('has-detail');selected(url.href);
+    void animatePanel(panel,false).then(()=>panel.remove());
+  }
+  const initialPanel=layout.querySelector('.article-detail');
+  if(initialPanel)void animatePanel(initialPanel,true);
+  function apply(doc,url,scroll=true,keepDetail=false) {
     const fragment=doc.querySelector('[data-reader-fragment]');
     if(!fragment)throw new Error('本文を読み込めませんでした。');
     const detail=fragment.querySelector('.article-detail');
-    layout.querySelector('.article-detail')?.remove();
-    if(detail)layout.append(detail);
-    fitDetail();
-    layout.classList.toggle('has-detail',!!detail);selected(url);
+    if(!keepDetail) {
+      const previous=layout.querySelector('.article-detail');
+      if(!detail && previous && !previous.inert) {
+        previous.inert=true;void animatePanel(previous,false).then(()=>previous.remove());
+      }else if(previous)removePanel(previous);
+      if(detail){layout.append(detail);void animatePanel(detail,true);}
+      fitDetail();layout.classList.toggle('has-detail',!!detail);
+    }
+    selected(url);
     const counts=JSON.parse(fragment.dataset.counts);
     const badges=document.querySelectorAll('.sidebar nav[aria-label="記事の表示条件"] .count');
     ['total','unread','starred','history'].forEach((name,index)=>{if(badges[index])badges[index].textContent=counts[name];});
     document.querySelector('.view-heading .muted').textContent=`${fragment.dataset.total} 件の記事`;
-    if(scroll) {
+    if(scroll && !keepDetail) {
       if(detail) {detail.focus({preventScroll:true});}
       else window.scrollTo(listScroll.x,listScroll.y);
     }
@@ -147,6 +176,11 @@
     event.preventDefault();if(link.matches('.article-title'))listScroll={x:scrollX,y:scrollY};
     void detail(url.href);
   });
+  document.addEventListener('click',event=>{
+    if(event.button!==0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
+    if(event.target.closest('.article-detail,a.article-title'))return;
+    closeDetail();
+  });
   document.addEventListener('library-membership-changed',async()=>{
     generation++;const url=new URL(location.href);url.searchParams.delete('article');
     try{
@@ -167,7 +201,7 @@
     const action=new URL(form.getAttribute('action'),location.href);
     if(!/^\/articles\/(?:\d+\/(?:read|star|read-next|open)|read-all|bulk-state)$/.test(action.pathname))return;
     event.preventDefault();if(writing)return;
-    writing=true;generation++;detailVersion++;
+    writing=true;generation++;const savingVersion=++detailVersion;
     for(const button of document.querySelectorAll('.article-card button,.article-detail button,.bulk-read-button,.reader-selection button')){
       if(!button.disabled){button.disabled=true;button.dataset.readerSaving='';}
     }
@@ -182,8 +216,10 @@
       const response=await fetch(action.href,{method:'POST',body:values,headers,signal:AbortSignal.timeout(20000)});
       const doc=parse(await response.text());
       if(!response.ok || doc.querySelector('[data-flash=error]'))throw new Error();
-      remember();history.pushState({reader:true,x:scrollX,y:scrollY},'',response.url);
-      const fragment=apply(doc,response.url,(action.pathname.endsWith('/read-next') || action.pathname.endsWith('/open')));
+      const keepDetail=savingVersion!==detailVersion;
+      const resultUrl=new URL(keepDetail?location.href:response.url);
+      remember();history.pushState({reader:true,x:scrollX,y:scrollY},'',resultUrl.href);
+      const fragment=apply(doc,resultUrl.href,(action.pathname.endsWith('/read-next') || action.pathname.endsWith('/open')),keepDetail);
       if(match || bulk) {
         for(const id of (bulk?changed:[match[1]])) {
           const old=list.querySelector(`[data-article-id="${id}"]`);
@@ -204,7 +240,7 @@
           const empty=document.createElement('div');empty.className='empty-state';const h=document.createElement('h2');h.textContent='記事がありません';empty.append(h);list.append(empty);
         }
       }
-      selected(response.url);announce('保存しました。');
+      selected(resultUrl.href);announce('保存しました。');
     } catch { announce('保存を確認できませんでした。接続を確認して一覧を再読み込みしてください。',true); }
     finally {writing=false;document.querySelectorAll('[data-reader-saving]').forEach(button=>{button.disabled=false;delete button.dataset.readerSaving;});if(loader)observe();document.dispatchEvent(new Event('reader-reconciled'));}
   });
@@ -229,7 +265,11 @@
     }else if(key==='o' || key==='enter'){
       event.preventDefault();cards[index].querySelector('.article-title')?.click();
     }else if(key==='m' || key==='s'){
-      event.preventDefault();cards[index].querySelector(key==='m'?'form[action$="/read"] button':'form[action$="/star"] button')?.click();
+      event.preventDefault();
+      const control=key==='m'?'form[action$="/read"] button':'form[action$="/star"] button';
+      const panel=layout.querySelector('.article-detail:not([inert])');
+      const current=panel?.querySelector('[data-visit-id]')?.dataset.visitId===cards[index].dataset.articleId;
+      (current?panel:cards[index]).querySelector(control)?.click();
     }else if(key==='/'){
       event.preventDefault();document.querySelector('#search')?.focus();
     }
