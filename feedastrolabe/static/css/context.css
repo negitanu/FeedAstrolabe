@@ -1,0 +1,31 @@
+.context-menu { position:fixed;inset:auto;z-index:50;min-width:190px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);box-shadow:0 6px 24px #0003; }
+.context-menu button { display:block;text-align:left;width:100%;border:0;background:transparent;color:var(--ink);border-radius:4px;padding:10px 14px; }
+.context-menu button:hover,.context-menu button:focus { background:var(--light);color:var(--accent); }
+.context-trigger { flex:none;width:28px;min-height:34px;padding:0;border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1; }
+.context-trigger:hover { color:var(--accent);background:var(--light); }
+.feed-row { display:flex;align-items:center;min-width:0; }
+.feed-row>.feed-item { flex:1;min-width:0; }
+.context-object { display:inline-flex;align-items:center;max-width:100%;gap:4px; }
+.context-object>a { min-width:0;overflow-wrap:anywhere; }
+.object-dialog { width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);overscroll-behavior:contain; }
+.object-dialog::backdrop { background:#0008; }
+.object-dialog>header { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:1; }
+.object-dialog>header h2 { margin:0;font-size:18px;overflow-wrap:anywhere; }
+.object-dialog>header button { flex:none;font-size:24px;min-width:40px; }
+.object-dialog [data-editor-body] { padding:20px; }
+.object-dialog [data-editor-feedback]:not(:empty) { padding:12px 20px;margin:0; }
+.object-dialog .settings-card { margin:0 0 18px;padding:16px; }
+.object-dialog .feed-schedule { display:block; }
+.object-dialog .feed-schedule>div { display:none; }
+.object-dialog form { max-width:100%; }
+.object-dialog .inline-form { display:block; }
+.object-dialog .inline-form input { width:100%; }
+.object-dialog .subscription-editor { border:0;padding:0; }
+.object-dialog [aria-busy=true] { opacity:.6;pointer-events:none; }
+@media(max-width:700px) { .context-trigger { min-width:32px;min-height:44px; } .object-dialog { width:calc(100vw - 16px);max-height:calc(100dvh - 16px); } .object-dialog [data-editor-body] { padding:12px; } }
+.object-list>li>.context-object,.navigation-group li>.context-object { display:flex;width:100%; }
+.context-object>.destination-card { flex:1; }
+.object-dialog label { display:block;margin:14px 0 6px; }
+.object-dialog label.check,.object-dialog label.checkbox-field { display:flex;align-items:center;gap:8px; }
+.object-dialog textarea,.object-dialog select { width:100%;font:inherit;border:1px solid var(--control-line);border-radius:6px;padding:9px;background:var(--surface);color:var(--ink); }
+.object-dialog form>button { margin-top:8px; }

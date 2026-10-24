@@ -1,5 +1,6 @@
 """Offline restore and consistent online SQLite backup. No credentials printed."""
 import argparse
+from contextlib import closing
 import fcntl
 import os
 import shutil
@@ -69,6 +70,9 @@ def _restore(source, destination):
             finally:
                 dst.close()
             init_database(str(destination))
+            from .social_ai import reset_after_restore
+            with closing(connect(destination)) as restored:
+                reset_after_restore(restored)
     finally:
         src.close()
 

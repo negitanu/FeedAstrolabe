@@ -1,0 +1,7 @@
+{% from 'research_base.html' import workspace_fields with context %}
+{% from 'triage_form.html' import fields with context %}
+{% macro token() %}<input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="settings_origin" value="1">{% endmacro %}
+<div data-editor-content data-editor-title="{{ page_title }}">
+{% include 'messages.html' %}
+{% for part in parts %}{% include 'settings_parts/' ~ part ~ '.html' %}{% endfor %}
+</div>

@@ -1,0 +1,1 @@
+{% for category,message in get_flashed_messages(with_categories=true) %}<div data-flash="{{ category }}" class="notice {{ category }}" role="{{ 'alert' if category=='error' else 'status' }}">{{ message }}</div>{% endfor %}

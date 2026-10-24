@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% from 'research_base.html' import workspace_fields with context %}
+{% from 'triage_form.html' import fields with context %}
+{% macro token() %}<input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="settings_origin" value="1">{% endmacro %}
+{% block body %}
+<main class="configuration-page">
+<nav class="context-navigation" aria-label="現在位置"><a href="{{ url_for('settings.index') }}">設定</a></nav>
+<header class="configuration-heading"><h1>{{ page_title }}</h1></header>
+{% include 'messages.html' %}
+<div class="configuration-layout"><div class="configuration-content">
+{% for part in parts %}{% include 'settings_parts/' ~ part ~ '.html' %}{% endfor %}
+<aside class="next-action"><a class="button" href="{{ work_url }}">{{ work_label }} →</a><a class="text-button" href="{{ url_for('settings.index') }}">設定一覧に戻る</a></aside>
+</div><aside class="configuration-sidebar"><nav aria-label="設定項目">{% for key,label in settings_links %}<a href="{{ url_for('settings_pages.page',section=key) }}" {% if key==section %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav></aside></div>
+</main>{% endblock %}
+
+{% block scripts %}{% if section=='ai' %}<script nonce="{{ context_nonce }}" src="{{ url_for('static',filename='ai-settings.js') }}" defer></script>{% endif %}{% endblock %}

@@ -105,6 +105,9 @@ def test_queue_worker_pause_failure_and_stale_result(app,client,monkeypatch,capl
         monkeypatch.setattr(observation,'capture_page',lambda feed:(calls.append(feed['id']) or 'A'))
         assert observation.observe_pages()==(0,0)
         assert collection.refresh_feeds(feed_id)==(0,0)
+        assert observation.observe_pages()==(0,0) and calls==[]
+        with db:db.execute('UPDATE feeds SET enabled=1 WHERE id=?',(feed_id,))
+        observation.queue_page(feed_id)
         assert observation.observe_pages()==(1,0) and calls==[feed_id]
         with db:db.execute('UPDATE settings SET polling_enabled=0')
         observation.queue_page(feed_id)
@@ -135,7 +138,7 @@ def test_v3_migration_foreign_keys_and_rollback(tmp_path):
         db.execute("INSERT INTO articles(id,feed_id,guid,title,content,search_text,published_at,is_read,is_starred) VALUES(5,1,'x:20','Saved','safe','safe','2026-01-01',1,1)")
     init_database(path);init_database(path)
     with connect(path) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==13
+        assert db.execute('PRAGMA user_version').fetchone()[0]==18
         assert db.execute('PRAGMA foreign_key_check').fetchall()==[]
         assert tuple(db.execute('SELECT id,is_read,is_starred FROM articles').fetchone())==(5,1,1)
         db.execute("INSERT INTO feeds(url,title,created_at,source_type) VALUES('https://example.org#page','Page','2026-01-01','page')")
@@ -305,4 +308,4 @@ def test_restore_preserves_page_state_and_refuses_active_observer(app, tmp_path)
     with connect(destination) as db:
         assert db.execute('SELECT snapshot FROM feeds WHERE id=?', (source,)).fetchone()[0] == 'Baseline'
         assert db.execute('SELECT feed_id FROM page_jobs').fetchone()[0] == source
-        assert db.execute('PRAGMA user_version').fetchone()[0] == 13
+        assert db.execute('PRAGMA user_version').fetchone()[0] == 18

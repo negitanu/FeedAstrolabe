@@ -5,7 +5,7 @@ import secrets
 import time
 
 import click
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, g, redirect, render_template, request, session, url_for
 
 from .operations_api import api as operations_api
 from .operations_ui import ui as operations_ui
@@ -13,10 +13,16 @@ from .db import close_db, get_db, init_database
 from .collection import add_feed, refresh_feeds, sanitize
 from .fetch import normalize_url
 from .preferences import preferences
+from .display_time import display_time
+from .identifiers import DatabaseIDConverter, optional_id, single_value
+from .reader_navigation import article_navigation
+from .navigation import navigation, navigation_context
+from .settings_pages import ui as settings_pages
 from .subscriptions import update_subscription, delete_subscription, SubscriptionMissing
 from .access import configure_access, verify_access
 from .api import api
 from .settings import settings
+from .social_ui import ui as social_ui
 from .research_api import research_api
 from .research_ui import research_ui
 from .evidence_api import api as evidence_api
@@ -41,6 +47,7 @@ def create_app(test_config=None):
     if test_config and test_config.get('DATA_DIR'):
         data_dir = Path(test_config['DATA_DIR']).resolve()
     app = Flask(__name__, instance_path=str(data_dir))
+    app.url_map.converters['int'] = DatabaseIDConverter
     data_dir.mkdir(parents=True, exist_ok=True)
     data_dir.chmod(0o700)
     import fcntl,weakref
@@ -67,6 +74,12 @@ def create_app(test_config=None):
     app.before_request(verify_access)
     app.register_blueprint(api)
     app.register_blueprint(settings)
+    app.register_blueprint(settings_pages)
+    app.register_blueprint(navigation)
+    app.context_processor(navigation_context)
+    from .presentation import presentation_context, script_nonce
+    app.context_processor(presentation_context)
+    app.register_blueprint(social_ui)
     app.register_blueprint(research_api)
     app.register_blueprint(research_ui)
     app.register_blueprint(evidence_api)
@@ -86,6 +99,7 @@ def create_app(test_config=None):
     app.register_blueprint(operations_api)
     app.register_blueprint(operations_ui)
     app.teardown_appcontext(close_db)
+    app.add_template_filter(display_time, 'display_time')
 
     @app.before_request
     def csrf_protect():
@@ -98,7 +112,8 @@ def create_app(test_config=None):
 
     @app.after_request
     def security_headers(response):
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        script_policy = "'nonce-" + g.sidebar_nonce + "'" if hasattr(g, 'sidebar_nonce') else "'none'"
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src " + script_policy + "; style-src 'self'; img-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['Cache-Control'] = 'no-store'
@@ -106,13 +121,22 @@ def create_app(test_config=None):
 
     def filters():
         source = request.values
-        view = source.get('view', preferences()['default_view'])
+        view = single_value(source, 'view', preferences()['default_view'])
         if view not in ('all', 'unread', 'starred'):
-            view = 'all'
-        feed_id = source.get('feed', type=int)
-        if feed_id is not None and feed_id < 1:
-            feed_id = None
-        query = source.get('q', '').strip()[:200]
+            abort(400, description='表示条件が不正です。')
+        feed_id = optional_id(source, 'feed')
+        from .folders import validate_name
+        folder_name = None
+        if 'folder' in source or request.endpoint == 'folder_detail':
+            try:
+                folder_name = validate_name(single_value(source, 'folder'))
+            except ValueError as exc:
+                abort(400, description=str(exc))
+            if get_db().execute('SELECT 1 FROM feeds WHERE folder=?', (folder_name,)).fetchone() is None:
+                abort(404, description='フォルダーが見つかりません。')
+        query = single_value(source, 'q', '').strip()
+        if len(query) > 200:
+            abort(400, description='検索語は 200 文字以下で指定してください。')
         clauses, params = [], []
         if view == 'unread':
             clauses.append('a.is_read=0')
@@ -121,6 +145,9 @@ def create_app(test_config=None):
         if feed_id:
             clauses.append('a.feed_id=?')
             params.append(feed_id)
+        if folder_name is not None:
+            clauses.append('EXISTS(SELECT 1 FROM feeds f WHERE f.id=a.feed_id AND f.folder=?)')
+            params.append(folder_name)
         if query:
             clauses.append("(a.title LIKE ? ESCAPE '!' OR a.search_text LIKE ? ESCAPE '!')")
             escaped = query.replace('!', '!!').replace('%', '!%').replace('_', '!_')
@@ -128,13 +155,9 @@ def create_app(test_config=None):
         from .research import find, ResearchMissing, WORKSPACE_ARTICLES
         scopes = {}
         for name, kind in [('workspace','workspace'),('tag','tag')]:
-            value = source.get(name, '')
-            scopes[name] = None
-            if value:
+            scopes[name] = optional_id(source, name)
+            if scopes[name] is not None:
                 try:
-                    if not value.isdecimal() or len(value)>19:
-                        raise ValueError('ID は正の整数で指定してください。')
-                    scopes[name] = int(value)
                     find(kind, scopes[name])
                 except ResearchMissing as exc:
                     abort(404,description=str(exc))
@@ -146,7 +169,7 @@ def create_app(test_config=None):
         if scopes['tag']:
             clauses.append('EXISTS(SELECT 1 FROM article_tags t WHERE t.article_id=a.id AND t.tag_id=?)')
             params.append(scopes['tag'])
-        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, q=query, **scopes)
+        return (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params, dict(view=view, feed=feed_id, folder=folder_name, q=query, **scopes)
 
     def return_to():
         target = request.form.get('next', '/')
@@ -155,27 +178,68 @@ def create_app(test_config=None):
             target = '/'
         return redirect(target)
 
+    @app.get('/articles/more', endpoint='article_more')
+    @app.get('/folders', endpoint='folder_detail')
     @app.get('/')
     def index():
         from .research import tag_rows, options
+        from .folders import feed_rows, feed_groups
         db = get_db()
         where, params, selected = filters()
+        article_id = optional_id(request.args, 'article')
         total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
-        page_size = preferences()['page_size']
-        pages = max(1, (total + page_size - 1) // page_size)
-        page = min(pages, max(1, request.args.get('page', 1, type=int)))
-        articles = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id' + where + ' ORDER BY a.published_at DESC,a.id DESC LIMIT ? OFFSET ?', params + [page_size, (page - 1) * page_size]).fetchall()
-        feeds = db.execute('SELECT f.*,sum(CASE WHEN a.is_read=0 THEN 1 ELSE 0 END) AS unread FROM feeds f LEFT JOIN articles a ON a.feed_id=f.id GROUP BY f.id ORDER BY f.folder,f.title').fetchall()
-        counts = db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles').fetchone()
-        article_id = request.args.get('article', type=int)
         article = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone() if article_id else None
-        if article_id and article is None:
+        if article_id and (article is None or (selected['folder'] is not None and
+                db.execute('SELECT folder FROM feeds WHERE id=?', (article['feed_id'],)).fetchone()[0] != selected['folder'])):
             abort(404)
+        navigation = article_navigation(where, params, article_id) if article else None
+        from .reader_stream import batch
+        cursor = single_value(request.args, 'cursor') if 'cursor' in request.args else None
+        if request.endpoint == 'article_more' and cursor is None:
+            abort(400)
+        all_results = single_value(request.args, 'all', '0')
+        if all_results not in ('0','1'):
+            abort(400)
+        articles, continuation = batch(where,params,selected,cursor,all_results=='1' and request.endpoint!='article_more')
+
+        def reader_url(**changes):
+            values = {**selected, **changes}
+            endpoint = 'folder_detail' if values.get('folder') is not None else 'index'
+            return url_for(endpoint, **values)
+
+        more_url = url_for('article_more', **selected, cursor=continuation) if continuation else None
+        next_path = reader_url(article=article_id) if article_id else reader_url()
+        if request.endpoint == 'article_more':
+            return {'html':render_template('article_cards.html', articles=articles, article=None,
+                    reader_url=reader_url, next_path=next_path), 'next':more_url}
+        feeds = feed_rows()
+        folder_groups = feed_groups(feeds)
+        selected_folder = next((group for group in folder_groups if group['name'] == selected['folder']), None)
+        count_where = ' WHERE feed_id IN (SELECT id FROM feeds WHERE folder=?)' if selected['folder'] is not None else ''
+        count_params = (selected['folder'],) if selected['folder'] is not None else ()
+        counts = db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles' + count_where, count_params).fetchone()
         selected_feed = next((f for f in feeds if f['id'] == selected['feed']), None)
         title = selected_feed['title'] if selected_feed else {'all': 'すべての記事', 'unread': '未読の記事', 'starred': 'スター付き'}[selected['view']]
-        return render_template('index.html', articles=articles, feeds=feeds, counts=counts, article=article,
-                               selected=selected, selected_feed=selected_feed, title=title, total=total, page=page, pages=pages,
-                               safe_content=sanitize(article['content']) if article else '', next_path=request.full_path.rstrip('?'),
+        if selected_folder is not None:
+            title = (selected['folder'] or '未分類') + ' の記事'
+
+        script_nonce()
+        if request.headers.get('X-Reader-Detail') == '1' and request.headers.get('X-Reader-Reconcile'):
+            try:
+                reconcile = int(request.headers['X-Reader-Reconcile'])
+                if reconcile < 1 or reconcile > 2**63-1:
+                    raise ValueError()
+            except ValueError:
+                abort(400)
+            articles = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id' + where +
+                       (' AND ' if where else ' WHERE ') + 'a.id=?', [*params,reconcile]).fetchall()
+        template = 'reader_detail_fragment.html' if request.headers.get('X-Reader-Detail') == '1' else 'index.html'
+        return render_template(template, articles=articles, feeds=feeds, counts=counts, article=article,
+                               folder_groups=folder_groups, selected_folder=selected_folder, reader_url=reader_url,
+                               article_navigation=navigation,
+                               sidebar_nonce=g.sidebar_nonce,
+                               selected=selected, selected_feed=selected_feed, title=title, total=total, more_url=more_url,
+                               safe_content=sanitize(article['content']) if article else '', next_path=next_path,
                                research_workspaces=options('workspace',selected['workspace']),
                                research_tags=options('tag',selected['tag']),
                                article_tags=tag_rows('article',article_id) if article else [])
@@ -184,12 +248,16 @@ def create_app(test_config=None):
     def subscribe():
         try:
             url = normalize_url(request.form.get('url', '').strip())
-            add_feed(url, request.form.get('folder', '').strip()[:80])
+            feed_id = add_feed(url, request.form.get('folder', '').strip()[:80])
             flash('フィードを登録しました。', 'success')
         except Exception as exc:
             app.logger.warning('Subscription failed: %s', exc)
             flash(str(exc)[:500], 'error')
-        return redirect(url_for('index'))
+            if request.form.get('source_origin') == 'rss':
+                from .settings_pages import render_source
+                return render_source('rss',request.form.to_dict(),400)
+            return redirect(url_for('index'))
+        return redirect(url_for('index',feed=feed_id) if request.form.get('source_origin') == 'rss' else url_for('index'))
 
     @app.post('/feeds/<int:feed_id>/folder')
     def folder(feed_id):
@@ -215,8 +283,11 @@ def create_app(test_config=None):
 
     @app.post('/refresh')
     def refresh():
+        feed_id = optional_id(request.form, 'feed')
+        if feed_id is not None and get_db().execute('SELECT 1 FROM feeds WHERE id=?', (feed_id,)).fetchone() is None:
+            abort(404, description='購読が見つかりません。')
         try:
-            succeeded, failed = refresh_feeds(request.form.get('feed', type=int))
+            succeeded, failed = refresh_feeds(feed_id)
             flash(f'更新完了：{succeeded} 件成功、{failed} 件失敗。ページ観測は専用ワーカーに予約しました。', 'error' if failed else 'success')
         except ValueError as exc:
             flash(str(exc), 'error')
@@ -242,6 +313,28 @@ def create_app(test_config=None):
             db.execute('UPDATE articles SET is_read=1 WHERE id IN (SELECT a.id FROM articles a' + where + ')', params)
         flash('表示条件に一致する記事を既読にしました。', 'success')
         return return_to()
+
+    @app.post('/articles/<int:article_id>/read-next')
+    def read_next(article_id):
+        where, params, selected = filters()
+        db = get_db()
+        with db:
+            # Keep successor selection and the state change in one snapshot.
+            db.execute('BEGIN IMMEDIATE')
+            if db.execute('SELECT 1 FROM articles WHERE id=?', (article_id,)).fetchone() is None:
+                abort(404)
+            navigation = article_navigation(where, params, article_id)
+            if navigation is None:
+                abort(409, description='この記事は現在の表示条件に含まれていません。一覧を開き直してください。')
+            successor = navigation['next']
+            db.execute('UPDATE articles SET is_read=1 WHERE id=?', (article_id,))
+            if successor:
+                target = url_for('folder_detail' if selected['folder'] is not None else 'index', **selected, article=successor['id'], _anchor='article-detail')
+            else:
+                target = url_for('folder_detail' if selected['folder'] is not None else 'index', **selected)
+        if not successor:
+            flash('この記事を既読にしました。表示条件に一致する次の記事はありません。', 'success')
+        return redirect(target, code=303)
 
     @app.get('/healthz')
     def health():
@@ -322,6 +415,8 @@ def create_app(test_config=None):
                 schedule();network_schedule();ai_schedule();connector_process();schedule();network_schedule();ai_schedule()
                 from .assistant import process as assistant_process
                 assistant_process()
+                from . import social_ai
+                social_ai.schedule();social_ai.process()
                 delivery.process();operations.schedule();operations.process()
                 from .triage import process
                 process()

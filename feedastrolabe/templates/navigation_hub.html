@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block body %}
+<main class="navigation-page" data-hub-area="{{ area }}" aria-label="{{ title }}">
+
+
+<div class="navigation-groups">{% for heading, items in groups %}<section class="navigation-group" id="group-{{ loop.index }}"><h2>{{ heading }}</h2><ul>{% for item in items %}<li><a class="destination-card" href="{{ item.href }}"><strong>{{ item.title }} <span aria-hidden="true">→</span></strong>{% if area != 'settings' %}<span>{{ item.description }}</span>{% endif %}</a></li>{% endfor %}</ul></section>{% endfor %}</div>
+{% if area == 'settings' %}
+<section id="individual-settings"><h2>登録済み項目の設定</h2><form class="settings-search" method="get" action="{{ url_for('settings.index') }}"><label class="sr-only" for="setting-query">名前で設定を探す</label><input id="setting-query" name="q" value="{{ request.args.get('q','') }}" placeholder="案件・ウォッチの名前"><button>絞り込む</button></form>
+<div class="navigation-groups">{% for heading, items in individual if items %}<section class="navigation-group"><h3>{{ heading }}</h3><ul class="object-list">{% for item in items %}<li><a class="destination-card compact" href="{{ item.href }}"><strong>{{ item.title }} →</strong>{% if area != 'settings' %}<span>{{ item.description }}</span>{% endif %}</a></li>{% else %}<li class="muted">登録はありません。</li>{% endfor %}</ul></section>{% endfor %}</div></section>
+
+{% endif %}
+</main>
+{% endblock %}

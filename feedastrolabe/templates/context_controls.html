@@ -1,0 +1,5 @@
+<div class="context-menu" id="object-menu" role="menu" aria-label="項目の操作" hidden></div>
+<dialog class="object-dialog" id="object-dialog" aria-labelledby="object-dialog-title" data-csrf="{{ session.csrf }}" data-rename-url="{{ url_for('settings_pages.rename_folder') }}">
+<header><h2 id="object-dialog-title"></h2><button type="button" class="text-button" data-editor-close aria-label="閉じる">×</button></header>
+<div data-editor-feedback role="status"></div><div data-editor-body></div>
+</dialog>

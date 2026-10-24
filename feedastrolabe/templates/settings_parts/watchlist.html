@@ -1,0 +1,1 @@
+{% if not workspace.archived %}<section class="settings-card"><h2>条件を更新</h2><form method="post" action="{{ url_for('triage.update',identifier=item.id) }}">{{ token() }}<input name="expected_revision" type="hidden" value="{{ item.revision }}">{{ fields(item) }}<button>新しい版として保存</button></form></section>{% endif %}

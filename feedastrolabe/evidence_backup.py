@@ -76,6 +76,27 @@ def references(db):
             report=db.execute('SELECT * FROM reports WHERE id=?',(row['report_id'],)).fetchone()
             expected=encode({'report_id':report['id'],'format':report['format'],'report_hash':report['payload_hash'],'content':report['payload'],'citation_manifest':json.loads(report['manifest'])})
             if expected!=row['payload'] or e.digest(row['payload'].encode())!=row['payload_hash']:raise ValueError('通知payload hashが不正です。')
+    if db.execute('PRAGMA user_version').fetchone()[0]>=15:
+        if db.execute("SELECT 1 FROM social_topics t JOIN feeds f ON f.id=t.feed_id WHERE f.source_kind IS NOT 'topic' OR f.source_type NOT IN ('mastodon','bluesky') OR f.poll_interval IS NULL OR f.poll_interval<900 LIMIT 1").fetchone() or db.execute('SELECT 1 FROM social_results r JOIN social_runs s ON s.id=r.run_id JOIN articles a ON a.id=r.article_id WHERE s.feed_id!=a.feed_id LIMIT 1').fetchone():
+            raise ValueError('SNS 調査と記事の参照が不正です。')
+        from .social_research import tag_value
+        for row in db.execute('SELECT hashtags,sample_count FROM social_runs'):
+            if len(row['hashtags'])>4096:
+                raise ValueError('SNS 調査のタグが不正です。')
+            tags=json.loads(row['hashtags'])
+            if not isinstance(tags,list) or len(tags)>12 or any(not isinstance(t,dict) or set(t)!={'tag','posts'} or not tag_value(t['tag']) or type(t['posts']) is not int or not 1<=t['posts']<=row['sample_count'] for t in tags):
+                raise ValueError('SNS 調査のタグが不正です。')
+    if db.execute('PRAGMA user_version').fetchone()[0]>=16:
+        from .social_ai import validate_snapshot,output
+        if db.execute('SELECT 1 FROM social_ai_jobs j JOIN social_runs s ON s.id=j.run_id WHERE j.feed_id!=s.feed_id LIMIT 1').fetchone():
+            raise ValueError('AI抽出とSNS調査の参照が不正です。')
+        for job in db.execute('SELECT * FROM social_ai_jobs'):
+            sources=validate_snapshot(job)
+            for source in sources:
+                if not db.execute('SELECT 1 FROM articles WHERE id=? AND feed_id=?',(source['article_id'],job['feed_id'])).fetchone():
+                    raise ValueError('AI抽出の出典参照が不正です。')
+            if job['status']=='success':
+                output(job['result'],sources)
     return [{'hash':row['hash'],'size':row['size']} for row in db.execute('SELECT * FROM evidence_blobs ORDER BY hash')]
 
 
@@ -138,7 +159,7 @@ def restore_bundle(source,destination):
     destination.parent.chmod(0o700)
     from .operations import offline_lock
     with offline_lock(destination.parent),e.storage_lock(destination.parent),ExitStack() as locks:
-        for name in ['init.lock','refresh.lock','observer.lock','connector.lock','assistant.lock','delivery.lock','backup.lock']:
+        for name in ['init.lock','refresh.lock','observer.lock','connector.lock','assistant.lock','social-ai.lock','delivery.lock','backup.lock']:
             handle=locks.enter_context((destination.parent/name).open('a'))
             fcntl.flock(handle,fcntl.LOCK_EX|fcntl.LOCK_NB)
         # Copy validated bundle into private staging, then validate the copy against source races.
@@ -147,6 +168,9 @@ def restore_bundle(source,destination):
             stage=Path(temporary)/'bundle';shutil.copytree(source,stage,symlinks=True)
             validate_bundle(stage)
             staged_db=stage/'feeds.sqlite3';init_database(staged_db)
+            from .social_ai import reset_after_restore
+            with closing(connect(staged_db)) as restored:
+                reset_after_restore(restored)
             staged_db.chmod(0o600)
             (stage/'evidence-blobs').chmod(0o700)
             for blob in (stage/'evidence-blobs').iterdir():blob.chmod(0o600)

@@ -1,0 +1,8 @@
+<section class="settings-card appearance-settings">
+<form method="post" action="{{ url_for('settings_pages.save_appearance') }}">{{ token() }}
+<fieldset class="appearance-options"><legend class="sr-only">配色</legend>
+{% for value,label in [('system','システムに合わせる'),('light','ライト'),('dark','ダーク')] %}
+<label class="appearance-choice"><input type="radio" name="theme" value="{{ value }}" {{ 'checked' if appearance==value }} required>
+<span class="theme-preview theme-preview-{{ value }}" aria-hidden="true"><span></span><span></span><span></span></span><strong>{{ label }}</strong></label>
+{% endfor %}</fieldset><button class="button">保存</button>
+</form></section>

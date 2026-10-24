@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FeedAstrolabe API",
-    "version": "0.14.0",
-    "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order."
+    "version": "0.16.0",
+    "description": "Bearer API key required. Cloudflare deployments additionally require Access service authentication at the edge. Dates are UTC. Article cursors use ID order. Integer path IDs must be 1 through 9223372036854775807, with at most 19 ASCII digits; out-of-range numeric IDs return 400, paths with longer IDs return 404."
   },
   "servers": [
     {
@@ -5481,6 +5481,14 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 1000
+          },
+          "display_timezone": {
+            "type": "string",
+            "enum": [
+              "UTC",
+              "Asia/Tokyo"
+            ],
+            "description": "Shared UI display timezone. Stored/API timestamps remain UTC."
           }
         },
         "required": [],
@@ -5521,6 +5529,14 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 1
+          },
+          "display_timezone": {
+            "type": "string",
+            "enum": [
+              "UTC",
+              "Asia/Tokyo"
+            ],
+            "description": "Shared UI display timezone. Stored/API timestamps remain UTC."
           }
         },
         "required": [
@@ -5529,7 +5545,8 @@
           "polling_enabled",
           "page_size",
           "default_view",
-          "api_rate_limit"
+          "api_rate_limit",
+          "display_timezone"
         ]
       },
       "BulkArticleState": {
@@ -6043,6 +6060,81 @@
           "data",
           "has_more"
         ]
+      },
+      "SocialAIConfig": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_revision"
+        ],
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "model": {
+            "type": "string",
+            "description": "Explicit provider/model, optionally :free. No automatic router or online variant."
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "minimum": 256,
+            "maximum": 4096
+          },
+          "daily_calls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "input_rate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000,
+            "description": "Price ceiling in micro USD per million input tokens."
+          },
+          "output_rate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000,
+            "description": "Price ceiling in micro USD per million output tokens."
+          },
+          "max_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000000,
+            "description": "Per-call ceiling in micro USD."
+          },
+          "daily_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000000,
+            "description": "UTC-day ceiling in micro USD."
+          }
+        }
+      },
+      "SocialAITopicConfig": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_revision"
+        ],
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "ai_enabled": {
+            "type": "boolean",
+            "description": "Opt in to automatic extraction after collection."
+          },
+          "ai_criteria": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
       }
     },
     "parameters": {
@@ -6210,22 +6302,15 @@
                     "additionalProperties": false,
                     "required": [
                       "source_type",
-                      "target"
+                      "target",
+                      "instance_url"
                     ],
                     "properties": {
                       "source_type": {
-                        "type": "string",
-                        "enum": [
-                          "x",
-                          "mastodon"
-                        ]
+                        "const": "mastodon"
                       },
                       "source_kind": {
-                        "type": "string",
-                        "enum": [
-                          "account",
-                          "list"
-                        ],
+                        "const": "account",
                         "default": "account"
                       },
                       "target": {
@@ -6233,7 +6318,7 @@
                       },
                       "instance_url": {
                         "type": "string",
-                        "description": "Required HTTPS origin for Mastodon; empty for X"
+                        "description": "Required public HTTPS origin for Mastodon"
                       },
                       "folder": {
                         "type": "string",
@@ -6283,6 +6368,58 @@
                         "minimum": 1,
                         "maximum": 365,
                         "default": 90
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_type",
+                      "source_kind",
+                      "name",
+                      "target"
+                    ],
+                    "properties": {
+                      "source_type": {
+                        "enum": [
+                          "mastodon",
+                          "bluesky"
+                        ]
+                      },
+                      "source_kind": {
+                        "const": "topic"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "target": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Mastodon: up to three comma-separated hashtags. Bluesky: search query."
+                      },
+                      "instance_url": {
+                        "type": "string",
+                        "description": "Mastodon requires public HTTPS origin. Bluesky must omit or leave empty."
+                      },
+                      "folder": {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      "poll_interval": {
+                        "type": "integer",
+                        "minimum": 900,
+                        "maximum": 86400,
+                        "default": 1800
+                      },
+                      "window_hours": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 168,
+                        "default": 24
                       }
                     }
                   }
@@ -6364,7 +6501,8 @@
                       "null"
                     ],
                     "minimum": 60,
-                    "maximum": 86400
+                    "maximum": 86400,
+                    "description": "Topic feeds require an explicit integer from 900 to 86400; other feeds accept null or 60 to 86400."
                   },
                   "url": {
                     "type": "string",
@@ -6385,6 +6523,18 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 365
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Topic feeds only."
+                  },
+                  "window_hours": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 168,
+                    "description": "Topic feeds only."
                   }
                 }
               }
@@ -6547,7 +6697,8 @@
                 "rss",
                 "x",
                 "mastodon",
-                "page"
+                "page",
+                "bluesky"
               ]
             }
           },
@@ -6741,6 +6892,9 @@
           },
           "429": {
             "description": "Key rate limit or provider cooldown"
+          },
+          "410": {
+            "description": "X collection retired; saved articles remain readable"
           }
         }
       }
@@ -14695,6 +14849,7 @@
       },
       "post": {
         "summary": "Atomic insertion-only XML import, 1MiB/100 feeds; no inline fetching",
+        "description": "Rejects DTDs, entity declarations, external references and malformed XML; at most 10,000 elements and depth 64. Direct API import remains one step, preserves document order and skips duplicate normalized URLs without fetching source URLs.",
         "parameters": [],
         "responses": {
           "200": {
@@ -14755,6 +14910,244 @@
             }
           }
         }
+      }
+    },
+    "/social-research": {
+      "get": {
+        "summary": "List Mastodon and Bluesky topic subscriptions",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Research result envelope; bounded samples, not exhaustive provider trends"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "404": {
+            "description": "Topic not found"
+          }
+        }
+      }
+    },
+    "/social-research/{feed_id}": {
+      "get": {
+        "summary": "Latest topic settings, reaction rankings and 30 successful runs",
+        "parameters": [
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Research result envelope; bounded samples, not exhaustive provider trends"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "404": {
+            "description": "Topic not found"
+          }
+        }
+      }
+    },
+    "/social-research/ai/config": {
+      "get": {
+        "summary": "Read OpenRouter settings, credential presence and today reservations (no API key returned)",
+        "responses": {
+          "200": {
+            "description": "JSON data envelope. Results are unverified AI evaluations, not factual verification."
+          },
+          "400": {
+            "description": "Invalid input or unavailable sources"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "409": {
+            "description": "Revision, disabled, cooldown or budget conflict"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Configure OpenRouter model and limits",
+        "responses": {
+          "200": {
+            "description": "JSON data envelope. Results are unverified AI evaluations, not factual verification."
+          },
+          "400": {
+            "description": "Invalid input or unavailable sources"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "409": {
+            "description": "Revision, disabled, cooldown or budget conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialAIConfig"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/social-research/{feed_id}/ai/settings": {
+      "patch": {
+        "summary": "Set per-field automatic extraction and importance criteria",
+        "responses": {
+          "200": {
+            "description": "JSON data envelope. Results are unverified AI evaluations, not factual verification."
+          },
+          "400": {
+            "description": "Invalid input or unavailable sources"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "409": {
+            "description": "Revision, disabled, cooldown or budget conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialAITopicConfig"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/social-research/{feed_id}/ai/jobs": {
+      "post": {
+        "summary": "Queue extraction for the latest collection; idempotent per run and configuration revisions",
+        "responses": {
+          "202": {
+            "description": "JSON data envelope. Results are unverified AI evaluations, not factual verification."
+          },
+          "400": {
+            "description": "Invalid input or unavailable sources"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "409": {
+            "description": "Revision, disabled, cooldown or budget conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "feed_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/social-research/ai/jobs/{job_id}": {
+      "get": {
+        "summary": "Read exact input, source snapshots, status, important topics, model and usage",
+        "responses": {
+          "200": {
+            "description": "JSON data envelope. Results are unverified AI evaluations, not factual verification."
+          },
+          "400": {
+            "description": "Invalid input or unavailable sources"
+          },
+          "401": {
+            "description": "Invalid API key"
+          },
+          "403": {
+            "description": "Write scope required"
+          },
+          "409": {
+            "description": "Revision, disabled, cooldown or budget conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775807
+            }
+          }
+        ]
       }
     }
   }

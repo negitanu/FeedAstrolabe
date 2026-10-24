@@ -16,8 +16,9 @@ def tunnel_app(tmp_path, monkeypatch):
 def test_tunnel_public_hostname_and_secure_cookie(tunnel_app):
     assert tunnel_app.config['ACCESS_MODE'] == 'tunnel'
     assert 'access_jwks' not in tunnel_app.extensions
-    response = tunnel_app.test_client().get('/settings', base_url='https://reader.example.com')
+    response = tunnel_app.test_client().get('/settings/environment', base_url='https://reader.example.com')
     assert response.status_code == 200
+    assert 'Cloudflare側で認証' in response.get_data(as_text=True)
     assert 'Secure' in response.headers['Set-Cookie']
     assert 'HttpOnly' in response.headers['Set-Cookie']
     assert tunnel_app.test_client().get('/healthz').status_code == 200

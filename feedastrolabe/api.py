@@ -25,6 +25,9 @@ def feed_record(row):
     if result['source_type'] == 'page':
         result['url'] = result['target']
         result['has_baseline'] = result['snapshot'] is not None
+    if result['source_kind'] == 'topic':
+        topic = get_db().execute('SELECT window_hours FROM social_topics WHERE feed_id=?', (result['id'],)).fetchone()
+        result['window_hours'] = topic['window_hours'] if topic else None
     for field in ('page_cursor', 'pending_newest', 'since_id', 'snapshot'):
         result.pop(field, None)
     return result
@@ -64,12 +67,27 @@ def create_feed():
     if not isinstance(body, dict):
         abort(400, description='Supply a JSON object')
     source_type = body.get('source_type', 'rss')
-    if source_type == 'page':
+    if body.get('source_kind') == 'topic':
+        allowed = {'source_type', 'source_kind', 'target', 'instance_url', 'name', 'folder', 'poll_interval', 'window_hours'}
+    elif source_type == 'page':
         allowed = {'source_type','url','selector','settle_ms','poll_interval','retention_days','folder'}
     else:
         allowed = {'source_type', 'url', 'folder'} if source_type == 'rss' else {'source_type', 'source_kind', 'target', 'instance_url', 'folder'}
     if set(body) - allowed:
-        abort(400, description='Unsupported fields; credentials must use server secret files')
+        abort(400, description='Unsupported fields')
+    if body.get('source_kind') == 'topic':
+        from .social_research import add_topic
+        for field in ('poll_interval', 'window_hours'):
+            if field in body and type(body[field]) is not int:
+                abort(400, description=field + ' must be an integer')
+        try:
+            feed_id = add_topic(source_type, body.get('target', ''), body.get('instance_url', ''), body.get('name', ''),
+                                body.get('folder', ''), body.get('poll_interval', 1800), body.get('window_hours', 24))
+        except RefreshBusy as exc:
+            abort(409, description=str(exc))
+        except ValueError as exc:
+            abort(409 if '登録済み' in str(exc) else 400, description=str(exc))
+        return get_feed(feed_id), 201, {'Location': url_for('api.get_feed', feed_id=feed_id)}
     if source_type == 'page':
         try:
             feed_id=add_page(body.get('url',''),body.get('selector',''),body.get('folder',''),body.get('settle_ms',1000),body.get('poll_interval',900),body.get('retention_days',90))
@@ -105,6 +123,79 @@ def create_feed():
     return get_feed(feed_id), 201, {'Location': url_for('api.get_feed', feed_id=feed_id)}
 
 
+@api.get('/social-research')
+def list_social_research():
+    limit = integer_arg('limit', 20, maximum=100)
+    before = integer_arg('before_id', None) if 'before_id' in request.args else None
+    rows = get_db().execute('''SELECT f.id,f.title,f.source_type,f.target,f.instance_url,f.folder,f.enabled,f.poll_interval,s.window_hours,f.error,f.success_at
+      FROM social_topics s JOIN feeds f ON f.id=s.feed_id WHERE (? IS NULL OR f.id<?) ORDER BY f.id DESC LIMIT ?''', (before, before, limit+1)).fetchall()
+    return {'data': [{**dict(r), 'enabled': bool(r['enabled'])} for r in rows[:limit]], 'next_before_id': rows[limit-1]['id'] if len(rows)>limit else None}
+
+
+@api.get('/social-research/<int:feed_id>')
+def get_social_research(feed_id):
+    from .social_research import topic_report
+    try:
+        return {'data': topic_report(feed_id)}
+    except LookupError as exc:
+        abort(404, description=str(exc))
+
+
+@api.get('/social-research/ai/config')
+def get_social_ai_config():
+    from .social_ai import configuration
+    return {'data':configuration()}
+
+
+@api.patch('/social-research/ai/config')
+def configure_social_ai():
+    from .social_ai import configure
+    from .research_api import errors
+    with errors():
+        return {'data':configure(request.get_json())}
+
+
+@api.patch('/social-research/<int:feed_id>/ai/settings')
+def configure_social_ai_topic(feed_id):
+    from .social_ai import topic_configure
+    from .research import ResearchMissing,ResearchConflict
+    try:
+        return {'data':topic_configure(feed_id,request.get_json())}
+    except ResearchMissing as exc:
+        abort(404,description=str(exc))
+    except ResearchConflict as exc:
+        abort(409,description=str(exc))
+    except ValueError as exc:
+        abort(400,description=str(exc))
+
+
+@api.post('/social-research/<int:feed_id>/ai/jobs')
+def enqueue_social_ai(feed_id):
+    from .social_ai import enqueue,detail
+    from .research import ResearchMissing,ResearchConflict
+    body=request.get_json()
+    if not isinstance(body,dict) or body:
+        abort(400,description='Supply an empty JSON object')
+    try:
+        return {'data':detail(enqueue(feed_id))},202
+    except ResearchMissing as exc:
+        abort(404,description=str(exc))
+    except ResearchConflict as exc:
+        abort(409,description=str(exc))
+    except ValueError as exc:
+        abort(400,description=str(exc))
+
+
+@api.get('/social-research/ai/jobs/<int:job_id>')
+def get_social_ai_job(job_id):
+    from .social_ai import detail
+    from .research import ResearchMissing
+    try:
+        return {'data':detail(job_id)}
+    except ResearchMissing as exc:
+        abort(404,description=str(exc))
+
+
 @api.get('/articles')
 def list_articles(workspace_id=None):
     clauses, params = [], []
@@ -127,7 +218,7 @@ def list_articles(workspace_id=None):
     except ResearchMissing as exc:
         abort(404,description=str(exc))
     if 'source_type' in request.args:
-        if request.args['source_type'] not in ('rss', 'x', 'mastodon', 'page'):
+        if request.args['source_type'] not in ('rss', 'x', 'mastodon', 'page', 'bluesky'):
             abort(400, description='Unsupported source_type')
         clauses.append('f.source_type=?')
         params.append(request.args['source_type'])
@@ -193,9 +284,11 @@ def update_article(article_id):
 
 @api.post('/feeds/<int:feed_id>/observe')
 def observe_feed(feed_id):
-    row=get_db().execute("SELECT id FROM feeds WHERE id=? AND source_type='page'",(feed_id,)).fetchone()
+    row=get_db().execute("SELECT id,enabled FROM feeds WHERE id=? AND source_type='page'",(feed_id,)).fetchone()
     if row is None:
         abort(404,description='Page observation not found')
+    if not row['enabled']:
+        abort(409, description='Subscription is paused')
     if not queue_page(feed_id):
         abort(404, description='Page observation not found')
     return {'data':{'feed_id':feed_id,'queued':True}},202
@@ -217,7 +310,7 @@ def management_errors():
 def update_feed(feed_id):
     body = request.get_json()
     if isinstance(body, dict):
-        for name in ('poll_interval', 'settle_ms', 'retention_days'):
+        for name in ('poll_interval', 'settle_ms', 'retention_days', 'window_hours'):
             if name in body and not (name == 'poll_interval' and body[name] is None) and type(body[name]) is not int:
                 abort(400, description=name + ' must be an integer')
     with management_errors():
@@ -237,6 +330,10 @@ def refresh_feed(feed_id):
     row = get_db().execute('SELECT * FROM feeds WHERE id=?', (feed_id,)).fetchone()
     if row is None:
         abort(404, description='Feed not found')
+    if row['source_type'] == 'x':
+        abort(410, description='X collection has been retired; use Mastodon or Bluesky research')
+    if not row['enabled']:
+        abort(409, description='Subscription is paused; resume it before collection')
     if row['source_type'] == 'page':
         if not queue_page(feed_id):
             abort(404, description='Page observation not found')
@@ -255,7 +352,7 @@ def refresh_feed(feed_id):
 
 
 def provider_wait(feed):
-    if feed['source_type'] not in ('x', 'mastodon'):
+    if feed['source_type'] not in ('bluesky', 'mastodon'):
         return None
     from .social import cooldown
     retry = cooldown(feed)

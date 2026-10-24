@@ -1,0 +1,2 @@
+<p><a class="button" href="{{ url_for('navigation.hub',area='collect') }}">＋ 情報源を追加</a></p>
+<ul class="object-list">{% for feed in feeds %}<li><a href="{{ url_for('settings_pages.object_edit',kind='feeds',identifier=feed.id) }}"><strong>{{ feed.title }}</strong><span>{{ feed.source_type|upper }} · {{ feed.folder or '未分類' }} · {{ '収集有効' if feed.enabled else '収集停止' }}</span><span>設定を変更 →</span></a></li>{% else %}<li>まだ情報源がありません。まず「情報源を追加」から登録してください。</li>{% endfor %}</ul>

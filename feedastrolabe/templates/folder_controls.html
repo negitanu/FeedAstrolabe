@@ -1,0 +1,2 @@
+{% macro handle(name) %}<button type="button" class="folder-drag-handle" data-drag-handle hidden aria-label="{{ name or '未分類' }} をドラッグで並べ替え" title="ドラッグで並べ替え"><span aria-hidden="true">⠿</span></button>{% endmacro %}
+{% macro status() %}<p class="folder-order-status sr-only" data-order-status aria-live="polite"></p>{% endmacro %}

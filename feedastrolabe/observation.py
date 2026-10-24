@@ -9,7 +9,7 @@ from pathlib import Path
 import unicodedata
 
 from flask import current_app
-from .collection import now
+from .collection import now, refresh_lock
 from .db import get_db
 from .opml import transfer_url
 from .preferences import bounded_int, preferences, is_due
@@ -73,7 +73,7 @@ def save_observation(feed,text):
     text=normalize_text(text)
     db=get_db()
     with db:
-        current=db.execute("SELECT * FROM feeds WHERE id=? AND source_type='page'",(feed['id'],)).fetchone()
+        current=db.execute("SELECT * FROM feeds WHERE id=? AND source_type='page' AND enabled=1",(feed['id'],)).fetchone()
         if current is None or current['revision']!=feed['revision']:
             return False
         article_id=None
@@ -101,8 +101,8 @@ def save_observation(feed,text):
 def queue_page(feed_id):
     db=get_db()
     with db:
-        db.execute("INSERT OR IGNORE INTO page_jobs(feed_id,requested_at) SELECT id,? FROM feeds WHERE id=? AND source_type='page'", (now(),feed_id))
-        return db.execute("SELECT 1 FROM feeds WHERE id=? AND source_type='page'", (feed_id,)).fetchone() is not None
+        db.execute("INSERT OR IGNORE INTO page_jobs(feed_id,requested_at) SELECT id,? FROM feeds WHERE id=? AND source_type='page' AND enabled=1", (now(),feed_id))
+        return db.execute("SELECT 1 FROM feeds WHERE id=? AND source_type='page' AND enabled=1", (feed_id,)).fetchone() is not None
 
 
 @contextmanager
@@ -121,11 +121,13 @@ def observer_lock():
 def observe_pages():
     db=get_db()
     successful=failed=0
-    with observer_lock():
+    with observer_lock(), refresh_lock():
         config=preferences()
         rows=db.execute("SELECT f.*,j.requested_at FROM feeds f LEFT JOIN page_jobs j ON j.feed_id=f.id WHERE f.source_type='page' ORDER BY j.requested_at,f.id").fetchall()
         for row in rows:
             feed=dict(row)
+            if not feed['enabled']:
+                continue
             if not feed['requested_at'] and not is_due(feed,config):
                 continue
             # Consume only this job; a refresh queued while capturing survives.

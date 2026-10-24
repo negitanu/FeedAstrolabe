@@ -1,0 +1,4 @@
+{% extends 'research_base.html' %}
+{% block research_body %}<h1>共有タグ</h1><p>案件・記事・メモで使うタグを管理します。名称変更はすべての関連箇所に反映されます。</p>
+<form method="post" action="{{ url_for('research.create_tag') }}">{{ token() }}<input type="hidden" name="return_to" value="settings-tags"><label for="new-tag">新しいタグ名</label><input id="new-tag" name="name" maxlength="80" required><button>タグを作成</button></form>
+{% for t in tags %}<section class="settings-card" id="tag-{{ t.id }}"><form method="post" action="{{ url_for('research.edit_tag',tag_id=t.id) }}">{{ token() }}<input type="hidden" name="return_to" value="settings-tags"><label for="tag-name-{{ t.id }}">名称を変更</label><input id="tag-name-{{ t.id }}" name="name" value="{{ t.name }}" maxlength="80" required><button>名称を保存</button></form></section>{% else %}<p>タグはまだありません。</p>{% endfor %}{% endblock %}

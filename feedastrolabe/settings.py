@@ -1,36 +1,43 @@
-import os
-
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for, Response
 from .db import get_db
 from .preferences import bounded_int, preferences, due_at, save_preferences
-from .collection import now
+from .collection import now, RefreshBusy
 from .keys import issue_key
 from .social import add_social, cooldown
 from .observation import add_page, edit_page
 from .subscriptions import update_subscription, SubscriptionMissing
-from .opml import import_opml, export_opml, MAX_OPML
+from .opml import parse_opml, preview_entries, import_entries, export_opml, MAX_OPML
+from .import_preview import sign_plan, load_plan
+from .identifiers import single_value
 
 settings = Blueprint('settings', __name__)
 
+def settings_url(anchor=None):
+    mapping = {'imports':'imports', 'social':'feeds', 'pages':'feeds', 'subscriptions':'feeds'}
+    section = request.form.get('return_section', '')
+    section = {'subscriptions':'feeds', 'sources':'feeds'}.get(section, section)
+    if section not in ('general','api','imports','feeds'):
+        section = mapping.get(anchor, 'general')
+    if anchor and anchor.startswith('feed-'):
+        return url_for('settings_pages.object_edit', kind='feeds', identifier=int(anchor[5:]))
+    return url_for('settings_pages.page', section=section)
+
 
 def render_settings(issued_token=None):
-    db = get_db()
-    config = preferences()
-    feeds = []
-    for row in db.execute('SELECT * FROM feeds ORDER BY folder,title'):
-        feed = dict(row)
-        due = due_at(feed, config)
-        feed['provider_retry'] = cooldown(feed) if feed['source_type'] in ('x','mastodon') else None
-        feed['queued'] = db.execute('SELECT 1 FROM page_jobs WHERE feed_id=?',(feed['id'],)).fetchone() is not None
-        feed['next_poll'] = due.strftime('%Y-%m-%d %H:%M:%S UTC') if due else '次の巡回で取得'
-        feeds.append(feed)
-    keys = db.execute('SELECT id,name,prefix,scope,created_at,expires_at,revoked_at,last_used_at FROM api_keys ORDER BY id DESC').fetchall()
-    return render_template('settings.html', config=config, feeds=feeds, keys=keys, issued_token=issued_token, access_mode=current_app.config['ACCESS_MODE'], x_configured=bool(current_app.config.get('X_TOKEN_FILE') or os.environ.get('FEEDASTROLABE_X_TOKEN_FILE')))
+    from .settings_pages import render_page
+    return render_page('api', issued_token=issued_token)
 
 
 @settings.get('/settings')
 def index():
-    return render_settings()
+    from .navigation import render_hub
+    section = request.args.get('section')
+    if section:
+        section = {'subscriptions':'feeds','sources':'feeds'}.get(section,section)
+        if section not in ('general','feeds','api','imports'):
+            abort(404)
+        return redirect(url_for('settings_pages.page', section=section))
+    return render_hub('settings')
 
 
 @settings.post('/settings')
@@ -40,7 +47,7 @@ def save():
         flash('設定を保存しました。ワーカーは次の巡回で設定を反映します。', 'success')
     except ValueError as exc:
         flash(str(exc), 'error')
-    return redirect(url_for('settings.index'))
+    return redirect(settings_url())
 
 
 @settings.post('/settings/feeds/<int:feed_id>')
@@ -54,7 +61,7 @@ def save_feed(feed_id):
         abort(404)
     except ValueError as exc:
         flash(str(exc), 'error')
-    return redirect(url_for('settings.index'))
+    return redirect(settings_url(f'feed-{feed_id}'))
 
 
 @settings.post('/settings/keys')
@@ -63,7 +70,7 @@ def create_key():
         _, token = issue_key(request.form.get('name', ''), request.form.get('scope', 'read'), request.form.get('days', '90'))
     except ValueError as exc:
         flash(str(exc), 'error')
-        return redirect(url_for('settings.index'))
+        return redirect(url_for('settings_pages.page',section='api'))
     # Plaintext stays only in this response, never in a cookie, flash or DB.
     return render_settings(token)
 
@@ -76,7 +83,7 @@ def revoke_key(key_id):
         if not result.rowcount:
             abort(404)
     flash('API キーを失効させました。', 'success')
-    return redirect(url_for('settings.index'))
+    return redirect(url_for('settings_pages.page',section='api'))
 
 
 @settings.get('/subscriptions.opml')
@@ -88,31 +95,49 @@ def export():
 def import_file():
     file = request.files.get('opml')
     try:
-        added, skipped = import_opml(file.read(MAX_OPML + 1) if file else b'')
-        flash(f'OPML：{added} 件追加、{skipped} 件登録済み。記事はワーカーの巡回時に取得します。', 'success')
+        entries = parse_opml(file.read(MAX_OPML + 1) if file else b'')
+        rows, counts = preview_entries(entries)
+        return render_template('opml_preview.html', entries=rows, counts=counts, plan=sign_plan(entries))
     except ValueError as exc:
         flash(str(exc), 'error')
-    return redirect(url_for('settings.index'))
+    return redirect(settings_url('imports'))
+
+
+@settings.post('/settings/opml/confirm')
+def confirm_import():
+    try:
+        entries = load_plan(single_value(request.form, 'plan', ''))
+        added, skipped = import_entries(entries)
+    except RefreshBusy as exc:
+        abort(409, description=str(exc))
+    except ValueError as exc:
+        abort(400, description=str(exc))
+    flash(f'OPML：{added} 件追加、{skipped} 件登録済み・重複。記事はワーカーの巡回時に取得します。', 'success')
+    return redirect(settings_url('imports'), code=303)
 
 
 @settings.post('/settings/social')
 def subscribe_social():
     try:
-        add_social(request.form.get('source_type', ''), request.form.get('source_kind', 'account'), request.form.get('target', ''), request.form.get('instance_url', ''), request.form.get('folder', ''))
+        feed_id = add_social(request.form.get('source_type', ''), request.form.get('source_kind', 'account'), request.form.get('target', ''), request.form.get('instance_url', ''), request.form.get('folder', ''))
         flash('SNS を登録しました。次の巡回で取得します。ライブラリから手動更新もできます。', 'success')
     except ValueError as exc:
         flash(str(exc), 'error')
-    return redirect(url_for('settings.index', _anchor='social'))
+        from .settings_pages import render_source
+        return render_source('mastodon',request.form.to_dict(),400)
+    return redirect(url_for('settings_pages.object_edit',kind='feeds',identifier=feed_id))
 
 
 @settings.post('/settings/pages')
 def subscribe_page():
     try:
-        add_page(request.form.get('url',''),request.form.get('selector',''),request.form.get('folder',''),request.form.get('settle_ms','1000'),request.form.get('poll_interval','900'),request.form.get('retention_days','90'))
+        feed_id = add_page(request.form.get('url',''),request.form.get('selector',''),request.form.get('folder',''),request.form.get('settle_ms','1000'),request.form.get('poll_interval','900'),request.form.get('retention_days','90'))
         flash('ページ観測を登録しました。専用ワーカーの初回観測で基準を保存します。','success')
     except ValueError as exc:
         flash(str(exc),'error')
-    return redirect(url_for('settings.index',_anchor='pages'))
+        from .settings_pages import render_source
+        return render_source('page',request.form.to_dict(),400)
+    return redirect(url_for('settings_pages.object_edit',kind='feeds',identifier=feed_id))
 
 
 @settings.post('/settings/pages/<int:feed_id>')
@@ -124,7 +149,7 @@ def save_page(feed_id):
         abort(404)
     except ValueError as exc:
         flash(str(exc),'error')
-    return redirect(url_for('settings.index',_anchor='pages'))
+    return redirect(settings_url(f'feed-{feed_id}'))
 
 
 @settings.post('/settings/feeds/<int:feed_id>/url')
@@ -136,4 +161,4 @@ def repair_url(feed_id):
         abort(404)
     except ValueError as exc:
         flash(str(exc), 'error')
-    return redirect(url_for('settings.index', _anchor='subscriptions'))
+    return redirect(settings_url(f'feed-{feed_id}'))

@@ -34,7 +34,8 @@ def test_empty_health_headers(client):
     response = client.get('/')
     assert response.status_code == 200
     assert 'まだフィードがありません' in response.get_data(as_text=True)
-    assert "script-src 'none'" in response.headers['Content-Security-Policy']
+    assert "script-src 'nonce-" in response.headers['Content-Security-Policy']
+    assert "script-src 'none'" in client.get('/healthz').headers['Content-Security-Policy']
     assert client.get('/healthz').json == {'status': 'ok'}
 
 
@@ -122,7 +123,8 @@ def test_detail_safe_and_get_read_only(app, client):
     subscribe(client)
     result = client.get('/?article=1')
     text = result.get_data(as_text=True)
-    assert '<script' not in text and 'javascript:' not in text and '<img' not in text
+    assert '<script>alert' not in text and 'javascript:' not in text and '<img' not in text
+    assert text.count('<script') == 6 and 'feed-disclosure.js' in text and 'article-layout.js' in text
     assert '<p>Hello 100% world</p>' in text
     assert 'rel="noopener noreferrer"' in text
     with app.app_context():
@@ -140,8 +142,13 @@ def test_pagination(app, client):
     text = client.get('/?page=1').get_data(as_text=True)
     assert text.count('class="article-card') == 30
     text = client.get('/?page=2').get_data(as_text=True)
-    assert text.count('class="article-card') == 3
-    assert '2 / 2 ページ' in text
+    assert text.count('class="article-card') == 30
+    from test_reader_navigation import markup
+    next_url = markup(text.encode()).find('.//*[@data-article-loader]').get('data-more-url')
+    response = client.get(next_url)
+    assert response.status_code == 200 and response.json['html'].count('class="article-card') == 3
+    assert response.json['next'] is None
+    assert ' ページ' not in text
     assert client.get('/?page=-4').status_code == 200
 
 

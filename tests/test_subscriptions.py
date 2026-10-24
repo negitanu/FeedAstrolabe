@@ -25,6 +25,8 @@ def test_rss_patch_repairs_url_preserving_state(app, client, monkeypatch):
         seen.append((url, etag, modified))
         return RSS, META
     monkeypatch.setattr(collection, 'fetch', fetch)
+    assert client.post('/api/v1/feeds/1/refresh', headers=headers).status_code == 409
+    client.patch('/api/v1/feeds/1', headers=headers, json={'enabled':True})
     result = client.post('/api/v1/feeds/1/refresh', headers=headers)
     assert result.status_code == 200 and result.json['data']['succeeded'] == 1
     assert seen == [('https://example.com/new-feed', None, None)]
@@ -80,6 +82,8 @@ def test_page_edits_reject_stale_capture_preserve_history_and_queue(app, client)
         db=get_db();current=dict(db.execute('SELECT * FROM feeds WHERE id=?',(source,)).fetchone())
         assert current['snapshot']=='B'
         assert not observation.save_observation(feed,'Stale')
+    assert client.post(path+'/refresh',headers=headers).status_code==409
+    client.patch(path,headers=headers,json={'enabled':True})
     for _ in range(2):
         assert client.post(path+'/refresh',headers=headers).status_code==202
     with app.app_context():
@@ -136,6 +140,9 @@ def test_sns_identity_and_provider_cooldown(app, client, monkeypatch):
     assert client.patch(f'/api/v1/feeds/{source}',headers=headers,json={'url':'https://example.com/feed'}).status_code==400
     import importlib
     monkeypatch.setattr(importlib.import_module('feedastrolabe.api'), 'refresh_feeds',lambda *a:pytest.fail('must not refresh during cooldown'))
+    result=client.post(f'/api/v1/feeds/{source}/refresh',headers=headers)
+    assert result.status_code==409
+    client.patch(f'/api/v1/feeds/{source}',headers=headers,json={'enabled':True})
     result=client.post(f'/api/v1/feeds/{source}/refresh',headers=headers)
     assert result.status_code==429 and int(result.headers['Retry-After'])>0
 

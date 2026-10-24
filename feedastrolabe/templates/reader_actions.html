@@ -1,0 +1,15 @@
+{% macro token() %}<input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="next" value="{{ next_path }}">{% endmacro %}
+{% macro state_form(item, action, label, value) %}<form method="post" action="{{ url_for('article_action', article_id=item.id, action=action) }}">{{ token() }}<input type="hidden" name="value" value="{{ value }}"><button class="text-button" aria-label="{{ label }}" title="{{ label }}">{{ label }}</button></form>{% endmacro %}
+{% macro sequence_links(label='記事の移動') %}
+{% if article_navigation %}<nav class="article-sequence" aria-label="{{ label }}">
+{% if article_navigation.previous %}<a rel="prev" href="{{ reader_url(article=article_navigation.previous.id, _anchor='article-detail') }}">← 前の記事</a>{% else %}<span class="muted">前の記事</span>{% endif %}
+<span class="muted">{{ article_navigation.position }} / {{ total }} 件</span>
+{% if article_navigation.next %}<a rel="next" href="{{ reader_url(article=article_navigation.next.id, _anchor='article-detail') }}">次の記事 →</a>{% else %}<span class="muted">次の記事</span>{% endif %}
+</nav>{% endif %}
+{% endmacro %}
+{% macro advance_form() %}
+{% if article_navigation %}<form class="read-next" method="post" action="{{ url_for('read_next', article_id=article.id) }}">
+<input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="view" value="{{ selected.view }}">{% if selected.folder is not none %}<input type="hidden" name="folder" value="{{ selected.folder }}">{% endif %}<input type="hidden" name="q" value="{{ selected.q }}"><input type="hidden" name="feed" value="{{ selected.feed or '' }}"><input type="hidden" name="workspace" value="{{ selected.workspace or '' }}"><input type="hidden" name="tag" value="{{ selected.tag or '' }}">
+<button>{{ '既読にして次へ →' if article_navigation.next else '既読にして一覧へ' }}</button>
+</form>{% endif %}
+{% endmacro %}

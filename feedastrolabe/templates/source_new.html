@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% macro token() %}<input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="source_origin" value="{{ source_kind }}">{% endmacro %}
+{% block body %}<main class="configuration-page source-registration">
+<nav class="context-navigation" aria-label="現在位置"><a href="{{ url_for('navigation.hub',area='collect') }}">集める</a></nav>
+<h1>{{ page_title }}</h1><p class="navigation-intro">{{ description }}</p>
+<ol class="task-progress" aria-label="登録から閲覧まで"><li aria-current="step">1. 情報源を登録</li><li>2. 収集結果を確認</li><li>3. 記事を読む</li></ol>
+{% include 'messages.html' %}
+{% include 'settings_parts/' ~ source_kind ~ '.html' %}
+
+</main>{% endblock %}
