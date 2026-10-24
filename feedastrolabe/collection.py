@@ -9,7 +9,8 @@ import bleach
 import feedparser
 from flask import current_app
 from .db import get_db
-from .fetch import fetch, safe_link
+from .fetch import fetch, safe_link, MAX_BYTES
+from .xml_safety import validate_xml
 from .preferences import preferences, is_due
 
 TAGS = {'p', 'br', 'a', 'strong', 'em', 'b', 'i', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'h2', 'h3', 'h4', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'}
@@ -24,6 +25,7 @@ def sanitize(value):
 
 
 def parse_feed(body):
+    validate_xml(body, max_bytes=MAX_BYTES, max_elements=100000)
     parsed = feedparser.parse(body)
     if not parsed.version or not (parsed.version.startswith('rss') or parsed.version.startswith('atom')):
         raise ValueError('RSS または Atom フィードを指定してください。')

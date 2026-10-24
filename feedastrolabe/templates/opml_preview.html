@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block body %}
+<main class="settings-page">
+<header class="settings-header"><a class="brand" href="/"><span class="brand-symbol">✳</span><span>FeedAstrolabe<small>YOUR DAILY ORBIT</small></span></a><a class="button secondary" href="{{ url_for('settings_pages.page',section='imports') }}">取り消して設定へ戻る</a></header>
+<h1>購読のインポートを確認</h1>
+<p class="muted">まだ購読は変更していません。追加する情報源とフォルダーを確認してください。</p>
+<section class="settings-card" aria-label="インポート内容">
+<h2>追加予定 {{ counts.new }} 件</h2><p>登録済み {{ counts.existing }} 件 · ファイル内で重複 {{ counts.duplicate }} 件</p>
+<p class="hint">登録済み・重複の URL は追加しません。同じ URL が複数ある場合は最初の内容を使います。記事は登録後、ワーカーの巡回時に取得します。</p>
+<ol class="opml-preview-list">
+{% for entry in entries %}<li class="opml-preview-entry"><div class="opml-preview-heading"><strong>{{ entry.title }}</strong><span class="classification-badge">{{ {'new':'追加予定','existing':'登録済み','duplicate':'ファイル内で重複'}[entry.status] }}</span></div><p class="small muted opml-preview-url">{{ entry.url }}</p><p class="small">フォルダー：{{ entry.folder or '未分類' }}</p></li>
+{% else %}<li class="muted">登録する RSS 購読が見つかりませんでした。</li>{% endfor %}
+</ol>
+<form method="post" action="{{ url_for('settings.confirm_import') }}"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="plan" value="{{ plan }}"><button class="button" {% if not counts.new %}disabled{% endif %}>{{ counts.new }} 件の購読を登録</button></form>
+<p class="hint">確認画面の有効期限は15分です。期限が切れた場合はファイルをアップロードし直してください。</p>
+<a class="text-button" href="{{ url_for('settings_pages.page',section='imports') }}">取り消す</a>
+</section></main>
+{% endblock %}

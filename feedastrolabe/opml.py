@@ -5,6 +5,7 @@ from defusedxml.ElementTree import fromstring
 from .collection import now, refresh_lock
 from .db import get_db
 from .fetch import normalize_url
+from .xml_safety import validate_xml
 
 MAX_OPML = 1024 * 1024
 
@@ -23,10 +24,11 @@ def transfer_url(value):
     return url
 
 
-def import_opml(data):
-    if not data or len(data) > MAX_OPML:
+def parse_opml(data):
+    if not isinstance(data, bytes) or not data or len(data) > MAX_OPML:
         raise ValueError('OPML は 1 MiB 以下のファイルを指定してください。')
     try:
+        validate_xml(data, max_bytes=MAX_OPML, max_elements=10000)
         root = fromstring(data, forbid_dtd=True, forbid_entities=True, forbid_external=True)
     except Exception:
         raise ValueError('安全な OPML XML を指定してください。') from None
@@ -34,29 +36,72 @@ def import_opml(data):
         raise ValueError('OPML の body が見つかりません。')
     entries = []
     # An explicit stack bounds deep nesting without Python recursion.
-    stack = [(child, '') for child in root.find('body')]
+    stack = [(child, '') for child in reversed(root.find('body'))]
     while stack:
         node, folder = stack.pop()
         if node.tag != 'outline':
             continue
         if node.get('xmlUrl'):
-            entries.append((transfer_url(node.get('xmlUrl')), (node.get('title') or node.get('text') or node.get('xmlUrl'))[:1000], folder[:80]))
+            entries.append({'url': node.get('xmlUrl'), 'title': (node.get('title') or node.get('text') or node.get('xmlUrl'))[:1000], 'folder': folder[:80]})
             if len(entries) > 100:
                 raise ValueError('一度にインポートできるフィードは 100 件までです。')
         else:
             name = node.get('text') or node.get('title') or ''
             next_folder = '/'.join(v for v in (folder, name) if v)[:80]
-            stack.extend((child, next_folder) for child in node)
+            stack.extend((child, next_folder) for child in reversed(node))
+    return validate_entries(entries)
+
+
+def validate_entries(entries):
+    if not isinstance(entries, list) or len(entries) > 100:
+        raise ValueError('一度にインポートできるフィードは 100 件までです。')
+    result = []
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {'url', 'title', 'folder'}:
+            raise ValueError('購読のデータが不正です。')
+        if any(not isinstance(entry[name], str) or len(entry[name]) > limit
+               for name, limit in [('url', 2048), ('title', 1000), ('folder', 80)]):
+            raise ValueError('購読のデータが不正です。')
+        try:
+            url = transfer_url(entry['url'])
+            if len(url) > 2048:
+                raise ValueError()
+        except ValueError:
+            raise ValueError('認証情報を含まない公開 HTTP(S) URL を指定してください。') from None
+        result.append({**entry, 'url': url})
+    return result
+
+
+def preview_entries(entries):
+    existing = {row['url'] for row in get_db().execute('SELECT url FROM feeds')}
+    seen = set()
+    rows = []
+    counts = {'new': 0, 'existing': 0, 'duplicate': 0}
+    for entry in entries:
+        status = 'duplicate' if entry['url'] in seen else 'existing' if entry['url'] in existing else 'new'
+        rows.append({**entry, 'status': status})
+        counts[status] += 1
+        seen.add(entry['url'])
+    return rows, counts
+
+
+def import_entries(entries):
+    entries = validate_entries(entries)
     db = get_db()
     added = skipped = 0
     with refresh_lock(), db:
-        for url, title, folder in entries:
-            cursor = db.execute('INSERT OR IGNORE INTO feeds(url,title,folder,created_at) VALUES(?,?,?,?)', (url, title, folder, now()))
+        db.execute('BEGIN IMMEDIATE')
+        for entry in entries:
+            cursor = db.execute('INSERT OR IGNORE INTO feeds(url,title,folder,created_at) VALUES(?,?,?,?)', (entry['url'], entry['title'], entry['folder'], now()))
             if cursor.rowcount:
                 added += 1
             else:
                 skipped += 1
     return added, skipped
+
+
+def import_opml(data):
+    return import_entries(parse_opml(data))
 
 
 def export_opml():
