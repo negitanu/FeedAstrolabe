@@ -16,6 +16,7 @@ from .preferences import preferences
 from .display_time import display_time
 from .identifiers import DatabaseIDConverter, optional_id, single_value
 from .reader_navigation import article_navigation
+from .reader_order import order_sql, VISITED
 from .navigation import navigation, navigation_context
 from .settings_pages import ui as settings_pages
 from .subscriptions import update_subscription, delete_subscription, SubscriptionMissing
@@ -135,7 +136,7 @@ def create_app(test_config=None):
     def filters():
         source = request.form if request.method == 'POST' else request.args
         view = single_value(source, 'view', preferences()['default_view'] if request.method == 'GET' else 'all')
-        if view not in ('all', 'unread', 'starred'):
+        if view not in ('all', 'unread', 'starred', 'history'):
             abort(400, description='表示条件が不正です。')
         feed_id = optional_id(source, 'feed')
         from .folders import validate_name
@@ -155,6 +156,8 @@ def create_app(test_config=None):
             clauses.append('a.is_read=0')
         if view == 'starred':
             clauses.append('a.is_starred=1')
+        if view == 'history':
+            clauses.append('EXISTS(SELECT 1 FROM article_visits v WHERE v.article_id=a.id)')
         if feed_id:
             clauses.append('a.feed_id=?')
             params.append(feed_id)
@@ -203,7 +206,7 @@ def create_app(test_config=None):
         if selected['feed'] is not None and db.execute('SELECT 1 FROM feeds WHERE id=?',(selected['feed'],)).fetchone() is None:
             abort(404)
         total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
-        article = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone() if article_id else None
+        article = db.execute(f'SELECT a.*,f.title AS feed_title,{VISITED} AS visited_at FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.id=?', (article_id,)).fetchone() if article_id else None
         if article_id and (article is None or (selected['folder'] is not None and
                 db.execute('SELECT folder FROM feeds WHERE id=?', (article['feed_id'],)).fetchone()[0] != selected['folder'])):
             abort(404)
@@ -215,7 +218,7 @@ def create_app(test_config=None):
                     article_id = None
                 else:
                     abort(404)
-        navigation = article_navigation(where, params, article_id) if article else None
+        navigation = article_navigation(where, params, article_id, selected) if article else None
         from .reader_stream import batch
         cursor = single_value(request.args, 'cursor') if 'cursor' in request.args else None
         if request.endpoint == 'article_more' and cursor is None:
@@ -241,8 +244,10 @@ def create_app(test_config=None):
         count_where = ' WHERE feed_id IN (SELECT id FROM feeds WHERE folder=?)' if selected['folder'] is not None else ''
         count_params = (selected['folder'],) if selected['folder'] is not None else ()
         counts = db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles' + count_where, count_params).fetchone()
+        counts = dict(counts)
+        counts['history'] = db.execute('SELECT count(*) FROM article_visits v JOIN articles ON articles.id=v.article_id' + count_where, count_params).fetchone()[0]
         selected_feed = next((f for f in feeds if f['id'] == selected['feed']), None)
-        title = selected_feed['title'] if selected_feed else {'all': 'すべての記事', 'unread': '未読の記事', 'starred': 'スター付き'}[selected['view']]
+        title = selected_feed['title'] if selected_feed else {'all': 'すべての記事', 'unread': '未読の記事', 'starred': 'スター付き', 'history': '最近読んだ記事'}[selected['view']]
         if selected_folder is not None:
             title = (selected['folder'] or '未分類') + ' の記事'
 
@@ -254,7 +259,7 @@ def create_app(test_config=None):
                     raise ValueError()
             except ValueError:
                 abort(400)
-            articles = db.execute('SELECT a.*,f.title AS feed_title FROM articles a JOIN feeds f ON f.id=a.feed_id' + where +
+            articles = db.execute(f'SELECT a.*,f.title AS feed_title,{VISITED} AS visited_at FROM articles a JOIN feeds f ON f.id=a.feed_id' + where +
                        (' AND ' if where else ' WHERE ') + 'a.id=?', [*params,reconcile]).fetchall()
         template = 'reader_detail_fragment.html' if request.headers.get('X-Reader-Detail') == '1' else 'index.html'
         return render_template(template, articles=articles, feeds=feeds, counts=counts, article=article,
@@ -329,8 +334,21 @@ def create_app(test_config=None):
         if action == 'read' and request.form['value'] == '1' and reading_prefs()['scan_after_read']:
             where, params, selected = filters()
             unread_where = where + (' AND ' if where else ' WHERE ') + 'a.is_read=0'
-            nxt = db.execute('SELECT a.id FROM articles a'+unread_where+' ORDER BY a.published_at DESC,a.id DESC LIMIT 1',params).fetchone()
+            nxt = db.execute('SELECT a.id FROM articles a'+unread_where+' ORDER BY '+order_sql(selected)+' LIMIT 1',params).fetchone()
             return redirect(url_for('folder_detail' if selected['folder'] is not None else 'index',**selected,article=nxt['id'] if nxt else None))
+        return return_to()
+
+    @app.post('/articles/<int:article_id>/visit')
+    def visit_article(article_id):
+        from datetime import datetime, timezone
+        db = get_db()
+        if db.execute('SELECT 1 FROM articles WHERE id=?', (article_id,)).fetchone() is None:
+            abort(404)
+        with db:
+            db.execute('INSERT INTO article_visits(article_id,visited_at) VALUES(?,?) ON CONFLICT(article_id) DO UPDATE SET visited_at=excluded.visited_at',
+                       (article_id, datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S.%f')))
+        if request.headers.get('X-Reader-Visit') == '1':
+            return '', 204
         return return_to()
 
     @app.post('/articles/<int:article_id>/open')
@@ -375,7 +393,7 @@ def create_app(test_config=None):
             db.execute('BEGIN IMMEDIATE')
             if db.execute('SELECT 1 FROM articles WHERE id=?', (article_id,)).fetchone() is None:
                 abort(404)
-            navigation = article_navigation(where, params, article_id)
+            navigation = article_navigation(where, params, article_id, selected)
             if navigation is None:
                 abort(409, description='この記事は現在の表示条件に含まれていません。一覧を開き直してください。')
             successor = navigation['next']

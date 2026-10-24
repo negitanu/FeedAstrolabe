@@ -90,7 +90,7 @@ def test_export_allowlist_snapshot_and_credentials(app,client,folder_data,monkey
     result=post(client,'/settings/export',{'presentation':json.dumps({'width':320,'layout':'line','disclosure':{'Tech':False}})})
     assert result.status_code==200
     data=result.json
-    assert data['format']=='feedastrolabe-settings' and data['format_version']==1 and data['db_schema_version']==18
+    assert data['format']=='feedastrolabe-settings' and data['format_version']==1 and data['db_schema_version']==19
     assert data['settings']['presentation']=={'width':320,'layout':'line','disclosure':{'Tech':False},'appearance':'dark'}
     assert len(data['settings']['subscriptions'])==8
     assert data['settings']['notifications'][0]['destination'] is None
@@ -149,7 +149,7 @@ def test_v17_upgrade_keeps_configuration_order_and_articles(tmp_path):
         db.execute("UPDATE social_ai_config SET model='vendor/existing',enabled=1")
     init_database(path);init_database(path)
     with connect(path) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==18
+        assert db.execute('PRAGMA user_version').fetchone()[0]==19
         assert db.execute('SELECT group_concat(feed_id) FROM (SELECT feed_id FROM feed_positions ORDER BY position)').fetchone()[0]=='2,1'
         assert tuple(db.execute('SELECT content,is_read,is_starred FROM articles').fetchone())==('Body',1,1)
         assert db.execute('SELECT provider FROM social_ai_config').fetchone()[0]=='openrouter'

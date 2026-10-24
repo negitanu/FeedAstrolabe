@@ -251,7 +251,7 @@ def test_v15_upgrade_and_bundle_restore_disables_paid_dispatch(app,tmp_path,monk
         db.execute('INSERT INTO social_topics VALUES(1,24)')
     init_database(source);init_database(source)
     with connect(source) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==18
+        assert db.execute('PRAGMA user_version').fetchone()[0]==19
         assert db.execute('SELECT enabled FROM social_ai_config').fetchone()[0]==0
         assert db.execute('SELECT ai_enabled FROM social_topics').fetchone()[0]==0
     feed_id=setup_ai(app,monkeypatch,automatic=True);model(app,monkeypatch)

@@ -121,7 +121,7 @@
     layout.classList.toggle('has-detail',!!detail);selected(url);
     const counts=JSON.parse(fragment.dataset.counts);
     const badges=document.querySelectorAll('.sidebar nav[aria-label="記事の表示条件"] .count');
-    ['total','unread','starred'].forEach((name,index)=>{if(badges[index])badges[index].textContent=counts[name];});
+    ['total','unread','starred','history'].forEach((name,index)=>{if(badges[index])badges[index].textContent=counts[name];});
     document.querySelector('.view-heading .muted').textContent=`${fragment.dataset.total} 件の記事`;
     if(scroll) {
       if(detail) {detail.focus({preventScroll:true});}

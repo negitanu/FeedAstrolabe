@@ -127,7 +127,7 @@ def test_detail_safe_and_get_read_only(app, client):
     from test_reader_navigation import markup
     assert not markup(result.data).findall('.//div[@class="prose"]//img')
     assert all(img.get('class')=='article-hero' for img in markup(result.data).findall('.//img'))
-    assert text.count('<script') == 6 and 'feed-disclosure.js' in text and 'article-layout.js' in text
+    assert text.count('<script') == 7 and 'feed-disclosure.js' in text and 'article-layout.js' in text
     assert '<p>Hello 100% world</p>' in text
     assert 'rel="noopener noreferrer"' in text
     with app.app_context():

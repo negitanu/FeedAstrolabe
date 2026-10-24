@@ -167,7 +167,7 @@ def test_bounded_atomic_settings_bulk_opml_scope_and_csrf(app,client):
  assert client.get('/operations').status_code==200
 
 def test_v12_schema_reports_retention_and_bundle_integrity(app,tmp_path):
- prior=tmp_path/'prior';prior.mkdir();db=connect(prior/'feeds.sqlite3');db.executescript(Path('tests/fixtures/v12_schema.sql').read_text());db.close();backup_bundle(prior/'feeds.sqlite3',tmp_path/'v12bundle');restore_bundle(tmp_path/'v12bundle',tmp_path/'restored'/'feeds.sqlite3');db=connect(tmp_path/'restored'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==18 and db.execute('SELECT backup_enabled FROM operations_config').fetchone()[0]==0;db.close()
+ prior=tmp_path/'prior';prior.mkdir();db=connect(prior/'feeds.sqlite3');db.executescript(Path('tests/fixtures/v12_schema.sql').read_text());db.close();backup_bundle(prior/'feeds.sqlite3',tmp_path/'v12bundle');restore_bundle(tmp_path/'v12bundle',tmp_path/'restored'/'feeds.sqlite3');db=connect(tmp_path/'restored'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==19 and db.execute('SELECT backup_enabled FROM operations_config').fetchone()[0]==0;db.close()
  wid,eid=case(app)
  with app.app_context():
   rid=p.create(wid,{'format':'markdown'});with_db=get_db()

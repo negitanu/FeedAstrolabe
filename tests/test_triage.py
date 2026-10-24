@@ -134,7 +134,7 @@ def test_v6_migration_bundle_and_monotonic_cursor(tmp_path):
     bundle=tmp_path/'v6-bundle';backup_bundle(database,bundle);assert json.loads((bundle/'manifest.json').read_text())['schema']==6
     init_database(database);app=create_app({'TESTING':True,'DATA_DIR':str(data)})
     with app.app_context():
-        db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==18 and not db.execute('PRAGMA foreign_key_check').fetchall()
+        db=get_db();assert db.execute('PRAGMA user_version').fetchone()[0]==19 and not db.execute('PRAGMA foreign_key_check').fetchall()
         assert db.execute('SELECT quote FROM quotations WHERE evidence_id=30').fetchone()[0]=='x'
         assert db.execute('SELECT evidence_id FROM note_evidence').fetchone()[0]==30
         with db:
@@ -149,7 +149,7 @@ def test_v6_migration_bundle_and_monotonic_cursor(tmp_path):
         assert get_db().execute('SELECT count(*) FROM watch_events').fetchone()[0]==1
         assert t.reprocess(identifier)['events_created']==0
     oldrestore=tmp_path/'old-restored'/'feeds.sqlite3';restore_bundle(bundle,oldrestore)
-    db=connect(oldrestore);assert db.execute('PRAGMA user_version').fetchone()[0]==18;assert db.execute('SELECT text FROM evidence').fetchone()[0]=='x';assert db.execute('SELECT quote FROM quotations').fetchone()[0]=='x';assert not db.execute('PRAGMA foreign_key_check').fetchall();db.close()
+    db=connect(oldrestore);assert db.execute('PRAGMA user_version').fetchone()[0]==19;assert db.execute('SELECT text FROM evidence').fetchone()[0]=='x';assert db.execute('SELECT quote FROM quotations').fetchone()[0]=='x';assert not db.execute('PRAGMA foreign_key_check').fetchall();db.close()
 
 
 def test_disabled_search_continuation_tags_dates_and_rule_caps(app,client):

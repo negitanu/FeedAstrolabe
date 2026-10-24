@@ -67,7 +67,7 @@ def test_v13_migration_preserves_data_and_default(tmp_path):
     init_database(path)
     init_database(path)
     with sqlite3.connect(path) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0] == 18
+        assert db.execute('PRAGMA user_version').fetchone()[0] == 19
         assert db.execute('SELECT page_size,display_timezone FROM settings').fetchone() == (50,'UTC')
         assert db.execute('SELECT title,created_at FROM feeds').fetchone() == ('Existing','2026-10-08 18:30:00')
         assert not db.execute('PRAGMA foreign_key_check').fetchall()
@@ -86,4 +86,4 @@ def test_timezone_bundle_round_trip(app, tmp_path):
         restore_bundle(bundle, restored)
         with connect(restored) as db:
             assert db.execute('SELECT display_timezone FROM settings').fetchone()[0] == 'Asia/Tokyo'
-            assert db.execute('PRAGMA user_version').fetchone()[0] == 18
+            assert db.execute('PRAGMA user_version').fetchone()[0] == 19

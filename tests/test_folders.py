@@ -142,12 +142,13 @@ def test_upgrade_from_v16_keeps_feeds_and_article_state(folder_data,app,client):
     with app.app_context():
         with get_db() as db:
             db.execute('DROP TABLE folder_positions')
+            db.execute('DROP TABLE article_visits')
             db.execute('PRAGMA user_version=16')
     init_database(app.config['DATABASE'])
     init_database(app.config['DATABASE']) # Repeated startup is safe.
     assert snapshot(app)==before
     with closing(connect(app.config['DATABASE'])) as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==18
+        assert db.execute('PRAGMA user_version').fetchone()[0]==19
         assert not db.execute('PRAGMA foreign_key_check').fetchall()
     assert sidebar_names(client.get('/'))==folder_data
 

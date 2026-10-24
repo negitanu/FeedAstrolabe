@@ -1,9 +1,11 @@
 """Locate article neighbours in the full, deterministic reader filter."""
 
 from .db import get_db
+from .reader_order import order_sql
 
 
-def article_navigation(where, params, article_id):
+def article_navigation(where, params, article_id, scope=None):
+    order = order_sql(scope)
     row = get_db().execute('''
         WITH ordered AS (
             SELECT a.id,
@@ -11,7 +13,7 @@ def article_navigation(where, params, article_id):
                    lag(a.id) OVER reading_order AS previous_id,
                    lead(a.id) OVER reading_order AS next_id
             FROM articles a''' + where + '''
-            WINDOW reading_order AS (ORDER BY a.published_at DESC, a.id DESC)
+            WINDOW reading_order AS (ORDER BY ''' + order + ''')
         )
         SELECT position, previous_id, next_id FROM ordered WHERE id=?
     ''', [*params, article_id]).fetchone()

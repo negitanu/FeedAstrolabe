@@ -121,7 +121,7 @@ def test_empty_folder_scope_survives_read_next(folder_data,client):
 
 
 def test_folder_sidebar_counts_match_selected_scope(folder_data,client):
-    for folder,counts in [('Tech',['3','2','1']),('', ['1','1','0'])]:
+    for folder,counts in [('Tech',['3','2','1','0']),('', ['1','1','0','0'])]:
         tree=markup(client.get('/folders?'+urlencode({'folder':folder})).data)
         assert [n.text for n in tree.findall(".//nav[@aria-label='記事の表示条件']/a/span[@class='count']")]==counts
 

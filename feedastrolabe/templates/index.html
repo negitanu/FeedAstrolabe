@@ -8,7 +8,7 @@
 <details class="sidebar-navigation" open><summary class="mobile-navigation-toggle">ライブラリ・フォルダー <span>{{ feeds|length }} フィード</span></summary><div class="sidebar-navigation-content">
 <div class="section-label">ライブラリ</div>
 <nav aria-label="記事の表示条件">
-{% for mode,label,symbol,count in [('all','すべての記事','☷',counts.total),('unread','未読','◉',counts.unread),('starred','スター付き','☆',counts.starred)] %}
+{% for mode,label,symbol,count in [('all','すべての記事','☷',counts.total),('unread','未読','◉',counts.unread),('starred','スター付き','☆',counts.starred),('history','最近読んだ記事','↶',counts.history)] %}
 <a class="nav-item {{ 'active' if selected.view == mode and not selected.feed }}" href="{{ url_for('index', view=mode, folder=selected.folder) }}"><span>{{ symbol }}　{{ label }}</span><span class="count">{{ count }}</span></a>
 {% endfor %}
 </nav>
@@ -50,4 +50,4 @@
 
 </main></div>
 {% endblock %}
-{% block scripts %}<script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='reader-stream.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='sidebar-organizer.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='feed-disclosure.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='article-layout.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='folder-order.js') }}" defer></script>{% endblock %}
+{% block scripts %}<script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='reader-visits.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='reader-stream.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='sidebar-organizer.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='feed-disclosure.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='article-layout.js') }}" defer></script><script nonce="{{ sidebar_nonce }}" src="{{ url_for('static', filename='folder-order.js') }}" defer></script>{% endblock %}

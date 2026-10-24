@@ -122,7 +122,7 @@ def test_api_consent_revision_archival_and_scopes(app,client,monkeypatch):
 
 def test_actual_v10_migration_bundle_keeps_cards_sources(app,tmp_path):
  prior=tmp_path/'prior';prior.mkdir();db=connect(prior/'feeds.sqlite3');db.executescript(Path('tests/fixtures/v10_schema.sql').read_text());db.close();bundle=tmp_path/'v10bundle';backup_bundle(prior/'feeds.sqlite3',bundle);restore_bundle(bundle,tmp_path/'restore'/'feeds.sqlite3')
- db=connect(tmp_path/'restore'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==18;assert db.execute('SELECT count(*) FROM connector_settings').fetchone()[0]==11;assert db.execute('SELECT sum(enabled) FROM connector_settings').fetchone()[0]==0;db.close()
+ db=connect(tmp_path/'restore'/'feeds.sqlite3');assert db.execute('PRAGMA user_version').fetchone()[0]==19;assert db.execute('SELECT count(*) FROM connector_settings').fetchone()[0]==11;assert db.execute('SELECT sum(enabled) FROM connector_settings').fetchone()[0]==0;db.close()
  wid,watch=setup(app)
  with app.app_context():cache('arxiv','id:1706.03762||0',fixtures()['arxiv']);a.sync(watch);card,qid=model(wid);a.benchmark(card,{'status':'claimed','result':'0.1','quotation_id':qid});e.prune()
  bundle=tmp_path/'v11bundle';backup_bundle(app.config['DATABASE'],bundle);restore_bundle(bundle,tmp_path/'restore2'/'feeds.sqlite3');db=connect(tmp_path/'restore2'/'feeds.sqlite3');assert db.execute('SELECT count(*) FROM ai_versions').fetchone()[0]==1;assert db.execute('SELECT count(*) FROM ai_benchmarks').fetchone()[0]==1;assert not db.execute('PRAGMA foreign_key_check').fetchall();db.close()

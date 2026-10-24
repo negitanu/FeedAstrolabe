@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from flask import current_app, g
 
-SCHEMA_VERSION = 18
+SCHEMA_VERSION = 19
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feeds (
@@ -263,6 +263,10 @@ def init_database(path):
             from .platform_schema import migrate
             migrate(db)
             db.execute('PRAGMA user_version=18')
+        if version < 19:
+            db.execute('CREATE TABLE article_visits (article_id INTEGER PRIMARY KEY REFERENCES articles(id) ON DELETE CASCADE, visited_at TEXT NOT NULL)')
+            db.execute('CREATE INDEX article_visits_time ON article_visits(visited_at DESC,article_id DESC)')
+            db.execute('PRAGMA user_version=19')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()
