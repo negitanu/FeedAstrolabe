@@ -39,12 +39,12 @@ def retry_time(headers):
     return datetime.fromtimestamp(future, timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
 
-def request_json(url, token=None):
+def request_json(url):
     conn = None
     try:
         url = normalize_url(url)
         parsed = urlsplit(url)
-        if parsed.scheme != 'https' or (token and parsed.hostname != 'api.x.com'):
+        if parsed.scheme != 'https' or parsed.port not in (None, 443):
             raise SocialError('SNS の取得先・認証先が不正です。')
         deadline = time.monotonic() + 30
         address = public_address(parsed.hostname, 443)
@@ -53,8 +53,6 @@ def request_json(url, token=None):
             raise SocialError('SNS 取得がタイムアウトしました。')
         conn = PinnedHTTP(parsed.hostname, 443, address, True, min(10, remaining))
         headers = {'User-Agent': 'FeedAstrolabe/0.3', 'Accept': 'application/json', 'Accept-Encoding': 'identity'}
-        if token:
-            headers['Authorization'] = 'Bearer ' + token
         conn.request('GET', urlunsplit(('', '', parsed.path or '/', parsed.query, '')), headers=headers)
         response = conn.getresponse()
         metadata = {k.lower(): v for k, v in response.getheaders()}

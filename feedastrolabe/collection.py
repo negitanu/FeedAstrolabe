@@ -103,6 +103,10 @@ def refresh_feeds(feed_id=None, due_only=False, interval_override=None):
         feeds = db.execute('SELECT * FROM feeds' + (' WHERE id=?' if feed_id else ''), (feed_id,) if feed_id else ()).fetchall()
         config = preferences()
         for feed in feeds:
+            if not feed['enabled']:
+                continue
+            if feed['source_type'] == 'x':
+                continue  # Historical articles remain readable; never contact X.
             if feed['source_type'] == 'page':
                 if not due_only and (feed_id or feed['enabled']):
                     from .observation import queue_page

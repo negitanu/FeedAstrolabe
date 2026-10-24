@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% macro token() %}<input type="hidden" name="csrf" value="{{ session.csrf }}">{% endmacro %}
+{% block body %}
+<main class="settings-page social-research-page">
+<nav class="context-navigation" aria-label="現在位置"><a href="{{ url_for('navigation.hub',area='collect') }}">集める</a> / <span>SNS トレンド調査</span></nav>
+<h1>{{ report.topic.title if report else 'SNS トレンド調査' }}</h1>
+{% for category,message in get_flashed_messages(with_categories=true) %}<div role="status" class="notice {{ category }}">{{ message }}</div>{% endfor %}
+{% if not config.polling_enabled %}<p class="notice">全体の定期収集は停止中です。<a href="{{ url_for('settings_pages.page',section='general') }}">設定</a>で有効にするとワーカーが巡回します。手動収集も利用できます。</p>{% endif %}
+<p class="muted small">公式 API で公開投稿を定期収集。収集サンプル内の注目度を、いいね ＋ 再投稿 × 2 ＋ 返信で集計します。網羅的なトレンドや、SNS 間で比較できる順位ではありません。</p>
+{% if not report %}
+
+<p><a class="button" href="{{ url_for('settings_pages.source',kind='sns') }}">＋ SNS の調査分野を追加</a></p>
+<section class="settings-card" id="topics"><h2>登録した分野</h2><div class="social-topic-list">
+{% for topic in topics %}<a class="social-topic-row" href="{{ url_for('social_research.detail',feed_id=topic.id) }}"><strong>{{ topic.title }}</strong><span class="feed-kind">{{ 'Bluesky' if topic.source_type=='bluesky' else 'Mastodon' }}</span><span>{{ topic.target }}</span><span class="small muted">{{ topic.poll_interval//60 }} 分ごと · {{ topic.sample_count if topic.sample_count is not none else '未収集' }}{{ ' 件' if topic.sample_count is not none }} · {{ '停止中' if not topic.enabled else '定期収集' }}{% if topic.error %} · 要確認{% endif %}</span></a>{% else %}<p class="muted">調査する分野を登録すると、収集結果がここに並びます。</p>{% endfor %}
+</div>{% if next_before %}<a href="{{ url_for('social_research.index',before_id=next_before) }}">次の分野 →</a>{% endif %}</section>
+{% else %}
+{% set topic=report.topic %}{% set latest=report.latest %}
+<nav class="social-actions"><a href="{{ url_for('social_research.index') }}">← 調査一覧</a><a href="{{ url_for('index',feed=topic.id) }}">記事一覧で読む →</a><form method="post" action="{{ url_for('social_research.refresh',feed_id=topic.id) }}">{{ token() }}<button>↻ 今すぐ収集</button></form></nav>
+<p class="small muted">{{ 'Bluesky 公開検索' if topic.source_type=='bluesky' else topic.instance_url }} · {{ topic.target }} · {{ topic.folder or '未分類' }} · {{ topic.poll_interval//60 }} 分ごと／過去 {{ topic.window_hours }} 時間<br>次回予定 {{ topic.next_poll|display_time(missing='次の巡回') }}{{ ' · 一時停止中' if not topic.enabled or not config.polling_enabled }}</p>
+{% if topic.error %}<p class="notice error">{{ topic.error }}{% if latest %} 前回成功時の結果を表示しています。{% endif %}</p>{% endif %}
+{% include 'social_ai_results.html' %}
+<section class="settings-card"><h2>注目の投稿 <span class="muted small">{{ latest.sample_count if latest else 0 }} 件のサンプル</span></h2>
+{% if latest %}<p class="small muted">収集 {{ latest.collected_at|display_time }} · 新規 {{ latest.new_count }} 件 · 対象 {{ latest.window_start|display_time }} 〜 {{ latest.collected_at|display_time }}<br>{{ '上位・新着を各100件まで取得し重複排除。検索インデックスの範囲に依存します。' if topic.source_type=='bluesky' else '指定サーバーのタグごとに最近40件まで取得。連合・公開範囲によって結果が変わります。' }} 上位40件を表示します。</p>
+<div class="social-hashtags">{% for tag in latest.hashtags %}<span class="feed-kind">#{{ tag.tag }} <strong>{{ tag.posts }} 件</strong></span>{% endfor %}</div>{% endif %}
+<ol class="social-results">{% for result in report.results %}<li><div><a href="{{ url_for('index',feed=topic.id,article=result.article_id,_anchor='article-detail') }}">{{ result.title }}</a><p class="small muted">{{ result.published_at|display_time }} · スコア {{ result.score }} · いいね {{ result.likes }} · 再投稿 {{ result.reposts }} · 返信 {{ result.replies }}{% if result.is_starred %} · ★{% endif %}</p></div>{% if result.link %}<a class="small" href="{{ result.link }}" target="_blank" rel="noopener noreferrer">原文 ↗</a>{% endif %}</li>{% else %}<li class="muted">{{ '対象期間の投稿が見つかりませんでした。検索条件や期間を確認してください。' if latest else 'まだ収集していません。ワーカーの巡回、または「今すぐ収集」で開始します。' }}</li>{% endfor %}</ol></section>
+<p><a class="button secondary" href="{{ url_for('settings_pages.object_edit',kind='feeds',identifier=topic.id) }}">この分野の設定 →</a></p>
+<details class="settings-card"><summary>収集履歴（直近30回）</summary><ul class="social-history">{% for run in report.history %}<li><time>{{ run.collected_at|display_time }}</time><span>{{ run.sample_count }} 件 · 新規 {{ run.new_count }} 件</span></li>{% else %}<li>収集履歴はありません。</li>{% endfor %}</ul></details>
+{% endif %}
+</main>
+{% endblock %}

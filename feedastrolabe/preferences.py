@@ -20,15 +20,18 @@ def bounded_int(value, low, high, label):
 
 def save_preferences(values):
     interval = bounded_int(values.get('poll_interval'), 60, 86400, 'ポーリング間隔')
-    page_size = bounded_int(values.get('page_size'), 10, 100, '表示件数')
+    page_size = bounded_int(values.get('page_size', preferences()['page_size']), 10, 100, '表示件数')
     rate = bounded_int(values.get('api_rate_limit'), 1, 1000, 'API リクエスト上限')
     view = values.get('default_view')
     if view not in ('all', 'unread', 'starred'):
         raise ValueError('初期表示が不正です。')
+    display_timezone = values.get('display_timezone', preferences()['display_timezone'])
+    if display_timezone not in ('UTC', 'Asia/Tokyo'):
+        raise ValueError('表示タイムゾーンは UTC または JST を選択してください。')
     db = get_db()
     with db:
-        db.execute('UPDATE settings SET poll_interval=?,polling_enabled=?,page_size=?,default_view=?,api_rate_limit=? WHERE id=1',
-                   (interval, int(values.get('polling_enabled') == '1'), page_size, view, rate))
+        db.execute('UPDATE settings SET poll_interval=?,polling_enabled=?,page_size=?,default_view=?,api_rate_limit=?,display_timezone=? WHERE id=1',
+                   (interval, int(values.get('polling_enabled') == '1'), page_size, view, rate, display_timezone))
 
 
 def due_at(feed, config, interval_override=None):
@@ -36,6 +39,8 @@ def due_at(feed, config, interval_override=None):
     if not feed['checked_at']:
         return None
     interval = feed['poll_interval'] or interval_override or config['poll_interval']
+    if feed.get('source_kind') == 'topic':
+        interval = max(900, interval)
     delay = min(86400, interval * 2 ** min(feed['failures'], 10))
     checked = datetime.strptime(feed['checked_at'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
     scheduled = checked + timedelta(seconds=delay)

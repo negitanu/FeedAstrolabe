@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from flask import current_app, g
 
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 18
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feeds (
@@ -229,6 +229,40 @@ def init_database(path):
             for statement in operations_schema.split(';'):
                 if statement.strip():db.execute(statement)
             db.execute('PRAGMA user_version=13')
+        if version < 14:
+            db.execute("ALTER TABLE settings ADD COLUMN display_timezone TEXT NOT NULL DEFAULT 'UTC' CHECK(display_timezone IN ('UTC','Asia/Tokyo'))")
+            db.execute('PRAGMA user_version=14')
+        if version < 15:
+            sql = db.execute("SELECT sql FROM sqlite_master WHERE name='feeds'").fetchone()[0]
+            sql = ('CREATE TABLE feeds_next ' + sql[sql.index('('):]).replace("('rss','x','mastodon','page')", "('rss','x','mastodon','page','bluesky')")
+            db.execute(sql)
+            columns = ','.join(row[1] for row in db.execute('PRAGMA table_info(feeds)'))
+            db.execute(f'INSERT INTO feeds_next({columns}) SELECT {columns} FROM feeds')
+            db.execute('DROP TABLE feeds')
+            db.execute('ALTER TABLE feeds_next RENAME TO feeds')
+            db.execute("UPDATE feeds SET enabled=0,error='X 収集は終了しました。Mastodon／Bluesky の SNS 調査へ移行してください。',retry_at=NULL WHERE source_type='x'")
+            db.execute("DELETE FROM provider_cooldowns WHERE provider='x'")
+            from .social_schema import SCHEMA as social_schema
+            for statement in social_schema.split(';'):
+                if statement.strip():
+                    db.execute(statement)
+            db.execute('PRAGMA user_version=15')
+        if version < 16:
+            from .social_ai_schema import SCHEMA as social_ai_schema
+            for statement in social_ai_schema.split(';'):
+                if statement.strip():
+                    db.execute(statement)
+            db.execute('PRAGMA user_version=16')
+        if version < 17:
+            db.execute('''CREATE TABLE folder_positions (
+                folder TEXT PRIMARY KEY NOT NULL CHECK(length(folder)<=80),
+                position INTEGER NOT NULL UNIQUE CHECK(position>=0)
+            )''')
+            db.execute('PRAGMA user_version=17')
+        if version < 18:
+            from .platform_schema import migrate
+            migrate(db)
+            db.execute('PRAGMA user_version=18')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise RuntimeError('Database foreign key integrity check failed')
         db.commit()

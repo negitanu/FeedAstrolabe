@@ -1,0 +1,47 @@
+.social-research-page h1{margin-bottom:8px}
+.social-research-page .settings-card{padding:18px;margin:14px 0}
+.social-research-page .settings-grid{gap:18px}
+.social-input-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.social-topic-row{display:grid;grid-template-columns:minmax(100px,1fr) auto minmax(120px,2fr);align-items:center;gap:6px 12px;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;overflow-wrap:anywhere}
+.social-topic-row>span:last-child{grid-column:1/-1}
+.social-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.social-actions form{margin-left:auto}
+.social-hashtags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.social-results{padding-left:28px;margin:8px 0}
+.social-results li{padding:9px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.social-results li>div{display:inline}
+.social-results p{margin:4px 0}
+.social-results li>a{display:inline-block;margin-left:8px}
+.social-history{list-style:none;padding:0}
+.social-history li{display:flex;gap:16px;padding:7px 0;border-bottom:1px solid var(--line)}
+@media(max-width:600px){.social-topic-row{grid-template-columns:1fr auto}
+.social-topic-row>span:nth-child(3){grid-column:1/-1}
+.social-research-page .settings-card{padding:12px}
+.social-history li{flex-wrap:wrap;gap:4px 12px}
+.social-actions{gap:12px}
+.social-actions form{margin-left:0}}
+.social-research-page{max-width:1200px;padding:22px 28px}
+.social-research-page .settings-header{margin-bottom:16px}
+.social-research-page h1{margin:4px 0 6px;font-size:26px}
+.social-research-page>.small{margin:6px 0}
+.social-research-page .notice{margin:8px 0}
+.social-research-page .settings-card h2{margin-bottom:8px}
+.social-research-page .settings-card label{margin-top:9px}
+.social-research-page .social-actions{margin:8px 0}
+@media(max-width:600px){.social-research-page{padding:16px}
+.social-research-page .settings-header{flex-direction:row;align-items:center;gap:8px;flex-wrap:nowrap}
+.social-research-page .settings-header .brand{font-size:14px;gap:5px}
+.social-research-page .settings-header .brand small{font-size:6px;letter-spacing:1px}
+.social-research-page .settings-header .brand-symbol{font-size:24px}
+.social-research-page .settings-header>.button{font-size:11px;padding:6px 8px;white-space:nowrap}
+.social-research-page h1{font-size:24px}}
+.social-ai-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.social-ai-heading h2,.social-ai-heading h3{margin:0!important}
+.social-ai-topics{list-style:none;padding:0;margin:8px 0}
+.social-ai-topics>li{padding:12px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.social-ai-topics h3{font-size:16px}
+.social-ai-topics p{margin:6px 0}
+.social-ai-sources{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--accent)}
+.social-ai-input{max-height:320px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;background:var(--bg);padding:12px;border:1px solid var(--line);border-radius:7px}
+.social-research-page #important-topics>details{margin-top:10px}
+.social-research-page #openrouter .check input,.social-research-page #important-topics .check input{width:auto}
