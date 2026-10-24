@@ -75,6 +75,8 @@ def create_app(test_config=None):
     app.register_blueprint(api)
     app.register_blueprint(settings)
     app.register_blueprint(settings_pages)
+    from .article_hero import hero
+    app.register_blueprint(hero)
     app.register_blueprint(navigation)
     app.context_processor(navigation_context)
     from .presentation import presentation_context, script_nonce

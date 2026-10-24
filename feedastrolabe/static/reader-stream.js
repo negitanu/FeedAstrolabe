@@ -4,6 +4,16 @@
   const list = document.querySelector('.article-list');
   const layout = document.querySelector('.reading-layout');
   if (!list || !layout) return;
+  function showHero(img) {
+    if(img.matches('[data-article-hero]'))img.hidden=!(img.complete && img.naturalWidth>0);
+  }
+  document.addEventListener('load',event=>{
+    if(event.target instanceof HTMLImageElement)showHero(event.target);
+  },true);
+  document.addEventListener('error',event=>{
+    if(event.target instanceof HTMLImageElement && event.target.matches('[data-article-hero]'))event.target.hidden=true;
+  },true);
+  document.querySelectorAll('[data-article-hero]').forEach(showHero);
   let loader = list.querySelector('[data-article-loader]');
   let loading = false, writing = false, generation = 0, detailVersion = 0;
   let listScroll = {x:scrollX,y:scrollY};

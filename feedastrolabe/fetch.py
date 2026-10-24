@@ -62,7 +62,7 @@ class PinnedHTTP(http.client.HTTPConnection):
             raise
 
 
-def fetch(url, etag=None, modified=None):
+def fetch(url, etag=None, modified=None, *, accept='application/atom+xml,application/rss+xml,application/xml,text/xml'):
     url = normalize_url(url)
     deadline = time.monotonic() + 30
     for hop in range(6):
@@ -75,7 +75,7 @@ def fetch(url, etag=None, modified=None):
         if remaining <= 0:
             raise ValueError('取得時間の上限を超えました。')
         conn = PinnedHTTP(p.hostname, port, address, p.scheme == 'https', min(10, remaining))
-        headers = {'User-Agent': 'FeedAstrolabe/0.1', 'Accept': 'application/atom+xml,application/rss+xml,application/xml,text/xml', 'Accept-Encoding': 'identity'}
+        headers = {'User-Agent': 'FeedAstrolabe/0.1', 'Accept': accept, 'Accept-Encoding': 'identity'}
         if etag:
             headers['If-None-Match'] = etag
         if modified:

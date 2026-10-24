@@ -148,3 +148,10 @@
 @media(max-width:900px) {
   .workspace .reading-layout > .article-detail {width:calc(100vw - 24px);right:12px;}
 }
+
+.workspace .article-detail .article-hero {display:block;width:480px;max-width:100%;height:auto;margin:16px auto;}
+.workspace .article-detail .article-hero[hidden] {display:none;}
+.workspace .article-detail .detail-separator {border:0;border-top:1px solid var(--line);margin:20px 0;}
+.workspace .article-detail .prose {border-top:0;padding-top:0;margin-top:0;}
+.workspace .article-detail .detail-features .research-article-links {margin:0 0 20px;}
+.workspace .article-detail .reading-next {border-top:0;padding-top:0;}
