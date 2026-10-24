@@ -241,6 +241,8 @@ def test_remote_keyboard_and_optional_post_open(browser,live_empty,streaming_dat
         assert response.ok
         page.reload()
         with app.app_context():assert get_db().execute('SELECT is_read FROM articles WHERE id=?',(target,)).fetchone()[0]==0
+        page.locator('#article-detail .detail-top a').click()
+        expect(page.locator('#article-detail')).to_have_count(0)
         page.locator(f'[data-article-id="{target}"] .open-form button').click()
         expect(page.locator(f'[data-article-id="{target}"]')).to_have_class(__import__('re').compile(r'\bread\b'))
         with app.app_context():assert get_db().execute('SELECT is_read FROM articles WHERE id=?',(target,)).fetchone()[0]==1

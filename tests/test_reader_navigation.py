@@ -270,7 +270,7 @@ def test_mobile_sequential_reading_with_native_controls(live_sequence, app, tmp_
                 detail = page.get_by_role('region', name='記事本文')
                 expect(detail.get_by_role('heading', name='Story 15', exact=True)).to_be_visible()
                 expect(detail.get_by_role('heading', name='Story 15', exact=True)).to_be_in_viewport()
-                nav = page.get_by_role('navigation', name='記事の移動', exact=True)
+                nav = page.get_by_role('navigation', name='記事の移動（本文末尾）', exact=True)
                 nav.get_by_role('link', name='次の記事 →').tap()
                 expect(detail.get_by_role('heading', name='Story 14', exact=True)).to_be_visible()
                 assert query(page.url) == {**filters, 'article':'14'}

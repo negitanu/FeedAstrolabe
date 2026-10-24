@@ -270,14 +270,16 @@ def test_layout_switch_navigation_and_read_star_actions(browser, presentation_re
 def test_layout_geometry_and_screenshots(browser, presentation_reader, layout, label, width, detail):
     with browser.new_context(viewport={'width':width,'height':960}) as context:
         page = context.new_page()
-        page.goto(presentation_reader+'/?article=36' if detail else presentation_reader)
+        page.goto(presentation_reader)
         page.get_by_role('button', name=label, exact=True).click()
+        if detail:
+            page.goto(presentation_reader+'/?article=36')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         boxes = page.locator('.article-card').evaluate_all('(cards) => cards.map(card => ({x:card.getBoundingClientRect().x,y:card.getBoundingClientRect().y,w:card.getBoundingClientRect().width,h:card.getBoundingClientRect().height}))')
         if layout == 'line':
             assert max(box['h'] for box in boxes) <= 62
             assert page.locator('.article-title').first.evaluate('(link) => getComputedStyle(link).whiteSpace') == 'nowrap'
-        elif width == 1440:
+        elif width >= 1280:
             assert boxes[0]['y'] == boxes[1]['y'] and boxes[0]['x'] != boxes[1]['x']
         else:
             assert boxes[0]['y'] < boxes[1]['y']

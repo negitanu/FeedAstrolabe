@@ -63,6 +63,18 @@
     if(event.target.closest('[data-load-more]')) { delete loader.dataset.failed;void more(); }
   });
   observe();
+  list.addEventListener('mousedown',event=>{
+    if(event.button===1 && event.target.closest('.article-card') && !event.target.closest('.article-actions'))event.preventDefault();
+  });
+  list.addEventListener('auxclick',event=>{
+    if(event.button!==1 || event.target.closest('.article-actions'))return;
+    const card=event.target.closest('.article-card');
+    if(!card)return;
+    event.preventDefault();
+    if(!card.dataset.originalUrl)return;
+    const url=new URL(card.dataset.originalUrl,location.href);
+    if(url.protocol==='https:' || url.protocol==='http:')window.open(url.href,'_blank','noopener,noreferrer');
+  });
   function selected(url) {
     const id=new URL(url,location.href).searchParams.get('article');
     for(const card of list.querySelectorAll('.article-card'))card.classList.toggle('selected',card.dataset.articleId===id);
@@ -79,7 +91,7 @@
     ['total','unread','starred'].forEach((name,index)=>{if(badges[index])badges[index].textContent=counts[name];});
     document.querySelector('.view-heading .muted').textContent=`${fragment.dataset.total} 件の記事`;
     if(scroll) {
-      if(detail) {detail.focus({preventScroll:true});detail.scrollIntoView({block:'start'});}
+      if(detail) {detail.focus({preventScroll:true});}
       else window.scrollTo(listScroll.x,listScroll.y);
     }
     return fragment;
