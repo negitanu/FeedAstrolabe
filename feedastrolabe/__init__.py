@@ -75,6 +75,8 @@ def create_app(test_config=None):
     app.register_blueprint(api)
     app.register_blueprint(settings)
     app.register_blueprint(settings_pages)
+    from .discovery import ui as discovery_ui
+    app.register_blueprint(discovery_ui)
     from .article_hero import hero
     app.register_blueprint(hero)
     app.register_blueprint(navigation)

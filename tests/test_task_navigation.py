@@ -244,7 +244,9 @@ def test_every_global_setting_in_two_clicks_and_correct_screen(browser,live_empt
 @pytest.mark.parametrize('width',[375,1280])
 def test_first_use_rss_and_sns_complete_workflow(browser,live_empty,app,monkeypatch,width,tmp_path):
     from playwright.sync_api import expect
-    from feedastrolabe import social_research
+    from feedastrolabe import social_research, discovery
+    from test_reader import RSS, META
+    monkeypatch.setattr(discovery,'fetch',lambda *a,**kw:(RSS,META))
     from test_social_research import bpost
     monkeypatch.setattr(social_research,'request_json',lambda *args:({'posts':[bpost()]},{}))
     with browser.new_context(viewport={'width':width,'height':900}) as context:
@@ -252,9 +254,11 @@ def test_first_use_rss_and_sns_complete_workflow(browser,live_empty,app,monkeypa
         page.get_by_role('link',name='情報源を選んで始める →',exact=True).click()
         page.locator('a.destination-card[href="/sources/new/rss"]').click()
         expect(page.get_by_role('heading',level=1)).to_have_text('RSS / Atom を追加')
-        page.get_by_label('RSS / Atom URL',exact=True).fill('https://example.com/feed')
+        page.get_by_label('Webサイト / RSS / Atom URL',exact=True).fill('https://example.com/feed')
         page.get_by_label('フォルダー',exact=True).fill('ニュース')
-        page.get_by_role('button',name='登録して記事を読む',exact=True).click()
+        page.get_by_role('button',name='候補を探す',exact=True).click()
+        expect(page.get_by_role('heading',name='最新の記事',exact=True)).to_be_visible()
+        page.get_by_role('button',name='購読して記事を読む',exact=True).click()
         expect(page).to_have_url(live_empty+'/?feed=1')
         page.locator('.article-title').filter(has_text='First story').click()
         expect(page.locator('#article-detail')).to_contain_text('Hello')

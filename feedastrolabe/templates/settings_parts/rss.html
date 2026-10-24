@@ -1,1 +1,8 @@
-<section class="settings-card" id="rss"><p>登録時に初回取得します。登録後は「読む」で記事を確認できます。</p><form method="post" action="{{ url_for('subscribe') }}">{{ token() }}<label for="rss-url">RSS / Atom URL</label><input id="rss-url" name="url" type="url" required maxlength="2048" placeholder="https://example.com/feed.xml" value="{{ submitted.get('url','') }}"><label for="rss-folder">フォルダー</label><input id="rss-folder" name="folder" maxlength="80" value="{{ submitted.get('folder','') }}"><button>登録して記事を読む</button></form></section>
+<section class="settings-card" id="rss">
+<form method="post" action="{{ url_for('discovery.discover') }}">{{ token() }}
+<label for="rss-url">Webサイト / RSS / Atom URL</label><input id="rss-url" name="url" type="url" required maxlength="2048" placeholder="https://example.com/" value="{{ submitted.get('url','') }}">
+<label for="rss-folder">フォルダー</label><input id="rss-folder" name="folder" maxlength="80" value="{{ submitted.get('folder','') }}"><button>候補を探す</button></form>
+{% if candidates %}<h2>見つかったフィード</h2>{% for candidate in candidates %}<form method="post" action="{{ url_for('discovery.discover') }}">{{ token() }}<input type="hidden" name="url" value="{{ candidate.url }}"><input type="hidden" name="folder" value="{{ submitted.get('folder','') }}"><p><strong>{{ candidate.title }}</strong><br>{{ candidate.url }}</p><button>記事をプレビュー</button></form>{% endfor %}{% endif %}
+{% if preview %}<h2>{{ preview.title }}</h2><p>{{ preview.url }}</p><h3>最新の記事</h3><ul>{% for entry in preview.articles %}<li><strong>{{ entry.title }}</strong><p>{{ entry.summary }}</p></li>{% else %}<li>記事はまだありません。</li>{% endfor %}</ul>
+<form method="post" action="{{ url_for('discovery.confirm') }}">{{ token() }}<input type="hidden" name="plan" value="{{ plan }}"><label for="confirm-folder">保存先のフォルダー</label><input id="confirm-folder" name="folder" maxlength="80" value="{{ submitted.get('folder','') }}"><button>購読して記事を読む</button></form>{% endif %}
+</section>

@@ -123,7 +123,10 @@ def test_detail_safe_and_get_read_only(app, client):
     subscribe(client)
     result = client.get('/?article=1')
     text = result.get_data(as_text=True)
-    assert '<script>alert' not in text and 'javascript:' not in text and '<img' not in text
+    assert '<script>alert' not in text and 'javascript:' not in text
+    from test_reader_navigation import markup
+    assert not markup(result.data).findall('.//div[@class="prose"]//img')
+    assert all(img.get('class')=='article-hero' for img in markup(result.data).findall('.//img'))
     assert text.count('<script') == 6 and 'feed-disclosure.js' in text and 'article-layout.js' in text
     assert '<p>Hello 100% world</p>' in text
     assert 'rel="noopener noreferrer"' in text
