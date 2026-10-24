@@ -29,4 +29,4 @@
 
 復旧用イメージ `feedastrolabe:pre-panel-polish-20261025` と `feedastrolabe-renderer:pre-panel-polish-20261025` を保持し、最終ソースでweb／rendererイメージを再構築した。
 
-web／worker／observer／rendererの更新・再起動は、自動承認レビューが「具体的な稼働サービス変更の明示承認がない」として拒否したため未実施。既存のweb／rendererはhealthy、worker／observer／tunnelもrunningを読み取り確認した。現在のサービスは更新前のまま。承認後にComposeで更新し、新しいfavicon／JS／CSSとhealthを実HTTPで確認する。DB移行はない。
+初回の稼働更新は自動承認レビューで明示承認が必要として停止した。その後、ユーザーの「OK」によりweb／worker／observer／rendererの更新・再起動を明示承認され、Composeで反映した。web／rendererはhealthy、worker／observer／tunnelもrunningを確認。コンテナ内の実HTTPでhealth、リーダー、favicon（SVG MIME）、開閉JS、選択欄CSS、ブランドCSSの6経路を200で取得し、新しい内容を確認した。DBは読み取り専用でschema19、quick_check ok、外部キーエラー0件を確認。UID10001・read-only構成を維持し、DB移行はない。

@@ -13,5 +13,5 @@
 
 - [x] 3.1 本仕様・README・操作文書・検証記録を更新
 - [x] 3.2 回帰・OpenSpec strict・依存・秘密情報を確認
-- [ ] 3.3 承認後に稼働コンテナ更新・health/HTTP確認
+- [x] 3.3 承認後に稼働コンテナ更新・health/HTTP確認
 - [x] 3.4 機能別commit/push
