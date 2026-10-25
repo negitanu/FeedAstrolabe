@@ -189,7 +189,7 @@ def test_only_matching_article_returns_empty_filtered_list(app, client, reading_
     with app.app_context(), get_db() as db:
         db.execute('DELETE FROM article_tags WHERE article_id != 1')
     soup = detail(client, reading_library, 1)
-    assert content(soup.find(".//form[@class='read-next']/button")) == '既読にして一覧へ'
+    assert soup.find(".//form[@class='read-next']") is None
     response = post(client, '/articles/1/read-next', reading_library)
     assert query(response.location) == reading_library
     after = markup(client.get(response.location).data)
@@ -274,10 +274,17 @@ def test_mobile_sequential_reading_with_native_controls(live_sequence, app, tmp_
                 nav.get_by_role('link', name='次の記事 →').tap()
                 expect(detail.get_by_role('heading', name='Story 14', exact=True)).to_be_visible()
                 assert query(page.url) == {**filters, 'article':'14'}
-                nav.get_by_role('link', name='← 前の記事').focus()
-                nav.get_by_role('link', name='← 前の記事').press('Enter')
+                if script_enabled:
+                    expect(detail.get_by_role('button', name='未読に戻す', exact=True)).to_be_visible()
+                    page.go_back()
+                else:
+                    nav.get_by_role('link', name='← 前の記事').focus()
+                    nav.get_by_role('link', name='← 前の記事').press('Enter')
                 expect(detail.get_by_role('heading', name='Story 15', exact=True)).to_be_visible()
-                detail.get_by_role('button', name='既読にして次へ →', exact=True).first.tap()
+                if script_enabled:
+                    page.go_forward()
+                else:
+                    nav.get_by_role('link', name='次の記事 →').tap()
                 expect(detail.get_by_role('heading', name='Story 14', exact=True)).to_be_visible()
                 assert query(page.url) == {**filters, 'article':'14'}
                 expect(detail.get_by_role('heading', name='Story 14', exact=True)).to_be_in_viewport()
@@ -293,5 +300,5 @@ def test_mobile_sequential_reading_with_native_controls(live_sequence, app, tmp_
                 assert query(page.url) == {**filters}
         finally:
             browser.close()
-    assert [row[0] for row in article_states(app) if row[1]] == [15]
+    assert [row[0] for row in article_states(app) if row[1]] == ([14,15] if script_enabled else [])
     assert all(row[2] == 1 for row in article_states(app))

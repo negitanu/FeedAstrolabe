@@ -86,7 +86,7 @@ def test_detail_semantic_order_and_single_advance(client):
     assert children[4].get('class')=='article-actions'
     assert children[6].get('class')=='prose'
     assert children[8].get('class')=='detail-features'
-    assert len(detail.findall(".//form[@class='read-next']"))==1
+    assert len(detail.findall(".//form[@class='read-next']"))==0
     assert children[9].find('nav') is not None
 
 
@@ -109,12 +109,12 @@ def test_hero_order_browser(browser, live_sequence, app, monkeypatch, width, sch
         img=detail.locator('[data-article-hero]')
         if has_image:
             expect(img).to_be_visible()
-            assert img.bounding_box()['width']==min(480,detail.evaluate('(el)=>el.clientWidth-parseFloat(getComputedStyle(el).paddingLeft)-parseFloat(getComputedStyle(el).paddingRight)'))
+            assert img.bounding_box()['width']==pytest.approx(min(480,detail.evaluate('(el)=>el.clientWidth-parseFloat(getComputedStyle(el).paddingLeft)-parseFloat(getComputedStyle(el).paddingRight)')), abs=0.1)
             assert img.bounding_box()['y']<detail.locator('h2').bounding_box()['y']
         else:
             expect(img).to_be_hidden()
         assert detail.evaluate('(el)=>{const r=el.getBoundingClientRect();return r.top>=document.querySelector(".view-heading").getBoundingClientRect().top-1 && r.bottom<=innerHeight;}')
-        assert detail.locator('form.read-next').count()==1
+        assert detail.locator('form.read-next').count()==0
         assert detail.locator('.reading-next form').count()==0
         assert detail.evaluate('(el)=>el.scrollWidth<=el.clientWidth')
         page.screenshot(path=f'/tmp/feedastrolabe-content-order-{width}-{has_image}.png')

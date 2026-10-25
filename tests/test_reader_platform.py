@@ -143,6 +143,7 @@ def test_scroll_retry_detail_history_and_bulk(browser,live_empty,streaming_data,
         expect(page.locator('.article-card')).to_have_count(60)
         card=page.locator('.article-card').nth(45);aid=card.get_attribute('data-article-id')
         card.locator('.article-title').click();expect(page.locator('#article-detail')).to_contain_text('Stream story')
+        expect(page.locator('#article-detail').get_by_role('button',name='未読に戻す',exact=True)).to_be_visible()
         count=page.locator('.article-card').count()
         page.locator('#article-detail .detail-top a').click()
         expect(page.locator('#article-detail')).to_have_count(0)
@@ -152,15 +153,15 @@ def test_scroll_retry_detail_history_and_bulk(browser,live_empty,streaming_data,
         assert page.locator('.article-card').count()>=count
         # A deep card state action must reconcile that card without losing loaded content.
         row=page.locator(f'[data-article-id="{aid}"]');row.locator('form[action$="/star"] button').click()
-        expect(row.locator('form[action$="/star"] [name=value]')).to_have_value('0')
-        assert page.locator('.article-card').count()>=count
+        expect(row).to_have_count(0)
+        assert page.locator('.article-card').count()>=count-1
         for _ in range(6):
             if not page.locator('[data-article-loader]').count():break
             previous=page.locator('.article-card').count()
             page.locator('[data-article-loader]').scroll_into_view_if_needed()
             page.wait_for_function('(count) => document.querySelectorAll(".article-card").length>count || !document.querySelector("[data-article-loader]")',arg=previous)
-        expect(page.locator('.article-card')).to_have_count(122)
-        assert len(set(page.locator('.article-card').evaluate_all('(nodes)=>nodes.map(node=>node.dataset.articleId)')))==122
+        expect(page.locator('.article-card')).to_have_count(121)
+        assert len(set(page.locator('.article-card').evaluate_all('(nodes)=>nodes.map(node=>node.dataset.articleId)')))==121
         button.click();expect(page.locator('.article-card')).to_have_count(0)
         assert errors==[]
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -234,16 +235,17 @@ def test_remote_keyboard_and_optional_post_open(browser,live_empty,streaming_dat
         page.keyboard.press('j');expect(cards.nth(1)).to_have_class(__import__('re').compile('keyboard-focus'))
         page.keyboard.press('o');expect(page.locator('#article-detail')).to_be_visible()
         assert 'article='+target in page.url
+        expect(page.locator('#article-detail').get_by_role('button',name='未読に戻す',exact=True)).to_be_visible()
         page.keyboard.press('s')
         expect(page.locator(f'[data-article-id="{target}"] form[action$="/star"] [name=value]')).to_have_value('0')
         csrf=page.locator('input[name=csrf]').first.input_value()
         response=page.request.post(live_empty+'/reading-prefs',form={'csrf':csrf,'list_density':'compact','mark_read_on_open':'1'})
         assert response.ok
         page.reload()
-        with app.app_context():assert get_db().execute('SELECT is_read FROM articles WHERE id=?',(target,)).fetchone()[0]==0
+        with app.app_context():assert get_db().execute('SELECT is_read FROM articles WHERE id=?',(target,)).fetchone()[0]==1
         page.locator('#article-detail .detail-top a').click()
         expect(page.locator('#article-detail')).to_have_count(0)
-        page.locator(f'[data-article-id="{target}"] .open-form button').click()
+        page.locator(f'[data-article-id="{target}"] .article-title').click()
         expect(page.locator(f'[data-article-id="{target}"]')).to_have_class(__import__('re').compile(r'\bread\b'))
         with app.app_context():assert get_db().execute('SELECT is_read FROM articles WHERE id=?',(target,)).fetchone()[0]==1
         assert errors==[]

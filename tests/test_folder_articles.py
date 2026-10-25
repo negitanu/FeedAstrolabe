@@ -96,7 +96,7 @@ def test_folder_click_search_and_actions(browser,live_empty,folder_data,width,ja
         expect(page.locator('#article-detail')).to_contain_text('Story 2')
         page.locator('#article-detail').get_by_role('button',name='★ 保存済み',exact=True).click()
         assert parse_qs(urlsplit(page.url).query)['folder']==['Tech']
-        page.locator('#article-detail').get_by_role('button',name='既読にする',exact=True).click()
+        page.locator('#article-detail').get_by_role('button',name='未読に戻す' if javascript else '既読にする',exact=True).click()
         assert parse_qs(urlsplit(page.url).query)['folder']==['Tech']
         page.locator('#article-detail').get_by_role('link',name='閉じる ×',exact=True).click()
         expect(page.locator('#article-detail')).to_have_count(0)

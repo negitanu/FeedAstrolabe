@@ -4,13 +4,7 @@
 {% macro sequence_links(label='記事の移動') %}
 {% if article_navigation %}<nav class="article-sequence" aria-label="{{ label }}">
 {% if article_navigation.previous %}<a rel="prev" href="{{ reader_url(article=article_navigation.previous.id, _anchor='article-detail') }}">← 前の記事</a>{% else %}<span class="muted">前の記事</span>{% endif %}
-<span class="muted">{{ article_navigation.position }} / {{ total }} 件</span>
+<span class="muted">{{ article_navigation.position }} / {{ article_navigation.total }} 件</span>
 {% if article_navigation.next %}<a rel="next" href="{{ reader_url(article=article_navigation.next.id, _anchor='article-detail') }}">次の記事 →</a>{% else %}<span class="muted">次の記事</span>{% endif %}
 </nav>{% endif %}
-{% endmacro %}
-{% macro advance_form() %}
-{% if article_navigation %}<form class="read-next" method="post" action="{{ url_for('read_next', article_id=article.id) }}">
-{{ token() }}{{ fields() }}
-<button>{{ '既読にして次へ →' if article_navigation.next else '既読にして一覧へ' }}</button>
-</form>{% endif %}
 {% endmacro %}

@@ -23,7 +23,7 @@ def test_visits_independent_restart_delete(app,client,tmp_path):
         db=get_db()
         assert [r[0] for r in db.execute('SELECT article_id FROM article_visits ORDER BY visited_at DESC')]==[1,2]
         assert db.execute('SELECT is_read,is_starred FROM articles WHERE id=1').fetchone()[:]==(1,0)
-        assert db.execute('SELECT is_read,is_starred FROM articles WHERE id=2').fetchone()[:]==(0,1)
+        assert db.execute('SELECT is_read,is_starred FROM articles WHERE id=2').fetchone()[:]==(1,1)
         with db:db.execute('DELETE FROM articles WHERE id=1')
         assert db.execute('SELECT count(*) FROM article_visits').fetchone()[0]==1
     assert ids(client.get('/?view=history'))==[2]
@@ -229,7 +229,7 @@ def test_productivity_browser_flow(browser,live_empty,app,productivity_data,widt
         with app.app_context():
             db=get_db()
             assert db.execute('SELECT count(*) FROM article_visits').fetchone()[0]==1
-            assert db.execute('SELECT sum(is_starred),sum(is_read) FROM articles').fetchone()[:]==(2,0)
+            assert db.execute('SELECT sum(is_starred),sum(is_read) FROM articles').fetchone()[:]==(2,1)
         assert errors==[]
 
 
@@ -246,7 +246,7 @@ def test_productivity_nojs_form(browser,live_empty,app,productivity_data,width):
         page.get_by_role('button',name='選択した記事に適用',exact=True).click()
         expect(page.locator('#reader-sort')).to_have_value('oldest')
         page.locator('.article-title').first.click()
-        page.get_by_role('button',name='閲覧履歴に記録',exact=True).click()
+        page.get_by_role('button',name='既読・閲覧履歴に記録',exact=True).click()
         expect(page.locator('#article-detail')).to_be_visible()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         with app.app_context():

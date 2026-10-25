@@ -223,15 +223,22 @@ def create_app(test_config=None):
         if article_id and (article is None or (selected['folder'] is not None and
                 db.execute('SELECT folder FROM feeds WHERE id=?', (article['feed_id'],)).fetchone()[0] != selected['folder'])):
             abort(404)
+        detail_where = where
+        if (article is not None and selected['view'] == 'unread'
+                and not request.headers.get('X-Reader-Reconcile') and not reconcile_ids
+                and db.execute('SELECT 1 FROM article_visits WHERE article_id=?', (article_id,)).fetchone()):
+            # Reopening an automatically read detail must retain the unread list scope.
+            detail_where = where.replace('a.is_read=0', '(a.is_read=0 OR a.id=?)', 1)
+        detail_params = [article_id, *params] if detail_where != where else params
         if article is not None:
-            clause = (where + ' AND a.id=?') if where else ' WHERE a.id=?'
-            if db.execute('SELECT 1 FROM articles a'+clause,[*params,article_id]).fetchone() is None:
+            clause = (detail_where + ' AND a.id=?') if detail_where else ' WHERE a.id=?'
+            if db.execute('SELECT 1 FROM articles a'+clause,[*detail_params,article_id]).fetchone() is None:
                 if request.headers.get('X-Reader-Detail') == '1' and (request.headers.get('X-Reader-Reconcile') == str(article_id) or article_id in reconcile_ids):
                     article = None
                     article_id = None
                 else:
                     abort(404)
-        navigation = article_navigation(where, params, article_id, selected) if article else None
+        navigation = article_navigation(detail_where, detail_params, article_id, selected) if article else None
         from .reader_stream import batch
         cursor = single_value(request.args, 'cursor') if 'cursor' in request.args else None
         if request.endpoint == 'article_more' and cursor is None:
@@ -361,9 +368,18 @@ def create_app(test_config=None):
         db = get_db()
         if db.execute('SELECT 1 FROM articles WHERE id=?', (article_id,)).fetchone() is None:
             abort(404)
+        where, params, selected = filters()
         with db:
+            db.execute('UPDATE articles SET is_read=1 WHERE id=?', (article_id,))
             db.execute('INSERT INTO article_visits(article_id,visited_at) VALUES(?,?) ON CONFLICT(article_id) DO UPDATE SET visited_at=excluded.visited_at',
                        (article_id, datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S.%f')))
+        if request.headers.get('X-Reader-State') == '1':
+            count_where = ' WHERE feed_id IN (SELECT id FROM feeds WHERE folder=?)' if selected['folder'] is not None else ''
+            count_params = (selected['folder'],) if selected['folder'] is not None else ()
+            counts = dict(db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles' + count_where, count_params).fetchone())
+            counts['history'] = db.execute('SELECT count(*) FROM article_visits v JOIN articles ON articles.id=v.article_id' + count_where, count_params).fetchone()[0]
+            total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
+            return {'counts': counts, 'total': total}
         if request.headers.get('X-Reader-Visit') == '1':
             return '', 204
         return return_to()
@@ -375,11 +391,6 @@ def create_app(test_config=None):
         clause = (where + ' AND a.id=?') if where else ' WHERE a.id=?'
         if db.execute('SELECT 1 FROM articles a'+clause,[*params,article_id]).fetchone() is None:
             abort(404)
-        if reading_prefs()['mark_read_on_open']:
-            with db:
-                db.execute('UPDATE articles SET is_read=1 WHERE id=?',(article_id,))
-            if selected['view'] == 'unread':
-                return redirect(url_for('folder_detail' if selected['folder'] is not None else 'index',**selected))
         return redirect(url_for('folder_detail' if selected['folder'] is not None else 'index',**selected,article=article_id))
 
     @app.post('/reading-prefs')

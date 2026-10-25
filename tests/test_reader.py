@@ -252,8 +252,10 @@ def test_reading_prefs_and_open_marks_read(app, client):
     post(client, '/reading-prefs', {'list_density': 'compact', 'mark_read_on_open': '1', 'scan_after_read': '1'})
     text = client.get('/').get_data(as_text=True)
     assert 'density-compact' in text
-    assert 'open_article' in text or '/articles/1/open' in text
-    post(client, '/articles/1/open', {'view': 'all'})
+    assert 'class="open-form"' not in text
+    response = post(client, '/articles/1/open', {'view': 'unread'})
+    assert 'article=1' in response.location
+    post(client, '/articles/1/visit')
     with app.app_context():
         assert get_db().execute('SELECT is_read FROM articles WHERE id=1').fetchone()[0] == 1
     assert client.get('/?article=1').status_code == 200

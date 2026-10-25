@@ -5,7 +5,7 @@ Provide progressive Japanese article browsing with filter-bound continuation and
 ## Requirements
 
 ### Requirement: Article browsing
-The system SHALL provide a responsive Japanese UI, deterministically sorted article lists, newest-first by default, article detail, HTTP(S) original links, and combined feed, folder, unread, starred, history, detailed literal search, date range, multiple source, workspace and tag filters. The reader SHALL progressively append matching articles as the user scrolls, without numbered pages, previous/next page controls or a user-facing result-count limit. Opening a detail SHALL NOT mutate read state; marking read SHALL require an explicit POST. Public API pagination SHALL remain compatible.
+The system SHALL provide a responsive Japanese UI, deterministically sorted article lists, newest-first by default, article detail, HTTP(S) original links, and combined feed, folder, unread, starred, history, detailed literal search, date range, multiple source, workspace and tag filters. The reader SHALL progressively append matching articles as the user scrolls, without numbered pages, previous/next page controls or a user-facing result-count limit. Displaying a detail SHALL trigger a CSRF-protected visit POST that persists read state; GET requests alone SHALL NOT mutate read state. Public API pagination SHALL remain compatible.
 
 #### Scenario: Search and filter
 - **WHEN** a user selects unread articles and searches for a title or content fragment

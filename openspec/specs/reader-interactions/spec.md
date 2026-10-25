@@ -42,7 +42,7 @@ The bulk-read control SHALL use the exact visible label 全て既読 and primary
 - **THEN** the button remains visually prominent with visible keyboard focus and text contrast of at least 4.5:1
 
 ### Requirement: Floating article detail and original access
-The reader SHALL open article details on ordinary selection in a right-aligned floating panel without shrinking or scrolling the retained list. The panel SHALL fit mobile viewports and scroll independently using theme colors. Middle-clicking a card outside its state controls SHALL open its original HTTP(S) URL in a new tab without selecting or marking the article read, including appended cards and mark-read-on-open mode. Missing original URLs SHALL NOT open a tab. The detail title SHALL link to the original in a new tab with noopener noreferrer when available, and remain plain text otherwise. The separate original button and upper previous/count/next navigation SHALL be removed; footer navigation and explicit read-next SHALL remain.
+The reader SHALL open article details on ordinary selection in a right-aligned floating panel without shrinking or scrolling the retained list. The panel SHALL fit mobile viewports and scroll independently using theme colors. Middle-clicking a card outside its state controls SHALL open its original HTTP(S) URL in a new tab without selecting or marking the article read, including appended cards and mark-read-on-open mode. Missing original URLs SHALL NOT open a tab. The detail title SHALL link to the original in a new tab with noopener noreferrer when available, and remain plain text otherwise. The separate original button and upper previous/count/next navigation SHALL be removed; footer navigation SHALL remain and explicit read-next controls SHALL be removed.
 
 #### Scenario: Open and close floating detail
 - **WHEN** a user selects and closes an article on desktop or mobile
@@ -61,11 +61,11 @@ The reader SHALL open article details on ordinary selection in a right-aligned f
 - **THEN** its detail title is plain text and middle click opens no new tab
 
 ### Requirement: Content-first article detail
-The detail SHALL present an optional hero image, linked title, timestamp, read-next/read/star controls, a horizontal separator, sanitized article description, a horizontal separator, research/tag and evidence controls, and footer previous/count/next navigation in that order. The source/close bar SHALL remain available. The duplicate footer read-next control SHALL be removed.
+The detail SHALL present an optional hero image, linked title, timestamp, read/star controls, a horizontal separator, sanitized article description, a horizontal separator, research/tag and evidence controls, and footer previous/count/next navigation in that order. The source/close bar SHALL remain available. All read-next controls SHALL be removed.
 
 #### Scenario: Read before research
 - **WHEN** a user opens an article
-- **THEN** description precedes research/evidence controls with explicit horizontal separators and the only read-next control precedes description
+- **THEN** description precedes research/evidence controls with explicit horizontal separators and no read-next control is displayed
 
 ### Requirement: Optional bounded hero image
 The reader SHALL attempt to obtain an Open Graph or Twitter Card image from the saved original URL without delaying the detail HTML response. It SHALL render a successfully loaded image before the title at 480 CSS pixels, constrained by available width. Missing or failed images SHALL leave no visible placeholder. Original page and image requests SHALL reuse public-address validation, DNS pinning, redirect validation and time/size limits. Only PNG, JPEG, GIF and WebP image signatures SHALL be served through a same-origin article endpoint; SVG and non-image responses SHALL be rejected. Successes and failures SHALL be cached with bounded entries and lifetime. Existing CSP and access controls SHALL be preserved.
@@ -88,3 +88,18 @@ The floating detail SHALL start no higher than the article-area heading or the v
 #### Scenario: Scroll or resize
 - **WHEN** the user scrolls the list, resizes the window or changes mobile sidebar height
 - **THEN** detail bounds follow the visible article area and header navigation remains available
+
+### Requirement: Mark displayed article as read
+The reader SHALL persist read state together with the CSRF-protected visit POST after displaying an article detail, independently of legacy read-on-open preferences. GET requests and middle-click original access SHALL NOT mutate read state. Successful saves SHALL update the matching retained card, detail state controls and scoped counts without closing the detail or losing loaded cards and scroll position. Failed saves SHALL display an error without claiming success. Explicitly marking the displayed article unread SHALL remain possible without immediately marking it read again.
+
+#### Scenario: Select unread article
+- **WHEN** a user opens an unread article in any list using mouse, touch or keyboard
+- **THEN** the displayed article becomes read, its star remains unchanged, the unread count updates and the detail stays open even in the unread view
+
+#### Scenario: Navigate and fail
+- **WHEN** the user navigates to another detail or returns through browser history
+- **THEN** the displayed detail is recorded as read; a failed detail fetch or failed visit save does not claim a successful read update
+
+#### Scenario: Explicit unread and middle click
+- **WHEN** the user marks the current detail unread or middle-clicks another article
+- **THEN** that explicit unread state is preserved and middle-click changes no read state
