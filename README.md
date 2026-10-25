@@ -135,3 +135,7 @@ openspec validate --all --strict --no-interactive
 5機能の操作・検索条件・制限は[読む・集めるの拡張](docs/reader-productivity.md)、検証結果は[検証記録](docs/verification-reader-discovery-history-controls.md)を参照してください。
 
 詳細の外側クリック・開閉の動き・faviconの更新は[検証記録](docs/verification-reader-panel-polish.md)を参照してください。
+
+詳細検索の「いずれかを含む」「含まない」はカンマ区切りの1行入力です。情報源はプルダウン内のチェックで複数選択できます。詳細は [操作文書](docs/reader-productivity.md#詳細検索) を参照してください。
+
+詳細検索は「情報源 → 検索対象 → いずれかを含む → 含まない → 公開日・開始 → 公開日・終了」の順です。PCでは6項目を1行に配置し、狭い画面では折り返します。

@@ -1,4 +1,7 @@
 """Bounded literal reader conditions; calendar dates use the library timezone."""
+import csv
+import io
+
 from datetime import date, datetime, time, timedelta, timezone
 
 from flask import abort
@@ -8,9 +11,32 @@ from .identifiers import single_value, MAX_ID
 from .preferences import preferences
 
 
+def phrase_input(value):
+    """Render canonical newline phrases as one reversible CSV input."""
+    if not value:
+        return ''
+    output = io.StringIO()
+    csv.writer(output, lineterminator='\r\n').writerow(value.splitlines())
+    return output.getvalue().removesuffix('\r\n')
+
+
 def conditions(source, query):
     selected = {name: single_value(source, name, '').strip() or None for name in
                 ('search_in', 'any_terms', 'exclude', 'date_from', 'date_to')}
+    for name in ('any_terms', 'exclude'):
+        input_name = name + '_csv'
+        if input_name not in source:
+            continue
+        if name in source:
+            abort(400, description='語句の入力形式が重複しています。')
+        raw = single_value(source, input_name, '')
+        if len(raw) > 2000 or '\n' in raw or '\r' in raw:
+            abort(400, description='語句は1行・2000文字以内のカンマ区切りで指定してください。')
+        try:
+            terms = next(csv.reader([raw], skipinitialspace=True, strict=True))
+        except csv.Error:
+            abort(400, description='語句のカンマ区切りや引用符を確認してください。')
+        selected[name] = '\n'.join(value.strip() for value in terms if value.strip()) or None
     field = selected['search_in'] or 'both'
     if field not in ('both', 'title', 'body'):
         abort(400, description='検索対象が不正です。')
@@ -28,7 +54,7 @@ def conditions(source, query):
         raw = selected[name] or ''
         terms = [value.strip() for value in raw.splitlines() if value.strip()]
         if len(raw) > 2000 or len(terms) > 10 or any(len(value) > 200 for value in terms):
-            abort(400, description='追加・除外キーワードは各10行・1行200文字以内で指定してください。')
+            abort(400, description='追加・除外キーワードは各10語句・1語句200文字以内で指定してください。')
         if terms:
             matches = [match(value) for value in terms]
             clauses.append('(' + ' OR '.join(matches) + ')' if name == 'any_terms'

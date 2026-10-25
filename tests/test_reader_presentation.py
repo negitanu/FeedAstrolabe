@@ -58,7 +58,7 @@ def test_folder_structure_counts_escaping_and_script_nonces(presentation_reader,
     assert {node.get('data-folder') for node in folders} >= {'', '未分類', HOSTILE_FOLDER}
     assert not tree.findall('.//img')
     scripts = tree.findall('.//script')
-    assert {script.get('src') for script in scripts} == {'/static/feed-disclosure.js', '/static/article-layout.js', '/static/folder-order.js', '/static/context-actions.js','/static/reader-stream.js','/static/sidebar-organizer.js','/static/reader-selection.js','/static/reader-visits.js'}
+    assert {script.get('src') for script in scripts} == {'/static/feed-disclosure.js', '/static/article-layout.js', '/static/folder-order.js', '/static/context-actions.js','/static/reader-stream.js','/static/sidebar-organizer.js','/static/reader-selection.js','/static/reader-visits.js','/static/reader-search.js'}
     assert len({script.get('nonce') for script in scripts}) == 1
     assert all(not script.text for script in scripts)
     selected = markup(client.get('/?feed=1').data)

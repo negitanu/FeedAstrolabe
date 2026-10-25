@@ -105,6 +105,8 @@ def create_app(test_config=None):
     app.register_blueprint(operations_ui)
     app.teardown_appcontext(close_db)
     app.add_template_filter(display_time, 'display_time')
+    from .reader_search import phrase_input
+    app.add_template_filter(phrase_input, 'phrase_input')
 
     @app.before_request
     def csrf_protect():
