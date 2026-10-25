@@ -263,11 +263,8 @@ def create_app(test_config=None):
         feeds = feed_rows()
         folder_groups = feed_groups(feeds)
         selected_folder = next((group for group in folder_groups if group['name'] == selected['folder']), None)
-        count_where = ' WHERE feed_id IN (SELECT id FROM feeds WHERE folder=?)' if selected['folder'] is not None else ''
-        count_params = (selected['folder'],) if selected['folder'] is not None else ()
-        counts = db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles' + count_where, count_params).fetchone()
-        counts = dict(counts)
-        counts['history'] = db.execute('SELECT count(*) FROM article_visits v JOIN articles ON articles.id=v.article_id' + count_where, count_params).fetchone()[0]
+        from .reader_state import library_counts
+        counts = library_counts(selected['folder'])
         selected_feed = next((f for f in feeds if f['id'] == selected['feed']), None)
         title = selected_feed['title'] if selected_feed else {'all': 'すべての記事', 'unread': '未読の記事', 'starred': 'スター付き', 'history': '最近読んだ記事'}[selected['view']]
         if selected_folder is not None:
@@ -376,10 +373,8 @@ def create_app(test_config=None):
             db.execute('INSERT INTO article_visits(article_id,visited_at) VALUES(?,?) ON CONFLICT(article_id) DO UPDATE SET visited_at=excluded.visited_at',
                        (article_id, datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S.%f')))
         if request.headers.get('X-Reader-State') == '1':
-            count_where = ' WHERE feed_id IN (SELECT id FROM feeds WHERE folder=?)' if selected['folder'] is not None else ''
-            count_params = (selected['folder'],) if selected['folder'] is not None else ()
-            counts = dict(db.execute('SELECT count(*) AS total,coalesce(sum(is_read=0),0) AS unread,coalesce(sum(is_starred),0) AS starred FROM articles' + count_where, count_params).fetchone())
-            counts['history'] = db.execute('SELECT count(*) FROM article_visits v JOIN articles ON articles.id=v.article_id' + count_where, count_params).fetchone()[0]
+            from .reader_state import library_counts
+            counts = library_counts(selected['folder'])
             total = db.execute('SELECT count(*) FROM articles a' + where, params).fetchone()[0]
             return {'counts': counts, 'total': total}
         if request.headers.get('X-Reader-Visit') == '1':

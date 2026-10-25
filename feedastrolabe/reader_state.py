@@ -21,3 +21,15 @@ def bulk_state(body, where='', params=()):
         db.execute('UPDATE articles SET '+','.join(k+'=?' for k in columns)+' WHERE id IN ('+marks+')',
                    [*columns.values(), *ids])
     return {'ids': ids, **{k: bool(v) for k, v in columns.items()}}
+
+
+def library_counts(folder=None):
+    """Keep the library unread badge global in full pages and visit responses."""
+    from .db import get_db
+    db = get_db()
+    where = ' WHERE feed_id IN (SELECT id FROM feeds WHERE folder=?)' if folder is not None else ''
+    params = (folder,) if folder is not None else ()
+    counts = dict(db.execute('SELECT count(*) AS total,coalesce(sum(is_starred),0) AS starred FROM articles' + where, params).fetchone())
+    counts['unread'] = db.execute('SELECT count(*) FROM articles WHERE is_read=0').fetchone()[0]
+    counts['history'] = db.execute('SELECT count(*) FROM article_visits v JOIN articles ON articles.id=v.article_id' + where, params).fetchone()[0]
+    return counts

@@ -10,7 +10,7 @@
 <div class="section-label">ライブラリ</div>
 <nav aria-label="記事の表示条件">
 {% for mode,label,symbol,count in [('all','すべての記事','☷',counts.total),('unread','未読','◉',counts.unread),('starred','スター付き','☆',counts.starred),('history','最近読んだ記事','↶',counts.history)] %}
-<a class="nav-item {{ 'active' if selected.view == mode and not selected.feed }}" href="{{ url_for('index', view=mode, folder=selected.folder) }}"><span>{{ symbol }}　{{ label }}</span><span class="count">{{ count }}</span></a>
+<a class="nav-item {{ 'active' if selected.view == mode and not selected.feed and (mode != 'unread' or selected.folder is none) }}" href="{{ url_for('index', view=mode, folder=(none if mode == 'unread' else selected.folder)) }}"><span>{{ symbol }}　{{ label }}</span><span class="count">{{ count }}</span></a>
 {% endfor %}
 </nav>
 <div class="section-label">フィード <span>{{ feeds|length }}</span></div>

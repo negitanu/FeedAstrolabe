@@ -177,10 +177,11 @@ def test_visit_returns_folder_scoped_counts(folder_data, app, client):
     from test_reader import post
     with app.app_context():
         db=get_db()
+        global_unread=db.execute('SELECT count(*) FROM articles WHERE is_read=0').fetchone()[0]
         total=db.execute("SELECT count(*) FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE f.folder='Tech'").fetchone()[0]
         unread=db.execute("SELECT count(*) FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE f.folder='Tech' AND a.is_read=0").fetchone()[0]
         aid=db.execute("SELECT a.id FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE f.folder='Tech' AND a.is_read=0 LIMIT 1").fetchone()[0]
     response=post(client,f'/articles/{aid}/visit',{'folder':'Tech','view':'unread'},headers={'X-Reader-State':'1'})
     assert response.json['counts']['total']==total
-    assert response.json['counts']['unread']==unread-1
+    assert response.json['counts']['unread']==global_unread-1
     assert response.json['total']==unread-1
