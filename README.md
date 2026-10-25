@@ -121,7 +121,7 @@ python3 scripts/check_secrets.py --staged --history
 
 ## 開発・仕様・検証
 
-開発・UI・検証・Git 管理・コミット名義の方針は [AGENT.md](AGENT.md) にまとめています。
+開発・UI・検証・Git 管理・コミット名義の方針は [AGENTS.md](AGENTS.md) にまとめています。
 
 現在の仕様は `openspec/specs/`、変更ごとの要件・設計・受入条件・タスクは `openspec/changes/` にあります。実装前に仕様を作成し、strict 検証と対応するテストを実行します。スキルは `.codex/skills/` にあります。
 
