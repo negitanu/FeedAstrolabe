@@ -75,7 +75,10 @@ test(
         args: executable ? [] : [root],
         env: { ...process.env, FEEDASTROLABE_LOCAL_DATA_DIR: dir },
       });
-      assert.equal(await desktop.evaluate(({ app }) => app.getVersion()), '0.2.0');
+      assert.equal(
+        await desktop.evaluate(({ app }) => app.getVersion()),
+        require('../package.json').version,
+      );
       const page = await desktop.firstWindow();
       const errors = [];
       page.on('pageerror', (error) => errors.push(error.message));

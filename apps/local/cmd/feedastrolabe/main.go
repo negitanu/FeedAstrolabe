@@ -74,7 +74,7 @@ func run() error {
 	go func() { defer close(aiDone); worker.Run(ctx) }()
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- server.Serve(listener) }()
-	if err = json.NewEncoder(os.Stdout).Encode(map[string]any{"type": "ready", "url": "http://" + listener.Addr().String(), "token": token, "version": "0.2.0"}); err != nil {
+	if err = json.NewEncoder(os.Stdout).Encode(map[string]any{"type": "ready", "url": "http://" + listener.Addr().String(), "token": token, "version": "0.1.0"}); err != nil {
 		return err
 	}
 	select {
