@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>FeedAstrolabe Local</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="app.js"></script>
+    <script defer src="social-ai.js"></script>
+    <script defer src="sync.js"></script>
+  </head>
+  <body>
+    <aside id="sidebar" aria-label="ライブラリとナビゲーション">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="15" />
+          <ellipse cx="20" cy="20" rx="7" ry="18" transform="rotate(40 20 20)" />
+          <path d="M4 24L36 16M20 3V37" />
+          <circle class="dot" cx="28" cy="9" r="3" />
+        </svg>
+        <div>FeedAstrolabe<span>LOCAL LIBRARY</span></div>
+      </div>
+      <div class="library-label">ライブラリ</div>
+      <div id="library-nav"></div>
+      <div class="source-label">
+        <span>情報源</span
+        ><button
+          id="new-folder"
+          class="icon-button"
+          aria-label="フォルダーを追加"
+          title="フォルダーを追加"
+        >
+          ＋
+        </button>
+      </div>
+      <div id="source-tree" aria-label="情報源一覧"></div>
+      <nav id="main-nav" aria-label="機能">
+        <button data-page="reader" class="active"><span aria-hidden="true">▤</span>読む</button
+        ><button data-page="collect"><span aria-hidden="true">＋</span>集める</button
+        ><button data-page="research"><span aria-hidden="true">⌕</span>調べる</button
+        ><button data-page="reports"><span aria-hidden="true">▧</span>まとめる</button
+        ><button data-page="settings"><span aria-hidden="true">⚙</span>設定</button>
+      </nav>
+      <div class="local-status"><span></span>このデバイスに保存</div>
+    </aside>
+    <div
+      id="resize"
+      role="separator"
+      tabindex="0"
+      aria-label="サイドバーの幅"
+      aria-orientation="vertical"
+      aria-valuemin="180"
+      aria-valuemax="520"
+      aria-valuenow="260"
+    ></div>
+    <div id="workspace">
+      <header id="topbar">
+        <div class="breadcrumb">
+          <span class="app-dot"></span><span id="location">ライブラリ</span
+          ><span class="slash">/</span><strong id="current-label">すべての記事</strong>
+        </div>
+        <div class="top-actions">
+          <span id="sync-status">ローカルライブラリ</span
+          ><button id="refresh" class="subtle"><span aria-hidden="true">↻</span> 更新</button>
+        </div>
+      </header>
+      <main id="main" aria-label="読む">
+        <section id="reader-page" class="page">
+          <div class="reader-toolbar">
+            <div class="search-box">
+              <span aria-hidden="true">⌕</span
+              ><input
+                id="search"
+                type="search"
+                placeholder="ライブラリを検索"
+                aria-label="記事を検索"
+              /><kbd>⌘ K</kbd>
+            </div>
+            <button id="toggle-filters" class="subtle" aria-expanded="false">詳細検索</button
+            ><button id="mark-all" class="primary">全て既読</button>
+          </div>
+          <form id="filters" class="filter-panel" hidden>
+            <label
+              >情報源<select
+                id="filter-feeds"
+                multiple
+                aria-label="情報源（複数選択）"
+              ></select></label
+            ><label
+              >検索対象<select id="filter-target">
+                <option value="">タイトルと本文</option>
+                <option value="title">タイトル</option>
+                <option value="content">本文</option>
+              </select></label
+            ><label>いずれかを含む<input id="filter-any" placeholder="カンマ区切り" /></label
+            ><label>含まない<input id="filter-exclude" placeholder="カンマ区切り" /></label
+            ><label>公開日・開始 (UTC)<input id="filter-from" type="date" /></label
+            ><label>公開日・終了 (UTC)<input id="filter-to" type="date" /></label>
+            <div class="filter-actions">
+              <button type="button" id="clear-filters" class="subtle">条件を解除</button
+              ><button class="primary">検索</button>
+            </div>
+          </form>
+          <div class="list-toolbar">
+            <span id="article-count">記事を読み込み中…</span>
+            <div class="list-controls">
+              <select id="sort" aria-label="並び順">
+                <option value="newest">公開日が新しい順</option>
+                <option value="oldest">公開日が古い順</option>
+                <option value="history">最近読んだ順</option>
+              </select>
+              <div id="view-controls" class="segmented" aria-label="表示形式">
+                <button data-view="standard" title="標準" aria-label="標準">☰</button
+                ><button data-view="compact" title="1行" aria-label="1行">≡</button
+                ><button data-view="tiles" title="タイル" aria-label="タイル">▦</button>
+              </div>
+            </div>
+          </div>
+          <div id="selection-bar" hidden>
+            <span id="selection-count"></span><button data-bulk="read">既読</button
+            ><button data-bulk="unread">未読</button><button data-bulk="star">スター</button
+            ><button data-bulk="unstar">スター解除</button
+            ><button id="clear-selection">選択解除</button>
+          </div>
+          <div id="reader-content">
+            <div id="article-scroll">
+              <div id="articles" aria-label="記事一覧"></div>
+              <div id="load-sentinel">
+                <button id="load-more" class="subtle" hidden>続きを読み込む</button>
+              </div>
+            </div>
+            <aside id="detail" hidden aria-label="記事詳細"></aside>
+          </div>
+        </section>
+        <section id="collect-page" class="page content-page" hidden>
+          <div class="page-intro">
+            <span class="eyebrow">GROW YOUR LIBRARY</span>
+            <h1>気になる情報を、ひとつの場所に。</h1>
+            <p>RSS / Atom の URL、または Web サイトから購読を追加します。</p>
+          </div>
+          <div class="panel">
+            <h2>RSS / Atom を追加</h2>
+            <form id="discover-form">
+              <label
+                >WebサイトまたはフィードのURL<input
+                  id="feed-url"
+                  type="url"
+                  required
+                  placeholder="https://example.com/feed.xml" /></label
+              ><button class="primary">候補を確認</button>
+            </form>
+            <div id="feed-previews"></div>
+          </div>
+          <div id="social-collect" class="panel">
+            <h2>SNS を追加</h2>
+            <div id="social-form-root"></div>
+          </div>
+          <div class="two-column">
+            <div class="panel">
+              <h2>OPML から読み込む</h2>
+              <p>別のリーダーの購読を取り込めます。追加前に内容と重複を確認します。</p>
+              <button id="import-opml" class="secondary">OPML を選択</button>
+              <div id="opml-preview"></div>
+            </div>
+            <div class="panel">
+              <h2>購読を書き出す</h2>
+              <p>フォルダー構成と購読URLを OPML で持ち出せます。</p>
+              <button id="export-opml" class="secondary">OPML を保存</button>
+            </div>
+          </div>
+        </section>
+        <section id="research-page" class="page content-page" hidden>
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">RESEARCH WORKSPACE</span>
+              <h1>情報をつなぎ、考えを残す。</h1>
+              <p>記事を案件に関連付け、根拠とメモを整理します。</p>
+            </div>
+            <button id="new-case" class="primary">＋ 案件を作成</button>
+          </div>
+          <section id="social-research" class="panel">
+            <h2>SNS 調査</h2>
+            <div id="social-results"></div>
+          </section>
+          <div class="research-layout">
+            <div id="case-list" aria-label="調査案件"></div>
+            <div id="case-workspace" class="panel">
+              <div class="empty compact-empty">
+                <span>⌕</span>
+                <h2>調査を始めましょう</h2>
+                <p>案件を作成して、記事とメモをまとめてください。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="reports-page" class="page content-page" hidden>
+          <div class="page-intro">
+            <span class="eyebrow">FROM READING TO INSIGHT</span>
+            <h1>根拠のある、まとめを。</h1>
+            <p>案件のメモと保存した根拠を、出典付き Markdown として書き出します。</p>
+          </div>
+          <div id="report-list"></div>
+        </section>
+        <section id="settings-page" class="page content-page" hidden>
+          <div class="page-intro">
+            <span class="eyebrow">MAKE IT YOURS</span>
+            <h1>自分に合う、読み心地に。</h1>
+          </div>
+          <div class="panel">
+            <h2>表示と収集</h2>
+            <form id="settings-form" class="settings-grid">
+              <label
+                >テーマ<select id="setting-theme">
+                  <option value="system">システムに合わせる</option>
+                  <option value="light">ライト</option>
+                  <option value="dark">ダーク</option>
+                </select></label
+              ><label
+                >更新間隔（分）<input
+                  id="setting-interval"
+                  type="number"
+                  min="1"
+                  max="1440"
+                  required /></label
+              ><label
+                >記事の表示形式<select id="setting-view">
+                  <option value="standard">標準</option>
+                  <option value="compact">1行</option>
+                  <option value="tiles">タイル</option>
+                </select></label
+              ><label
+                >表示タイムゾーン<select id="setting-timezone">
+                  <option value="Asia/Tokyo">日本標準時（JST）</option>
+                  <option value="UTC">協定世界時（UTC）</option>
+                </select></label
+              >
+              <label class="check-field"
+                ><input id="setting-pause" type="checkbox" />定期収集を停止する</label
+              >
+              <div class="form-actions"><button class="primary">設定を保存</button></div>
+            </form>
+          </div>
+          <section id="ai-settings" class="panel">
+            <h2>AI接続</h2>
+            <div id="ai-settings-root"></div>
+          </section>
+          <div class="two-column">
+            <div class="panel">
+              <h2>設定の持ち出し</h2>
+              <p>
+                表示・更新間隔・AI接続設定を JSON
+                に保存します。キーや予算消費履歴は含みません。記事や調査メモは含まれません。
+              </p>
+              <div class="button-row">
+                <button id="export-settings" class="secondary">設定を保存</button
+                ><button id="import-settings" class="subtle">設定を読み込む</button>
+              </div>
+            </div>
+            <div class="panel">
+              <h2>完全バックアップ</h2>
+              <p>
+                購読・記事・既読・スター・案件・根拠をまとめて保存・復元します。機密情報を含む場合は安全に保管してください。
+              </p>
+              <div class="button-row">
+                <button id="export-backup" class="secondary">バックアップを保存</button
+                ><button id="restore-backup" class="subtle">復元</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Web と同期</h2>
+            <p>
+              購読・記事・既読・スター・収集状態を共有します。停止中もこのデバイスだけで利用できます。
+            </p>
+            <form id="sync-form" class="settings-form">
+              <label
+                >接続先 URL<input id="sync-url" type="url" placeholder="https://reader.example.com"
+              /></label>
+              <label class="check-field"
+                ><input
+                  id="sync-enabled"
+                  type="checkbox"
+                />同期を有効にする（起動中は1分ごと）</label
+              >
+              <button class="primary" type="submit">保存</button>
+            </form>
+            <div class="button-row">
+              <button id="sync-connect" class="subtle">接続先を開く</button
+              ><button id="sync-now" class="secondary">今すぐ同期</button>
+            </div>
+            <p id="sync-detail" role="status"></p>
+          </div>
+          <div class="about">
+            <span class="brand-small">FeedAstrolabe Local</span
+            ><span>0.2.0 · Go / Electron · ローカル保存</span>
+            <p>収集はアプリ起動中に行います。元の FeedAstrolabe とは別のライブラリです。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="toast" role="status" hidden></div>
+    <div id="context-menu" role="menu" hidden></div>
+    <dialog id="dialog">
+      <form method="dialog" id="dialog-form">
+        <div class="dialog-header">
+          <h2 id="dialog-title"></h2>
+          <button type="button" id="dialog-close" class="icon-button" aria-label="閉じる">×</button>
+        </div>
+        <div id="dialog-body"></div>
+        <div class="dialog-actions">
+          <button type="button" id="dialog-cancel" class="subtle">キャンセル</button
+          ><button type="submit" id="dialog-confirm" class="primary">保存</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

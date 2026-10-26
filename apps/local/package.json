@@ -1,0 +1,73 @@
+{
+  "name": "feedastrolabe-local",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FeedAstrolabe の Go / Electron ローカル版",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "build:go": "node scripts/build.cjs",
+    "start": "npm run build:go && electron .",
+    "test": "node --test tests/*.test.cjs",
+    "test:go": "go test -race ./...",
+    "test:desktop": "npm run build:go && node --test tests/*.e2e.cjs",
+    "pack": "npm run build:go && electron-builder --dir",
+    "dist": "npm run build:go && electron-builder",
+    "setup": "npm ci && install-electron",
+    "test:live": "npm run build:go && node tests/live-smoke.cjs",
+    "format": "prettier --write ui desktop scripts/*.cjs tests/*.cjs package.json .prettierrc.json",
+    "format:check": "prettier --check ui desktop scripts/*.cjs tests/*.cjs package.json .prettierrc.json"
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0",
+    "playwright": "1.64.1",
+    "prettier": "3.9.10"
+  },
+  "build": {
+    "appId": "local.feedastrolabe.desktop",
+    "productName": "FeedAstrolabe Local",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**/*",
+      "ui/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "bin",
+        "to": "bin",
+        "filter": [
+          "feedastrolabe*"
+        ]
+      },
+      {
+        "from": "docs/THIRD_PARTY_NOTICES.md",
+        "to": "THIRD_PARTY_NOTICES.md"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.news",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "News"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "license": "UNLICENSED"
+}

@@ -5,3 +5,5 @@
 !feedastrolabe/**
 feedastrolabe/**/__pycache__/
 feedastrolabe/**/.DS_Store
+
+apps/

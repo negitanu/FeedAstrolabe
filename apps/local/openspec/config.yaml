@@ -1,0 +1,13 @@
+schema: spec-driven
+context: |
+  FeedAstrolabe-local is a Japanese single-user Go / Electron desktop port of FeedAstrolabe.
+  Keep the original Python repository and its data untouched.
+  Native process owns SQLite, collection and local authenticated API. Sandboxed Electron owns UI.
+  Final objective: port all FeedAstrolabe features. Track staged gaps and original spec mapping.
+  Current change adds SNS and AI on top of the working reader and local research workflow.
+  No Cloudflare, Docker or paid AI service is required for core use.
+rules:
+  specs:
+    - Every requirement includes testable WHEN/THEN scenarios.
+  tasks:
+    - Include strict validation, tests and truthful verification documentation.
