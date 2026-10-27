@@ -514,7 +514,14 @@ func TestOllamaCloudAndLocalPreflight(t *testing.T) {
 		if e != nil {
 			t.Fatal(e)
 		}
-		if _, e = s.ApproveAssistant(p.ID, p.InputHash, true); e != nil {
+		_, e = s.ApproveAssistant(p.ID, p.InputHash, true)
+		if runtime.GOOS == "windows" {
+			if e == nil || !strings.Contains(e.Error(), "ACL") {
+				t.Fatalf("Windows must reject unsupported token ACL validation: %v", e)
+			}
+			return
+		}
+		if e != nil {
 			t.Fatal(e)
 		}
 		w := NewAIWorker(s, mockJSON(func(r *http.Request) (int, string, http.Header) {
@@ -524,12 +531,6 @@ func TestOllamaCloudAndLocalPreflight(t *testing.T) {
 			return 200, jsonString(map[string]any{"model": "fixture-cloud", "done": true, "done_reason": "stop", "prompt_eval_count": 100, "eval_count": 50, "message": map[string]any{"role": "assistant", "content": assistantOutput(ev)}}), nil
 		}))
 		_, e = w.ProcessOne(context.Background())
-		if runtime.GOOS == "windows" {
-			if e == nil || !strings.Contains(e.Error(), "ACL") {
-				t.Fatalf("Windows must reject unsupported token ACL validation: %v", e)
-			}
-			return
-		}
 		if e != nil {
 			t.Fatal(e)
 		}
