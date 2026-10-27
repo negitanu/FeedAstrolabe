@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -522,7 +523,14 @@ func TestOllamaCloudAndLocalPreflight(t *testing.T) {
 			}
 			return 200, jsonString(map[string]any{"model": "fixture-cloud", "done": true, "done_reason": "stop", "prompt_eval_count": 100, "eval_count": 50, "message": map[string]any{"role": "assistant", "content": assistantOutput(ev)}}), nil
 		}))
-		if _, e = w.ProcessOne(context.Background()); e != nil {
+		_, e = w.ProcessOne(context.Background())
+		if runtime.GOOS == "windows" {
+			if e == nil || !strings.Contains(e.Error(), "ACL") {
+				t.Fatalf("Windows must reject unsupported token ACL validation: %v", e)
+			}
+			return
+		}
+		if e != nil {
 			t.Fatal(e)
 		}
 		jobs, _ := s.AIJobs("assistant", caseID)
